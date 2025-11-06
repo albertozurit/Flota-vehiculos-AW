@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <title>Registro - Plataforma de Flotas</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="mb-4">Registro de Empleado</h2>
+            
+            <% if (usuario && usuario.rol === 'admin') { %>
+                <div class="alert alert-info">Solo los administradores deben crear empleados.</div>
+            <% } %>
+
+            <% if (typeof mensaje !== 'undefined' && mensaje) { %>
+                <div class="alert alert-warning"><%= mensaje %></div>
+            <% } %>
+
+            <form action="/register" method="POST">
+                
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre Completo</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">Correo Corporativo</label>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="ejemplo@empresa.com" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="password" name="password" minlength="8" required>
+                    <div class="form-text">Mínimo 8 caracteres (requisito de Lab 7).</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Registrar</button>
+            </form>
+            
+            <p class="mt-3">¿Ya tienes cuenta? <a href="/login">Iniciar Sesión</a></p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
