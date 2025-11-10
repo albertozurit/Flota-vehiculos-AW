@@ -69,6 +69,27 @@ router.post('/register', async (request, response) => {
 
 });
 
+router.post('/login', async (request, response) => { //TODO revisar si el async iria aqui
+     const {email, password} = request.body;
+     const saltRounds = 10;
+
+
+     try {
+        const {emailBD, passwordBD} = await pool.execute('SELECT email, password FROM  users where email = ?', [email]);
+
+        if(emailBD === email && passwordBD === await bcrypt.hash(password, saltRounds)) {
+            request.session.mensaje = "Login  realizado con éxito";
+            response.redirect('/');
+        } else {
+            console.log ("Compruebe sus credenciales");
+        }
+
+     } catch (error) {
+        console.log("error al iniciar sesion");
+     }
+    
+});
+
 
 
 //RUTAS GET
