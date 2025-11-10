@@ -75,7 +75,7 @@ router.post('/login', async (request, response) => {
   try {
     // Buscar el usuario por email
     const [rows] = await pool.execute(
-      'SELECT email, password FROM users WHERE email = ?',
+      'SELECT email, password FROM USERS WHERE email = ?',
       [email]
     );
 
