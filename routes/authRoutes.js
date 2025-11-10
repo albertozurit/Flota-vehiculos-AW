@@ -75,9 +75,10 @@ router.post('/login', async (request, response) => { //TODO revisar si el async 
 
 
      try {
-        const {emailBD, passwordBD} = await pool.execute('SELECT email, password FROM  users where email = ?', [email]);
+        const [rows] = await pool.execute('SELECT email, password FROM  users where email = ?', [email]);
+        const user = rows[0];
 
-        if(emailBD === email && passwordBD === await bcrypt.hash(password, saltRounds)) {
+        if(user.email === email && await bcrypt.compare(password, user.password)) {
             request.session.mensaje = "Login  realizado con éxito";
             response.redirect('/');
         } else {
