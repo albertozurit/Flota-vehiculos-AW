@@ -68,27 +68,43 @@ router.post('/register', async (request, response) => {
 
 
 });
+//TODO mejorar errores
+router.post('/login', async (request, response) => {
+  const { email, password } = request.body;
 
-router.post('/login', async (request, response) => { //TODO revisar si el async iria aqui
-     const {email, password} = request.body;
-     const saltRounds = 10;
+  try {
+    // Buscar el usuario por email
+    const [rows] = await pool.execute(
+      'SELECT email, password FROM users WHERE email = ?',
+      [email]
+    );
 
+    // Si no existe el usuario
+    if (rows.length === 0) {
+      console.log("Usuario no encontrado");
+      return response.render('login', { mensaje: "Usuario no encontrado" });
+    }
 
-     try {
-        const [rows] = await pool.execute('SELECT email, password FROM  users where email = ?', [email]);
-        const user = rows[0];
+    const user = rows[0];
 
-        if(user.email === email && await bcrypt.compare(password, user.password)) {
-            request.session.mensaje = "Login  realizado con éxito";
-            response.redirect('/');
-        } else {
-            console.log ("Compruebe sus credenciales");
-        }
+    // Comparar contraseñas
+    const passwordOk = await bcrypt.compare(password, user.password);
 
-     } catch (error) {
-        console.log("error al iniciar sesion");
-     }
-    
+    if (!passwordOk) {
+      console.log("Contraseña incorrecta");
+      return response.render('login', { mensaje: "Contraseña incorrecta" });
+    }
+
+    // Si todo va bien:
+    request.session.mensaje = "Login realizado con éxito";
+    request.session.usuario = user;
+    console.log("✅ Login correcto");
+    response.redirect('/');
+
+  } catch (error) {
+    console.error("⚠️ Error al iniciar sesión:", error);
+    response.render('login', { mensaje: "Error en el servidor" });
+  }
 });
 
 
