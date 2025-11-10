@@ -107,6 +107,24 @@ router.post('/login', async (request, response) => {
   }
 });
 
+//logout 
+router.post('/logout', (request, response) => {
+    request.session.destroy((err) => {
+        if(err){
+            console.log("Erorr cerrando sesion: ", err);
+            return response.redirect('/');
+        }
+        response.clearCookie('connect.sid');
+        response.redirect('/login');
+    });
+});
+//hay que añadir en la pagina principal un boton para salir de la sesion yo haria 
+// un modal que se despliegue o añadir el boton en la cabecera del menu 
+// <form action="/logout" method="POST";">
+//<button type="submit" class="btn btn-danger">Cerrar sesion</button>
+//</form>
+
+
 
 
 //RUTAS GET
