@@ -43,7 +43,8 @@ router.post('/register', async (request, response) => {
 
     try {
 
-
+        // dice el profe que no hay que usar await, usar callback despues del proceso que se ejecuta 
+        // asi solo en un sistema asincrono
         const [existeUsuario] = await pool.execute('SELECT email FROM USERS where email = ?', [email]);
 
         if (existeUsuario.length > 0) {
