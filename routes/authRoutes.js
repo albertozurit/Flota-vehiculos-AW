@@ -53,26 +53,31 @@ function insertarUsuario(usuario, callback) {
 router.post('/register', (request, response) => {
     const rol = 'empleado';
     const saltRounds = 10;
-    bcrypt.hash(request.body.password, saltRounds)
-    .then((hashedPassword) => {
-    let usuario = {
-        nombre: request.body.nombre,
-        email: request.body.email,
-        password: hashedPassword
-    };
-
-    insertarUsuario(usuario, (err, newUserId) => {
-        if(!err){
-            usuario.id = newUserId;
-            request.session.usuario = usuario;
-            response.redirect('/');
+    bcrypt.hash(request.body.password, saltRounds, (err, hashedPassword) => {
+        if(err){
+            console.error("Error al hashear la contraseña", err);
+            return response.redirect('/register');
         }
+        let usuario = {
+            nombre: request.body.nombre,
+            email: request.body.email,
+            password: hashedPassword
+        };
+
+        insertarUsuario(usuario, (err, newUserId) => {
+            if(!err){
+                usuario.id = newUserId;
+                request.session.usuario = usuario;
+                response.redirect('/');
+            }
+            else{
+                console.log("Error al insertar usuario", err);
+                response.redirect('/register');
+            }
+        });    
     });
-}).catch((err) => {
-    console.error("Error al hashear la contraseña", err);
-    return response.redirect('/register');
 });
-});
+
 
 
 
