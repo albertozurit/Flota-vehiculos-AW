@@ -15,6 +15,9 @@ function requireAuth(request, response, next) {
     }
 }
 
+
+//HA DICHO DE HACERLO CON MIDDLEWARE NO CON IF PARA LOS PERMISOS
+
 //Middleware de administrador
 function requireAdmin(request, response, next) {
     if (request.session.usuario && request.session.usuario.rol === 'admin') {
@@ -25,12 +28,53 @@ function requireAdmin(request, response, next) {
     }
 }
 
-//RUTAS POST
 
-router.post('/register', async (request, response) => {
-    const { nombre, email, password } = request.body; //TODO
+function insertarUsuario(usuario, callback) {
+    pool.getConnection((err, connection) => {
+        if(err){
+            callback(err);
+        }
+        else{
+            let sql = "INSERT INTO USERS (nombre, email, password, rol) VALUES (?,?,?,?)";
+            connection.query(sql, [usuario.nombre, usuario.email, usuario.password, 'empleado'],   
+                (err, results) => {
+                connection.release()
+                if(err){
+                    callback (err);
+                }else{
+                    callback (null, results.insertId);
+                }
+            });
+        }
+    } );
+}
+
+//RUTAS POST
+router.post('/register', (request, response) => {
     const rol = 'empleado';
-    const saltRounds = 10; //para el tema del hash de la password
+    const saltRounds = 10;
+    bcrypt.hash(request.body.password, saltRounds)
+    .then((hashedPassword) => {
+    let usuario = {
+        nombre: request.body.nombre,
+        email: request.body.email,
+        password: hashedPassword
+    };
+
+    insertarUsuario(usuario, (err, newUserId) => {
+        if(!err){
+            usuario.id = newUserId;
+            request.session.usuario = usuario;
+            response.redirect('/');
+        }
+    });
+}).catch((err) => {
+    console.error("Error al hashear la contraseña", err);
+    return response.redirect('/register');
+});
+});
+
+
 
     const sendErrors = (mensaje) => { //funcion para rediriger al register si ha habido algun error
         request.session.mensaje = mensaje;
@@ -66,11 +110,8 @@ router.post('/register', async (request, response) => {
 
     }
 
-
-
-});
 //TODO mejorar errores
-router.post('/login', async (request, response) => {
+router.post('/login', async(request, response) => {
   const { email, password } = request.body;
 
   try {
