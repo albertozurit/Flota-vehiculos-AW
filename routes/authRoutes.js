@@ -53,16 +53,19 @@ function insertarVehiculo(vehiculo, callback) {
     pool.getConnection((err, connection) => {
         if (err) {
             callback(err);
+
+            
         } else {
-            let sql = "INSERT INTO VEHICULOS (marca, modelo, tipo, precioHora) VALUES (?,?,?,?)";
-            connection.query(sql, [vehiculo.marca, vehiculo.modelo, vehiculo.tipo, vehiculo.precioHora], (err, results) => {
+            let sql = "INSERT INTO VEHICULOS (marca, modelo, tipo, precioHora) VALUES (?,?,?,?,?)";
+            connection.query(sql);
+            (err, results) => {
                 connection.release();
                 if (err) {
                     callback(err);
                 } else {
-                    callback(null, results.insertId);
+                    callback(null, results.insertId); //TODO 
                 }
-            });
+            }
         }
     });
 }
@@ -225,7 +228,6 @@ router.post('/logout', (request, response) => {
 });
 
 
-//TODO Crear vehiculo
 // Crear vehículo (solo admin)
 router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
     const { marca, modelo, tipo, precioHora } = request.body;
@@ -247,7 +249,7 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =
     insertarVehiculo(vehiculo, (err, newVehicleId) => {
         if (!err) {
             console.log("✅ Vehículo creado con ID:", newVehicleId);
-            response.redirect('/vehiculos');
+            response.redirect('/');
         } else {
             console.error("Error al insertar vehículo:", err);
             response.render('vehiculos/nuevo', {
@@ -256,6 +258,8 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =
         }
     });
 });
+
+
 
 
 
@@ -290,6 +294,39 @@ router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =>
         mensaje: null
     });
 });
+
+// Listar vehículos 
+router.get('/vehiculos', requireAuth, (request, response) => {
+    pool.getConnection((err, connection) => {
+        if(err) {
+            console.error("Error al obtener conexión:", err);
+            return response.render('vehiculos/lista', {
+                vehiculos: [],
+                mensaje: "Error en el servidor"
+            });
+        }
+
+        let sql = 'SELECT * FROM VEHICULOS';
+        connection.query(sql, (err, rows) => {
+            connection.release();
+            
+            if(err) {
+                console.error("Error en la consulta:", err);
+                return response.render('vehiculos/lista', {
+                    vehiculos: [],
+                    mensaje: "Error en el servidor"
+                });
+            }
+
+            console.log(`📋 ${rows.length} vehículos encontrados`);
+            response.render('vehiculos/lista', {
+                vehiculos: rows,
+                mensaje: null
+            });
+        });
+    });
+});
+
 
 
 module.exports = router;

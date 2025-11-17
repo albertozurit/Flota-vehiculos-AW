@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Vehículos - Flota de Vehículos</title>
+    <link rel="stylesheet" href="/css/estilos.css">
+</head>
+<body>
+
+<div class="container mt-5">
+    <h2 class="mb-4">Lista de Vehículos</h2>
+
+    <% if (mensaje) { %>
+        <div class="alert alert-danger"><%= mensaje %></div>
+    <% } %>
+
+    <% if (usuario && usuario.rol === 'admin') { %>
+        <a href="/vehiculos/nuevo" class="btn btn-primary mb-3">➕ Crear Nuevo Vehículo</a>
+    <% } %>
+
+    <% if (vehiculos.length === 0) { %>
+        <div class="alert alert-info">
+            No hay vehículos registrados en la plataforma.
+        </div>
+    <% } else { %>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Marca</th>
+                    <th>Modelo</th>
+                    <th>Tipo</th>
+                    <th>Precio/Hora</th>
+                    <th>Estado</th>
+                    <% if (usuario && usuario.rol === 'admin') { %>
+                        <th>Acciones</th>
+                    <% } %>
+                </tr>
+            </thead>
+            <tbody>
+                <% vehiculos.forEach(vehiculo => { %>
+                    <tr>
+                        <td><%= vehiculo.id %></td>
+                        <td><%= vehiculo.marca %></td>
+                        <td><%= vehiculo.modelo %></td>
+                        <td><%= vehiculo.tipo %></td>
+                        <td><%= vehiculo.precioHora %>€</td>
+                        <td>
+                            <% if (vehiculo.estado === 'disponible') { %>
+                                <span class="badge bg-success">Disponible</span>
+                            <% } else if (vehiculo.estado === 'reservado') { %>
+                                <span class="badge bg-warning">Reservado</span>
+                            <% } else { %>
+                                <span class="badge bg-danger">Mantenimiento</span>
+                            <% } %>
+                        </td>
+                        <% if (usuario && usuario.rol === 'admin') { %>
+                            <td>
+                                <a href="/vehiculos/editar/<%= vehiculo.id %>" class="btn btn-sm btn-warning">✏️ Editar</a>
+                                <form action="/vehiculos/eliminar/<%= vehiculo.id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que quieres eliminar este vehículo?')">🗑️ Eliminar</button>
+                                </form>
+                            </td>
+                        <% } %>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    <% } %>
+
+    <a href="/" class="btn btn-secondary mt-3">⬅️ Volver al inicio</a>
+</div>
+
+</body>
+</html>
