@@ -31,133 +31,191 @@ function requireAdmin(request, response, next) {
 
 function insertarUsuario(usuario, callback) {
     pool.getConnection((err, connection) => {
-        if(err){
+        if (err) {
             callback(err);
         }
-        else{
+        else {
             let sql = "INSERT INTO USERS (nombre, email, password, rol) VALUES (?,?,?,?)";
-            connection.query(sql, [usuario.nombre, usuario.email, usuario.password, 'empleado'],   
+            connection.query(sql, [vehiculo.marca, vehiculo.modelo, vehiculo.tipo, vehiculo.precioHora], 
                 (err, results) => {
-                connection.release()
-                if(err){
-                    callback (err);
-                }else{
-                    callback (null, results.insertId);
+                    connection.release()
+                    if (err) {
+                        callback(err);
+                    } else {
+                        callback(null, results.insertId);
+                    }
+                });
+        }
+    });
+}
+
+function insertarVehiculo(vehiculo, callback) {
+    pool.getConnection((err, connection) => {
+        if (err) {
+            callback(err);
+        } else {
+            let sql = "INSERT INTO VEHICULOS (marca, modelo, tipo, precioHora) VALUES (?,?,?,?)";
+            connection.query(sql, [vehiculo.marca, vehiculo.modelo, vehiculo.tipo, vehiculo.precioHora], (err, results) => {
+                connection.release();
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, results.insertId);
                 }
             });
         }
-    } );
+    });
 }
 
 //RUTAS POST
 router.post('/register', (request, response) => {
+    const { nombre, email, password } = request.body;
     const rol = 'empleado';
     const saltRounds = 10;
-    bcrypt.hash(request.body.password, saltRounds, (err, hashedPassword) => {
-        if(err){
-            console.error("Error al hashear la contraseña", err);
-            return response.redirect('/register');
-        }
-        let usuario = {
-            nombre: request.body.nombre,
-            email: request.body.email,
-            password: hashedPassword
-        };
+    if (password.length < 8) {
+        return response.render('register', {
+            usuario: null,
+            mensaje: "La contraseña debe tener mínimo 8 caracteres"
+        });
+    }
 
-        insertarUsuario(usuario, (err, newUserId) => {
-            if(!err){
-                usuario.id = newUserId;
-                request.session.usuario = usuario;
-                response.redirect('/');
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error("Error al obtener conexión:", err);
+            return response.render('register', {
+                usuario: null,
+                mensaje: "Error en el servidor"
+            });
+        }
+
+        let sqlCheck = 'SELECT email FROM USERS WHERE email = ?';
+        connection.query(sqlCheck, [email], (err, rows) => {
+            if (err) {
+                connection.release();
+                console.error("Error al verificar email:", err);
+                return response.render('register', {
+                    usuario: null,
+                    mensaje: "Error en el servidor"
+                });
             }
-            else{
-                console.log("Error al insertar usuario", err);
-                response.redirect('/register');
+
+            if (rows.length > 0) {
+                connection.release();
+                return response.render('register', {
+                    usuario: null,
+                    mensaje: "El correo electrónico ya está registrado"
+                });
             }
-        });    
+
+
+            bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
+                if (err) {
+                    connection.release();
+                    console.error("Error al hashear la contraseña", err);
+                    return response.render('register', {
+                        usuario: null,
+                        mensaje: "Error al procesar la contraseña"
+                    });
+                }
+
+                let usuario = {
+                    nombre: nombre,
+                    email: email,
+                    password: hashedPassword
+                };
+
+                insertarUsuario(usuario, (err, newUserId) => {
+                    connection.release();
+                    if (!err) {
+                        usuario.id = newUserId;
+                        request.session.usuario = usuario;
+                        response.redirect('/');
+                    } else {
+                        console.log("Error al insertar usuario", err);
+                        response.render('register', {
+                            usuario: null,
+                            mensaje: "Error al crear el usuario"
+                        });
+                    }
+                });
+            });
+        });
     });
 });
 
 
 
 
-    const sendErrors = (mensaje) => { //funcion para rediriger al register si ha habido algun error
-        request.session.mensaje = mensaje;
-        return response.redirect('/register');
-    }
 
-    if (password.length < 8) {
-        return sendErrors("La contraseña tiene que tener al menos 8 digitos");
-    }
 
-    try {
+router.post('/login', (request, response) => {
+    const { email, password, recordar } = request.body;
 
-        // dice el profe que no hay que usar await, usar callback despues del proceso que se ejecuta 
-        // asi solo en un sistema asincrono
-        const [existeUsuario] = await pool.execute('SELECT email FROM USERS where email = ?', [email]);
-
-        if (existeUsuario.length > 0) {
-            return sendErrors("Error: El correo electrónico ya está registrado.");
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error("Error al obtener conexión:", err);
+            return response.render('login', { mensaje: "Error en el servidor" });
         }
 
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        let sql = 'SELECT id, nombre, email, password, rol FROM USERS WHERE email = ?';
+        connection.query(sql, [email], (err, rows) => {
+            connection.release();
 
-        await pool.execute('INSERT INTO USERS (nombre, email, password, rol) VALUES (?,?,?,?)', [nombre, email, hashedPassword, rol]);
+            if (err) {
+                console.error("Error en la consulta:", err);
+                return response.render('login', { mensaje: "Error en el servidor" });
+            }
 
-        request.session.mensaje = 'Registro realizado con éxito';
-        response.redirect('/login');
+            if (rows.length === 0) {
+                console.log("Usuario no encontrado");
+                return response.render('login', { mensaje: "Usuario no encontrado" });
+            }
 
-    } catch (error) {
+            const user = rows[0];
 
-        console.error("Error al registrar usuario", error);
+            bcrypt.compare(password, user.password, (err, passwordOk) => {
+                if (err) {
+                    console.error("Error al comparar contraseñas:", err);
+                    return response.render('login', { mensaje: "Error en el servidor" });
+                }
 
-        sendErrors("Error interno del servdidor. Inténtelo de nuevo");
+                if (!passwordOk) {
+                    console.log("Contraseña incorrecta");
+                    return response.render('login', { mensaje: "Contraseña incorrecta" });
+                }
 
-    }
+                // Si se marca "recordar sesión", extender la duración de la cookie
+                if (recordar) {
+                    request.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 días
+                } else {
+                    request.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 24 horas (por defecto)
+                }
 
-//TODO mejorar errores
-router.post('/login', async(request, response) => {
-  const { email, password } = request.body;
+                request.session.mensaje = "Login realizado con éxito";
+                request.session.usuario = {
+                    id: user.id,
+                    nombre: user.nombre,
+                    email: user.email,
+                    rol: user.rol
+                };
 
-  try {
-    // Buscar el usuario por email
-    const [rows] = await pool.execute(
-      'SELECT email, password FROM USERS WHERE email = ?',
-      [email]
-    );
-
-    // Si no existe el usuario
-    if (rows.length === 0) {
-      console.log("Usuario no encontrado");
-      return response.render('login', { mensaje: "Usuario no encontrado" });
-    }
-
-    const user = rows[0];
-
-    // Comparar contraseñas
-    const passwordOk = await bcrypt.compare(password, user.password);
-
-    if (!passwordOk) {
-      console.log("Contraseña incorrecta");
-      return response.render('login', { mensaje: "Contraseña incorrecta" });
-    }
-
-    // Si todo va bien:
-    request.session.mensaje = "Login realizado con éxito";
-    request.session.usuario = user;
-    console.log("✅ Login correcto");
-    response.redirect('/');
-
-  } catch (error) {
-    console.error("⚠️ Error al iniciar sesión:", error);
-    response.render('login', { mensaje: "Error en el servidor" });
-  }
+                request.session.save((err) => {
+                    if (err) {
+                        console.error("Error al guardar sesión:", err);
+                        return response.render('login', { mensaje: "Error en el servidor" });
+                    }
+                    console.log("✅ Login correcto, sesión guardada por:", recordar ? "30 días" : "24 horas");
+                    response.redirect('/');
+                });
+            });
+        });
+    });
 });
 
 //logout 
 router.post('/logout', (request, response) => {
     request.session.destroy((err) => {
-        if(err){
+        if (err) {
             console.log("Erorr cerrando sesion: ", err);
             return response.redirect('/');
         }
@@ -165,17 +223,45 @@ router.post('/logout', (request, response) => {
         response.redirect('/login');
     });
 });
-//hay que añadir en la pagina principal un boton para salir de la sesion yo haria 
-// un modal que se despliegue o añadir el boton en la cabecera del menu 
-// <form action="/logout" method="POST";">
-//<button type="submit" class="btn btn-danger">Cerrar sesion</button>
-//</form>
 
+
+//TODO Crear vehiculo
+// Crear vehículo (solo admin)
+router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
+    const { marca, modelo, tipo, precioHora } = request.body;
+
+    // Validaciones básicas
+    if (!marca || !modelo || !precioHora) {
+        return response.render('vehiculos/nuevo', {
+            mensaje: "Por favor, completa todos los campos obligatorios"
+        });
+    }
+
+    const vehiculo = {
+        marca: marca,
+        modelo: modelo,
+        tipo: tipo || 'electrico',
+        precioHora: precioHora
+    };
+
+    insertarVehiculo(vehiculo, (err, newVehicleId) => {
+        if (!err) {
+            console.log("✅ Vehículo creado con ID:", newVehicleId);
+            response.redirect('/vehiculos');
+        } else {
+            console.error("Error al insertar vehículo:", err);
+            response.render('vehiculos/nuevo', {
+                mensaje: "Error al crear el vehículo"
+            });
+        }
+    });
+});
 
 
 
 //RUTAS GET
 router.get('/', function (request, response) {
+    console.log("📍 Usuario en sesión:", request.session.usuario);
     response.status(200);
     response.render('index', {
         title: "Pagina principal"
@@ -194,6 +280,15 @@ router.get('/register', function (request, response) {
 router.get('/login', function (request, response) {
     response.status(200);
     response.render('login');
+});
+
+
+// Formulario para crear vehículo (solo admin)
+router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
+    response.status(200);
+    response.render('vehiculos/nuevo', {
+        mensaje: null
+    });
 });
 
 

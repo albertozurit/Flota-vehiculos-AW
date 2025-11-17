@@ -3,6 +3,11 @@ npm-debug.log
 .DS_Store
 *.log
 .env
-package-lock.json
-config/database.js
+
+# No subir archivos de BD SQLite u otros SGBD
+*.db
+*.sqlite
+*.sqlite3
+
+# No subir configuración local de BD (usar valores por defecto de XAMPP)
 config/database.js

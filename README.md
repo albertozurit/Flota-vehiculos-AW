@@ -38,7 +38,32 @@ Aplicación web para la gestión integral de una flota de vehículos eléctricos
   - Ctrl+H → Mis reservas
 - ✅ Preferencias guardadas en localStorage
 
+## Requisitos Previos
+
+⚠️ **IMPORTANTE**: Esta aplicación requiere **XAMPP** (Apache + MySQL + phpMyAdmin)
+
+- XAMPP instalado y configurado
+- MySQL corriendo en XAMPP
+- Node.js instalado
+
 ## Instalación
+
+### 1. Configurar Base de Datos en XAMPP
+
+**Ver instrucciones detalladas en:** [INSTRUCCIONES_BD.md](INSTRUCCIONES_BD.md)
+
+Resumen rápido:
+1. Inicia Apache y MySQL en XAMPP
+2. Abre phpMyAdmin (http://localhost/phpmyadmin)
+3. Crea el usuario de BD:
+```sql
+CREATE USER 'dbuser'@'localhost' IDENTIFIED BY 'dbpass123';
+GRANT ALL PRIVILEGES ON flotawei.* TO 'dbuser'@'localhost';
+FLUSH PRIVILEGES;
+```
+4. Ejecuta el script completo `config/schema.sql` en la pestaña SQL
+
+### 2. Instalar Dependencias de Node.js
 
 ```bash
 # Clonar o descargar el proyecto
@@ -52,6 +77,10 @@ npm start
 ```
 
 El servidor se ejecutará en: http://localhost:3000
+
+### Credenciales por Defecto
+- **Usuario admin**: admin@flota.com
+- **Contraseña**: admin123
 
 ## Estructura del Proyecto
 
@@ -141,10 +170,11 @@ Para crear un usuario administrador manualmente:
 
 - **Backend**: Node.js + Express.js
 - **Motor de vistas**: EJS
-- **Sesiones**: express-session
+- **Sesiones**: express-session + express-mysql-session
 - **Seguridad**: bcrypt (hash de contraseñas)
 - **Frontend**: HTML5, CSS3, Bootstrap 5.3
-- **Base de datos**: MySQL (por implementar)
+- **Base de datos**: MySQL 8.x (XAMPP - Motor InnoDB)
+- **Pool de conexiones**: mysql2/promise
 
 ## Validaciones Implementadas
 

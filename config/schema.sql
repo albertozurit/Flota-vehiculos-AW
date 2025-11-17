@@ -2,6 +2,15 @@
 CREATE DATABASE IF NOT EXISTS flotawei;
 USE flotawei;
 
+-- Tabla de concesionarios (debe crearse primero porque otras tablas dependen de ella)
+CREATE TABLE IF NOT EXISTS CONCESIONARIOS (
+    id_concesionario INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    ciudad VARCHAR(255),
+    direccion VARCHAR(255),
+    telefono VARCHAR(9)
+);
+
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS USERS (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -9,18 +18,10 @@ CREATE TABLE IF NOT EXISTS USERS (
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     rol ENUM('admin', 'empleado') DEFAULT 'empleado',
-    concesionario_id INT FOREIGN KEY,
+    concesionario_id INT,
     preferencias_accesibilidad JSON,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tabla de concesionarios
-CREATE TABLE IF NOT EXISTS CONCESIONARIOS (
-    id_concesionario INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    ciudad VARCHAR(255),
-    direccion VARCHAR(255),
-    telefono VARCHAR(9),
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (concesionario_id) REFERENCES CONCESIONARIOS(id_concesionario) ON DELETE SET NULL
 );
 
 -- Tabla de vehículos
@@ -36,7 +37,7 @@ CREATE TABLE IF NOT EXISTS VEHICULOS (
     imagen_url VARCHAR(255),
     estado ENUM('disponible', 'en_mantenimiento', 'reservado') DEFAULT 'disponible',
     concesionario_id INT,
-    FOREIGN KEY (concesionario_id) REFERENCES CONCESIONARIOS(id) ON DELETE SET NULL
+    FOREIGN KEY (concesionario_id) REFERENCES CONCESIONARIOS(id_concesionario) ON DELETE SET NULL
 );
 
 -- Tabla de reservas
