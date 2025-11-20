@@ -36,7 +36,7 @@ function insertarUsuario(usuario, callback) {
         }
         else {
             let sql = "INSERT INTO USERS (nombre, email, password, rol) VALUES (?,?,?,?)";
-            connection.query(sql, [vehiculo.marca, vehiculo.modelo, vehiculo.tipo, vehiculo.precioHora], 
+            connection.query(sql, [vehiculo.marca, vehiculo.modelo, vehiculo.tipo, vehiculo.precioHora],
                 (err, results) => {
                     connection.release()
                     if (err) {
@@ -54,10 +54,11 @@ function insertarVehiculo(vehiculo, callback) {
         if (err) {
             callback(err);
 
-            
+
         } else {
             let sql = "INSERT INTO VEHICULOS (marca, modelo, tipo, precioHora) VALUES (?,?,?,?,?)";
             connection.query(sql);
+            //TODO REVISAR SI NO HAY QUE PASARLE NADA como por ejemplo  connection.query(sql, [vehiculo.marca, vehiculo.modelo, vehiculo.tipo, vehiculo.precioHora],
             (err, results) => {
                 connection.release();
                 if (err) {
@@ -260,12 +261,58 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =
 });
 
 
+router.post('/vehiculos/:id/editar', requireAdmin, (request, response) => {
+    const { marca, modelo, tipo, precioHora } = request.body;
+
+    if (!marca || !modelo || !precioHora) {
+        return response.render('vehiculos/nuevo', {
+            mensaje: "Por favor, completa todos los campos obligatorios"
+        });
+    }
+
+    const vehiculo = {
+        marca: marca,
+        modelo: modelo,
+        tipo: tipo || 'electrico',
+        precioHora: precioHora
+    };
+
+    pool.getConnection((err, connection) => {
+        if (err) {
+            callback(err);
+        } else {
+            let sql = "UPDATE INTO VEHICULOS (marca, modelo, tipo, precioHora) VALUES (?,?,?,?,?) WHERE ";
+            //TODO HACER
+            connection.query(sql);
+            (err, results) => {
+                connection.release();
+                if (err) {
+                    callback(err);
+                } else {
+                    callback(null, results.insertId); //TODO 
+                }
+            }
+        }
+    });
+
+});
+
+//Crear reserva 
+//TODO revisar si un empleado puede hacer las reservas o debe hacerlo también un admin
+router.post('/reservas/nueva', requireAuth, (request, response) => {
+
+
+
+});
+
+
+
 
 
 
 //RUTAS GET
 router.get('/', function (request, response) {
-    console.log("📍 Usuario en sesión:", request.session.usuario);
+    //console.log("📍 Usuario en sesión:", request.session.usuario);
     response.status(200);
     response.render('index', {
         title: "Pagina principal"
@@ -298,7 +345,7 @@ router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =>
 // Listar vehículos 
 router.get('/vehiculos', requireAuth, (request, response) => {
     pool.getConnection((err, connection) => {
-        if(err) {
+        if (err) {
             console.error("Error al obtener conexión:", err);
             return response.render('vehiculos/lista', {
                 vehiculos: [],
@@ -309,8 +356,8 @@ router.get('/vehiculos', requireAuth, (request, response) => {
         let sql = 'SELECT * FROM VEHICULOS';
         connection.query(sql, (err, rows) => {
             connection.release();
-            
-            if(err) {
+
+            if (err) {
                 console.error("Error en la consulta:", err);
                 return response.render('vehiculos/lista', {
                     vehiculos: [],
@@ -325,6 +372,38 @@ router.get('/vehiculos', requireAuth, (request, response) => {
             });
         });
     });
+});
+
+
+//Formulario para editar un vehiculo pasando su id como argumento
+router.get('/vehiculos/:id/editar', requireAuth, (request, response) => {
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error("Error en el servidor");
+            response.render('/vehiculos/editar', {
+                mensaje: null
+            });
+        }
+
+        let sql = "SELECT marca, modelo, tipo, precioHora FROM VEHICULOS WHERE "; //TODO meter el where
+        connection.query(sql, (err, rows) => {
+            connection.release();
+
+            if (err) {
+                console.error("Error en la consulta:", err);
+                return response.render('vehiculos/editar', {
+                    vehiculos: [],
+                    mensaje: "Error en el servidor"
+                });
+            }
+
+            console.log(`vehiculo editado`);
+            response.render('vehiculos/editar', {
+                mensaje: null
+            });
+        })
+    })
+
 });
 
 

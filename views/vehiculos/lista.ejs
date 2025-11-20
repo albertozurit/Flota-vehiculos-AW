@@ -57,7 +57,7 @@
                         </td>
                         <% if (usuario && usuario.rol === 'admin') { %>
                             <td>
-                                <a href="/vehiculos/editar/<%= vehiculo.id %>" class="btn btn-sm btn-warning">✏️ Editar</a>
+                                <a href="/vehiculos/<%= vehiculo.id %>/editar/" class="btn btn-sm btn-warning">✏️ Editar</a>
                                 <form action="/vehiculos/eliminar/<%= vehiculo.id %>" method="POST" style="display:inline;">
                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que quieres eliminar este vehículo?')">🗑️ Eliminar</button>
                                 </form>
