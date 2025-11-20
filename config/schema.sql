@@ -62,6 +62,15 @@ CREATE TABLE IF NOT EXISTS sessions (
     PRIMARY KEY (session_id)
 );
 
+-- Tabla de clientes para que la empresa guarde sus datos cuando hacen una reserva  
+CREATE TABLE IF NOT EXISTS CLIENTES (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    telefono VARCHAR(9),
+    direccion VARCHAR(255)
+);
+
 -- Insertar un usuario administrador por defecto (password: admin123)
 INSERT INTO USERS (nombre, email, password, rol) 
 VALUES ('Administrador', 'admin@flota.com', '$2b$10$8DfggNWqCqeoWf7HWvo.V.K0sYDfNEpT8pqRXYhYQTE3fjizArvxe', 'admin')
