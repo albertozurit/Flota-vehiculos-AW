@@ -376,30 +376,30 @@ router.get('/vehiculos', requireAuth, (request, response) => {
 
 
 //Formulario para editar un vehiculo pasando su id como argumento
-router.get('/vehiculos/:id/editar', requireAuth, (request, response) => {
+router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error en el servidor");
-            response.render('/vehiculos/editar', {
-                mensaje: null
-            });
+            return response.redirect('/vehiculos');
         }
 
-        let sql = "SELECT marca, modelo, tipo, precioHora FROM VEHICULOS WHERE "; //TODO meter el where
-        connection.query(sql, (err, rows) => {
+        let sql = "SELECT marca, modelo, tipo, precioHora FROM VEHICULOS WHERE id = ?"; //TODO meter el where
+        connection.query(sql, [vehiculo_id],(err, rows) => {
             connection.release();
 
             if (err) {
                 console.error("Error en la consulta:", err);
-                return response.render('vehiculos/editar', {
-                    vehiculos: [],
-                    mensaje: "Error en el servidor"
-                });
+                return  response.redirect('/vehiculos');
             }
 
             console.log(`vehiculo editado`);
+            if(rows.length === 0) {
+                console.log("Vehículo no encontrado");
+                return response.redirect('/vehiculos');
+            }
             response.render('vehiculos/editar', {
-                mensaje: null
+                mensaje: null,
+                vehiculo: rows[0]
             });
         })
     })
