@@ -1,12 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Vehículos - Flota de Vehículos</title>
-    <link rel="stylesheet" href="/css/estilos.css">
-</head>
-<body>
+<%- include('../partials/head') %>
 
 <div class="container mt-5">
     <h2 class="mb-4">Lista de Vehículos</h2>
@@ -57,9 +49,9 @@
                         </td>
                         <% if (usuario && usuario.rol === 'admin') { %>
                             <td>
-                                <a href="/vehiculos/<%= vehiculo.id %>/editar/" class="btn btn-sm btn-warning">✏️ Editar</a>
-                                <form action="/vehiculos/eliminar/<%= vehiculo.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que quieres eliminar este vehículo?')">🗑️ Eliminar</button>
+                                <a href="/vehiculos/<%= vehiculo.id %>/editar/" class="btn btn-sm btn-warning"> Editar</a>
+                                <form action="/vehiculos/<%= vehiculo.id %>/eliminar" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que quieres eliminar este vehículo?')"> Eliminar</button>
                                 </form>
                             </td>
                         <% } %>

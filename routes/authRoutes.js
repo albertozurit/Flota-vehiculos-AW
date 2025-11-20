@@ -260,41 +260,47 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =
     });
 });
 
-
-router.post('/vehiculos/:id/editar', requireAdmin, (request, response) => {
+//editar vehiculo solo admin
+router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
+    const vehiculoId = request.params.id;
     const { marca, modelo, tipo, precioHora } = request.body;
 
+    //mirar si hay cambpos vacios
     if (!marca || !modelo || !precioHora) {
-        return response.render('vehiculos/nuevo', {
+        return response.render('vehiculos/editar', {
+            vehiculo: { id: vehiculoId, marca, modelo, tipo, precioHora },
             mensaje: "Por favor, completa todos los campos obligatorios"
         });
     }
 
-    const vehiculo = {
-        marca: marca,
-        modelo: modelo,
-        tipo: tipo || 'electrico',
-        precioHora: precioHora
-    };
+    //miramos precio numero y mayor que cero
+    if (isNaN(precioHora) || precioHora <= 0) {
+        return response.render('vehiculos/editar', {
+            vehiculo: { id: vehiculoId, marca, modelo, tipo, precioHora },
+            mensaje: "El precio debe ser un número válido mayor que 0"
+        });
+    }
 
+    //actualizar el vehículo
     pool.getConnection((err, connection) => {
         if (err) {
-            callback(err);
-        } else {
-            let sql = "UPDATE INTO VEHICULOS (marca, modelo, tipo, precioHora) VALUES (?,?,?,?,?) WHERE ";
-            //TODO HACER
-            connection.query(sql);
-            (err, results) => {
-                connection.release();
-                if (err) {
-                    callback(err);
-                } else {
-                    callback(null, results.insertId); //TODO 
-                }
-            }
+            console.error("Error al obtener conexión:", err);
+            return response.redirect('/vehiculos');
         }
-    });
 
+        let sql = "UPDATE VEHICULOS SET marca = ?, modelo = ?, tipo = ?, precioHora = ? WHERE id = ?";
+        connection.query(sql, [marca, modelo, tipo || 'electrico', precioHora, vehiculoId], (err, results) => {
+            connection.release();
+
+            if (err) {
+                console.error("Error al actualizar vehículo:", err);
+                return response.redirect('/vehiculos');
+            }
+
+            console.log("✅ Vehículo actualizado correctamente");
+            response.redirect('/vehiculos');
+        });
+    });
 });
 
 //Crear reserva 
@@ -304,6 +310,81 @@ router.post('/reservas/nueva', requireAuth, (request, response) => {
 
 
 });
+
+function eliminarVehiculo(vehiculoId, callback) {
+    pool.getConnection((err, connection) => {
+        if (err) {
+            return callback(err);
+        }
+
+        // Comprobar si el vehículo está reservado actualmente
+        let sqlCheckEstado = "SELECT estado FROM VEHICULOS WHERE id = ? AND activo = 1";
+        connection.query(sqlCheckEstado, [vehiculoId], (err, rows) => {
+            if (err) {
+                connection.release();
+                return callback(err);
+            }
+
+            if (rows.length === 0) {
+                connection.release();
+                return callback(new Error("El vehículo no existe o ya está inactivo."));
+            }
+
+            const vehiculo = rows[0];
+
+            if (vehiculo.estado === "reservado") {
+                connection.release();
+                return callback(new Error("El vehículo está reservado actualmente y no se puede eliminar."));
+            }
+
+            //Comprobar si tiene reservas activas
+            let sqlCheckReservas = `
+                SELECT id FROM RESERVAS 
+                WHERE vehiculo_id = ? AND estado = 'activa'
+            `;
+            connection.query(sqlCheckReservas, [vehiculoId], (err, reservas) => {
+                if (err) {
+                    connection.release();
+                    return callback(err);
+                }
+
+                if (reservas.length > 0) {
+                    connection.release();
+                    return callback(new Error("El vehículo tiene reservas activas y no se puede eliminar."));
+                }
+
+                // Baja lógica del vehículo
+                let sqlUpdate = "UPDATE VEHICULOS SET activo = 0 WHERE id = ?";
+                connection.query(sqlUpdate, [vehiculoId], (err, results) => {
+                    connection.release();
+
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    callback(null, results.affectedRows);
+                });
+            });
+        });
+    });
+}
+
+  
+// Baja lógica del vehículo
+router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (request, response) => {
+    const vehiculoId = request.params.id;
+
+    eliminarVehiculo(vehiculoId, (err, affectedRows) => {
+        if (err) {
+            console.error("Error al eliminar vehículo:", err);
+            return response.redirect('/vehiculos');
+        }
+
+        console.log(`Vehículo ${vehiculoId} marcado como inactivo`);
+        response.redirect('/vehiculos');
+    });
+});
+
 
 
 
@@ -342,7 +423,7 @@ router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =>
     });
 });
 
-// Listar vehículos 
+// Listar vehículos solo autenticados
 router.get('/vehiculos', requireAuth, (request, response) => {
     pool.getConnection((err, connection) => {
         if (err) {
@@ -377,14 +458,16 @@ router.get('/vehiculos', requireAuth, (request, response) => {
 
 //Formulario para editar un vehiculo pasando su id como argumento
 router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
+    const vehiculoId = request.params.id;
+    
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error en el servidor");
             return response.redirect('/vehiculos');
         }
 
-        let sql = "SELECT marca, modelo, tipo, precioHora FROM VEHICULOS WHERE id = ?"; //TODO meter el where
-        connection.query(sql, [vehiculo_id],(err, rows) => {
+        let sql = "SELECT id, marca, modelo, tipo, precioHora, estado FROM VEHICULOS WHERE id = ?";
+        connection.query(sql, [vehiculoId], (err, rows) => {
             connection.release();
 
             if (err) {

@@ -1,28 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modificar un vehiculo</title>
-</head>
-<body>
-    <h1>Bienvenidos a la sección de editar</h1>
+<%- include('../partials/head') %>
 
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
-                    <th>Tipo</th>
-                    <th>Precio/Hora</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
+<div class="container mt-5">
+    <h2 class="mb-4">✏️ Editar Vehículo</h2>
 
+    <% if (mensaje) { %>
+        <div class="alert alert-danger"><%= mensaje %></div>
+    <% } %>
 
+    <form action="/vehiculos/<%= vehiculo.id %>/editar" method="POST">
+        
+        <div class="mb-3">
+            <label for="marca" class="form-label">Marca:</label>
+            <input type="text" class="form-control" id="marca" name="marca" value="<%= vehiculo.marca %>" required>
+        </div>
+<!--modelo-->
+        <div class="mb-3">
+            <label for="modelo" class="form-label">Modelo:</label>
+            <input type="text" class="form-control" id="modelo" name="modelo" value="<%= vehiculo.modelo %>" required>
+        </div>
+<!--Tipo de coche-->
+        <div class="mb-3">
+            <label for="tipo" class="form-label">Tipo:</label>
+            <select class="form-control" id="tipo" name="tipo" required>
+                <option value="electrico" <%= vehiculo.tipo === 'electrico' ? 'selected' : '' %>>Eléctrico</option>
+                <option value="gasolina" <%= vehiculo.tipo === 'gasolina' ? 'selected' : '' %>>Gasolina</option>
+                <option value="diesel" <%= vehiculo.tipo === 'diesel' ? 'selected' : '' %>>Diesel</option>
+                <option value="hibrido" <%= vehiculo.tipo === 'hibrido' ? 'selected' : '' %>>Híbrido</option>
+            </select>
+        </div>
+        <!--Preci hora-->
+        <div class="mb-3">
+            <label for="precioHora" class="form-label">Precio por Hora (€):</label>
+            <input type="number" class="form-control" id="precioHora" name="precioHora" value="<%= vehiculo.precioHora %>" step="0.01" required>
+        </div>
 
-            </tbody>
-        </table>
+        <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
+        <a href="/vehiculos" class="btn btn-secondary">❌ Cancelar</a>
+    </form>
+
+</div>
+
 </body>
 </html>

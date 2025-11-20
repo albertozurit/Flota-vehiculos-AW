@@ -5,6 +5,7 @@ USE flotawei;
 -- Tabla de concesionarios (debe crearse primero porque otras tablas dependen de ella)
 CREATE TABLE IF NOT EXISTS CONCESIONARIOS (
     id_concesionario INT AUTO_INCREMENT PRIMARY KEY,
+    activo TINYINT(1) DEFAULT 1,
     nombre VARCHAR(100) NOT NULL,
     ciudad VARCHAR(255),
     direccion VARCHAR(255),
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS CONCESIONARIOS (
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS USERS (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    activo TINYINT(1) DEFAULT 1,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -27,6 +29,7 @@ CREATE TABLE IF NOT EXISTS USERS (
 -- Tabla de vehículos
 CREATE TABLE IF NOT EXISTS VEHICULOS ( 
     id INT AUTO_INCREMENT PRIMARY KEY,
+    activo TINYINT(1) DEFAULT 1,
     matricula VARCHAR(20) UNIQUE NOT NULL,
     marca VARCHAR(100) NOT NULL,
     modelo VARCHAR(100) NOT NULL,
