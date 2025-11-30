@@ -12,6 +12,11 @@
             <form action="/vehiculos/nuevo" method="POST">
                 
                 <div class="mb-3">
+                    <label for="matricula" class="form-label">Matrícula *</label>
+                    <input type="text" class="form-control" id="matricula" name="matricula" required>
+                </div>
+
+                <div class="mb-3">
                     <label for="marca" class="form-label">Marca *</label>
                     <input type="text" class="form-control" id="marca" name="marca" required>
                 </div>
@@ -22,17 +27,23 @@
                 </div>
 
                 <div class="mb-3">
-                    <label for="tipo" class="form-label">Tipo</label>
-                    <select class="form-control" id="tipo" name="tipo">
-                        <option value="electrico">Eléctrico</option>
-                        <option value="hibrido">Híbrido</option>
-                        <option value="gasolina">Gasolina</option>
-                    </select>
+                    <label for="anio_matriculacion" class="form-label">Año de matriculación</label>
+                    <input type="number" class="form-control" id="anio_matriculacion" name="anio_matriculacion" min="1900" max="2100">
                 </div>
 
                 <div class="mb-3">
-                    <label for="precioHora" class="form-label">Precio por Hora (€) *</label>
-                    <input type="number" step="0.01" class="form-control" id="precioHora" name="precioHora" required>
+                    <label for="numero_plazas" class="form-label">Número de plazas</label>
+                    <input type="number" class="form-control" id="numero_plazas" name="numero_plazas" min="1">
+                </div>
+
+                <div class="mb-3">
+                    <label for="autonomia_km" class="form-label">Autonomía (km)</label>
+                    <input type="number" class="form-control" id="autonomia_km" name="autonomia_km" min="0">
+                </div>
+
+                <div class="mb-3">
+                    <label for="color" class="form-label">Color</label>
+                    <input type="text" class="form-control" id="color" name="color">
                 </div>
 
                 <button type="submit" class="btn btn-primary">Crear Vehículo</button>

@@ -20,18 +20,28 @@
         </div>
 <!--Tipo de coche-->
         <div class="mb-3">
-            <label for="tipo" class="form-label">Tipo:</label>
-            <select class="form-control" id="tipo" name="tipo" required>
-                <option value="electrico" <%= vehiculo.tipo === 'electrico' ? 'selected' : '' %>>Eléctrico</option>
-                <option value="gasolina" <%= vehiculo.tipo === 'gasolina' ? 'selected' : '' %>>Gasolina</option>
-                <option value="diesel" <%= vehiculo.tipo === 'diesel' ? 'selected' : '' %>>Diesel</option>
-                <option value="hibrido" <%= vehiculo.tipo === 'hibrido' ? 'selected' : '' %>>Híbrido</option>
-            </select>
+            <label for="matricula" class="form-label">Matrícula:</label>
+            <input type="text" class="form-control" id="matricula" name="matricula" value="<%= vehiculo.matricula %>" required>
         </div>
-        <!--Preci hora-->
+
         <div class="mb-3">
-            <label for="precioHora" class="form-label">Precio por Hora (€):</label>
-            <input type="number" class="form-control" id="precioHora" name="precioHora" value="<%= vehiculo.precioHora %>" step="0.01" required>
+            <label for="anio_matriculacion" class="form-label">Año de matriculación:</label>
+            <input type="number" class="form-control" id="anio_matriculacion" name="anio_matriculacion" value="<%= vehiculo.anio_matriculacion %>" min="1900" max="2100">
+        </div>
+
+        <div class="mb-3">
+            <label for="numero_plazas" class="form-label">Número de plazas:</label>
+            <input type="number" class="form-control" id="numero_plazas" name="numero_plazas" value="<%= vehiculo.numero_plazas %>" min="1">
+        </div>
+
+        <div class="mb-3">
+            <label for="autonomia_km" class="form-label">Autonomía (km):</label>
+            <input type="number" class="form-control" id="autonomia_km" name="autonomia_km" value="<%= vehiculo.autonomia_km %>" min="0">
+        </div>
+
+        <div class="mb-3">
+            <label for="color" class="form-label">Color:</label>
+            <input type="text" class="form-control" id="color" name="color" value="<%= vehiculo.color %>">
         </div>
 
         <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>

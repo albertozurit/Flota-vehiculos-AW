@@ -35,10 +35,11 @@ function insertarUsuario(usuario, callback) {
             callback(err);
         }
         else {
-            let sql = "INSERT INTO USERS (nombre, email, password, rol) VALUES (?,?,?,?)";
-            connection.query(sql, [usuario.nombre, usuario.email, usuario.password, usuario.rol],
+            // Nuevo esquema: tabla `Usuarios` (correo, contrasena). Usamos id_concesionario=1 por defecto.
+            let sql = "INSERT INTO Usuarios (nombre, correo, contrasena, rol, id_concesionario) VALUES (?,?,?,?,?)";
+            connection.query(sql, [usuario.nombre, usuario.email, usuario.password, usuario.rol, 1],
                 (err, results) => {
-                    connection.release()
+                    connection.release();
                     if (err) {
                         callback(err);
                     } else {
@@ -51,23 +52,29 @@ function insertarUsuario(usuario, callback) {
 
 function insertarVehiculo(vehiculo, callback) {
     pool.getConnection((err, connection) => {
-        if (err) {
-            callback(err);
+        if (err) return callback(err);
 
+        const sql = `INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario)
+                     VALUES (?,?,?,?,?,?,?,?,?,?)`;
 
-        } else {
-            let sql = "INSERT INTO VEHICULOS (marca, modelo, tipo, precioHora) VALUES (?,?,?,?,?)";
-            connection.query(sql);
-            //TODO REVISAR SI NO HAY QUE PASARLE NADA como por ejemplo  connection.query(sql, [vehiculo.marca, vehiculo.modelo, vehiculo.tipo, vehiculo.precioHora],
-            (err, results) => {
-                connection.release();
-                if (err) {
-                    callback(err);
-                } else {
-                    callback(null, results.insertId); //TODO 
-                }
-            }
-        }
+        const params = [
+            vehiculo.matricula || null,
+            vehiculo.marca || null,
+            vehiculo.modelo || null,
+            vehiculo.anio_matriculacion || null,
+            vehiculo.numero_plazas || null,
+            vehiculo.autonomia_km || null,
+            vehiculo.color || null,
+            vehiculo.imagen || null,
+            vehiculo.estado || 'disponible',
+            vehiculo.id_concesionario || 1
+        ];
+
+        connection.query(sql, params, (err, results) => {
+            connection.release();
+            if (err) return callback(err);
+            callback(null, results.insertId);
+        });
     });
 }
 
@@ -78,8 +85,10 @@ router.post('/register', (request, response) => {
     const saltRounds = 10;
     if (password.length < 8) {
         return response.render('usuarios/register', {
+            title: 'Registro de usuario',
             usuario: null,
-            mensaje: "La contraseña debe tener mínimo 8 caracteres"
+            mensaje: "La contraseña debe tener mínimo 8 caracteres",
+            preferencias: request.session.preferencias || {}
         });
     }
 
@@ -87,27 +96,33 @@ router.post('/register', (request, response) => {
         if (err) {
             console.error("Error al obtener conexión:", err);
             return response.render('usuarios/register', {
+                title: 'Registro de usuario',
                 usuario: null,
-                mensaje: "Error en el servidor"
+                mensaje: "Error en el servidor",
+                preferencias: request.session.preferencias || {}
             });
         }
 
-        let sqlCheck = 'SELECT email FROM USERS WHERE email = ?';
-        connection.query(sqlCheck, [email], (err, rows) => {
+    let sqlCheck = 'SELECT correo FROM Usuarios WHERE correo = ?';
+    connection.query(sqlCheck, [email], (err, rows) => {
             if (err) {
                 connection.release();
                 console.error("Error al verificar email:", err);
                 return response.render('usuarios/register', {
+                    title: 'Registro de usuario',
                     usuario: null,
-                    mensaje: "Error en el servidor"
+                    mensaje: "Error en el servidor",
+                    preferencias: request.session.preferencias || {}
                 });
             }
 
             if (rows.length > 0) {
                 connection.release();
                 return response.render('usuarios/register', {
+                    title: 'Registro de usuario',
                     usuario: null,
-                    mensaje: "El correo electrónico ya está registrado"
+                    mensaje: "El correo electrónico ya está registrado",
+                    preferencias: request.session.preferencias || {}
                 });
             }
 
@@ -117,15 +132,18 @@ router.post('/register', (request, response) => {
                     connection.release();
                     console.error("Error al hashear la contraseña", err);
                     return response.render('usuarios/register', {
+                        title: 'Registro de usuario',
                         usuario: null,
-                        mensaje: "Error al procesar la contraseña"
+                        mensaje: "Error al procesar la contraseña",
+                        preferencias: request.session.preferencias || {}
                     });
                 }
 
                 let usuario = {
                     nombre: nombre,
                     email: email,
-                    password: hashedPassword
+                    password: hashedPassword,
+                    rol: rol
                 };
 
                 insertarUsuario(usuario, (err, newUserId) => {
@@ -136,9 +154,11 @@ router.post('/register', (request, response) => {
                         response.redirect('/');
                     } else {
                         console.log("Error al insertar usuario", err);
-                        response.render('usuarios/register', {
+                        return response.render('usuarios/register', {
+                            title: 'Registro de usuario',
                             usuario: null,
-                            mensaje: "Error al crear el usuario"
+                            mensaje: "Error al crear el usuario: " + (err.message || ''),
+                            preferencias: request.session.preferencias || {}
                         });
                     }
                 });
@@ -161,8 +181,8 @@ router.post('/login', (request, response) => {
             return response.render('usuarios/login', { mensaje: "Error en el servidor" });
         }
 
-        let sql = 'SELECT id, nombre, email, password, rol FROM USERS WHERE email = ?';
-        connection.query(sql, [email], (err, rows) => {
+    let sql = 'SELECT id_usuario AS id, nombre, correo AS email, contrasena AS password, rol FROM Usuarios WHERE correo = ?';
+    connection.query(sql, [email], (err, rows) => {
             connection.release();
 
             if (err) {
@@ -247,26 +267,31 @@ router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
 
 // Crear vehículo (solo admin)
 router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
-    const { marca, modelo, tipo, precioHora } = request.body;
+    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = request.body;
 
-    // Validaciones básicas
-    if (!marca || !modelo || !precioHora) {
+    // Validaciones básicas: matrícula, marca y modelo son obligatorios
+    if (!matricula || !marca || !modelo) {
         return response.render('vehiculos/nuevo', {
-            mensaje: "Por favor, completa todos los campos obligatorios"
+            mensaje: "Por favor, completa los campos obligatorios: matrícula, marca y modelo"
         });
     }
 
     const vehiculo = {
+        matricula: matricula,
         marca: marca,
         modelo: modelo,
-        tipo: tipo || 'electrico',
-        precioHora: precioHora
+        anio_matriculacion: anio_matriculacion || null,
+        numero_plazas: numero_plazas ? parseInt(numero_plazas) : null,
+        autonomia_km: autonomia_km ? parseInt(autonomia_km) : null,
+        color: color || null,
+        estado: 'disponible',
+        id_concesionario: 1 // opción A: concesionario por defecto
     };
 
     insertarVehiculo(vehiculo, (err, newVehicleId) => {
         if (!err) {
             console.log("✅ Vehículo creado con ID:", newVehicleId);
-            response.redirect('/');
+            response.redirect('/vehiculos');
         } else {
             console.error("Error al insertar vehículo:", err);
             response.render('vehiculos/nuevo', {
@@ -279,33 +304,25 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =
 //editar vehiculo solo admin
 router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
     const vehiculoId = request.params.id;
-    const { marca, modelo, tipo, precioHora } = request.body;
+    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = request.body;
 
-    //mirar si hay cambpos vacios
-    if (!marca || !modelo || !precioHora) {
+    if (!matricula || !marca || !modelo) {
         return response.render('vehiculos/editar', {
-            vehiculo: { id: vehiculoId, marca, modelo, tipo, precioHora },
-            mensaje: "Por favor, completa todos los campos obligatorios"
+            vehiculo: { id: vehiculoId, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color },
+            mensaje: "Por favor, completa los campos obligatorios: matrícula, marca y modelo"
         });
     }
 
-    //miramos precio numero y mayor que cero
-    if (isNaN(precioHora) || precioHora <= 0) {
-        return response.render('vehiculos/editar', {
-            vehiculo: { id: vehiculoId, marca, modelo, tipo, precioHora },
-            mensaje: "El precio debe ser un número válido mayor que 0"
-        });
-    }
-
-    //actualizar el vehículo
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error al obtener conexión:", err);
             return response.redirect('/vehiculos');
         }
 
-        let sql = "UPDATE VEHICULOS SET marca = ?, modelo = ?, tipo = ?, precioHora = ? WHERE id = ?";
-        connection.query(sql, [marca, modelo, tipo || 'electrico', precioHora, vehiculoId], (err, results) => {
+        const sql = `UPDATE Vehiculos SET matricula = ?, marca = ?, modelo = ?, anio_matriculacion = ?, numero_plazas = ?, autonomia_km = ?, color = ? WHERE id_vehiculo = ?`;
+        const params = [matricula, marca, modelo, anio_matriculacion || null, numero_plazas ? parseInt(numero_plazas) : null, autonomia_km ? parseInt(autonomia_km) : null, color || null, vehiculoId];
+
+        connection.query(sql, params, (err, results) => {
             connection.release();
 
             if (err) {
@@ -321,10 +338,95 @@ router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, respon
 
 //Crear reserva 
 //TODO revisar si un empleado puede hacer las reservas o debe hacerlo también un admin
-router.post('/reservas/nueva', requireAuth, (request, response) => {
+router.post('/reservas/guardar', requireAuth, async (req, res) => {
+    const { vehiculoId, fechaInicio, horaInicio, fechaFin, horaFin } = req.body;
+    const userId = req.session.usuario.id;
 
+    // Validación básica
+    if (!vehiculoId || !fechaInicio || !horaInicio || !fechaFin || !horaFin) {
+        return res.status(400).render('reservasformulario', {
+            title: 'Nueva Reserva de Vehículo',
+            usuario: req.session.usuario,
+            vehiculos: [], // Deberías volver a cargar la lista de vehículos aquí
+            mensaje: 'Todos los campos de fecha, hora y vehículo son obligatorios.'
+        });
+    }
 
+    try {
+        // **PASO 2:** Lógica para comprobar disponibilidad y guardar en la BD
+        const inicio = `${fechaInicio} ${horaInicio}`;
+        const fin = `${fechaFin} ${horaFin}`;
 
+        pool.getConnection((err, connection) => {
+            if (err) {
+                console.error('Error al obtener conexión para guardar reserva:', err);
+                req.session.mensaje = 'Error en el servidor al guardar la reserva';
+                return res.redirect('/reservas/listado');
+            }
+
+            // Usamos transacción para insertar reserva y actualizar estado del vehículo
+            connection.beginTransaction(transactionErr => {
+                if (transactionErr) {
+                    console.error('Error iniciando transacción:', transactionErr);
+                    connection.release();
+                    req.session.mensaje = 'Error en el servidor al guardar la reserva';
+                    return res.redirect('/reservas/listado');
+                }
+
+                const insertSql = `INSERT INTO Reservas (id_usuario, id_vehiculo, fecha_inicio, fecha_fin, estado) VALUES (?,?,?,?,?)`;
+                const insertParams = [userId, vehiculoId, inicio, fin, 'activa'];
+
+                connection.query(insertSql, insertParams, (insertErr, insertRes) => {
+                    if (insertErr) {
+                        console.error('Error insertando reserva:', insertErr);
+                        return connection.rollback(() => {
+                            connection.release();
+                            req.session.mensaje = 'Error al guardar la reserva';
+                            return res.redirect('/reservas/listado');
+                        });
+                    }
+
+                    // Actualizar estado del vehículo a 'reservado'
+                    const updateSql = `UPDATE Vehiculos SET estado = 'reservado' WHERE id_vehiculo = ?`;
+                    connection.query(updateSql, [vehiculoId], (updateErr) => {
+                        if (updateErr) {
+                            console.error('Error actualizando estado del vehículo:', updateErr);
+                            return connection.rollback(() => {
+                                connection.release();
+                                req.session.mensaje = 'Error al guardar la reserva';
+                                return res.redirect('/reservas/listado');
+                            });
+                        }
+
+                        connection.commit(commitErr => {
+                            if (commitErr) {
+                                console.error('Error al confirmar transacción:', commitErr);
+                                return connection.rollback(() => {
+                                    connection.release();
+                                    req.session.mensaje = 'Error al guardar la reserva';
+                                    return res.redirect('/reservas/listado');
+                                });
+                            }
+
+                            connection.release();
+                            console.log(`Reserva creada para el vehículo ${vehiculoId} de ${inicio} a ${fin} (id_reserva=${insertRes.insertId})`);
+                            req.session.mensaje = '¡Reserva realizada con éxito!';
+                            return res.redirect('/reservas/listado');
+                        });
+                    });
+                });
+            });
+        });
+
+    } catch (error) {
+        console.error('Error al guardar la reserva:', error);
+        res.render('reservasformulario', {
+            title: 'Nueva Reserva de Vehículo',
+            usuario: req.session.usuario,
+            vehiculos: [],
+            mensaje: 'Error al procesar la reserva. Inténtelo de nuevo.'
+        });
+    }
 });
 
 function eliminarVehiculo(vehiculoId, callback) {
@@ -332,9 +434,8 @@ function eliminarVehiculo(vehiculoId, callback) {
         if (err) {
             return callback(err);
         }
-
-        // Comprobar si el vehículo está reservado actualmente
-        let sqlCheckEstado = "SELECT estado FROM VEHICULOS WHERE id = ? AND activo = 1";
+        // Usamos nuevo esquema: comprobar estado en `Vehiculos` usando id_vehiculo
+        let sqlCheckEstado = "SELECT estado FROM Vehiculos WHERE id_vehiculo = ?";
         connection.query(sqlCheckEstado, [vehiculoId], (err, rows) => {
             if (err) {
                 connection.release();
@@ -343,7 +444,7 @@ function eliminarVehiculo(vehiculoId, callback) {
 
             if (rows.length === 0) {
                 connection.release();
-                return callback(new Error("El vehículo no existe o ya está inactivo."));
+                return callback(new Error("El vehículo no existe."));
             }
 
             const vehiculo = rows[0];
@@ -353,11 +454,8 @@ function eliminarVehiculo(vehiculoId, callback) {
                 return callback(new Error("El vehículo está reservado actualmente y no se puede eliminar."));
             }
 
-            //Comprobar si tiene reservas activas
-            let sqlCheckReservas = `
-                SELECT id FROM RESERVAS 
-                WHERE vehiculo_id = ? AND estado = 'activa'
-            `;
+            // Comprobar si tiene reservas activas en la tabla `Reservas`
+            let sqlCheckReservas = `SELECT id_reserva FROM Reservas WHERE id_vehiculo = ? AND estado = 'activa'`;
             connection.query(sqlCheckReservas, [vehiculoId], (err, reservas) => {
                 if (err) {
                     connection.release();
@@ -369,8 +467,8 @@ function eliminarVehiculo(vehiculoId, callback) {
                     return callback(new Error("El vehículo tiene reservas activas y no se puede eliminar."));
                 }
 
-                // Baja lógica del vehículo
-                let sqlUpdate = "UPDATE VEHICULOS SET activo = 0 WHERE id = ?";
+                // Baja lógica: marcar como 'mantenimiento'
+                let sqlUpdate = "UPDATE Vehiculos SET estado = 'mantenimiento' WHERE id_vehiculo = ?";
                 connection.query(sqlUpdate, [vehiculoId], (err, results) => {
                     connection.release();
 
@@ -431,7 +529,8 @@ router.get('/perfil', requireAuth, (request, response) => {
 
 router.get('/register', function (request, response) {
     response.status(200);
-    response.render('register', {
+    response.render('usuarios/register', {
+        title: "Registro de usuario",
         usuario: request.session.usuario || null,
         mensaje: request.session.mensaje || null,
         preferencias: request.session.preferencias || {}
@@ -441,7 +540,8 @@ router.get('/register', function (request, response) {
 
 router.get('/login', function (request, response) {
     response.status(200);
-    response.render('login', {
+    response.render('usuarios/login', {
+        title: "Login de usuario",
         mensaje: request.session.mensaje || null,
         preferencias: request.session.preferencias || {}
     });
@@ -452,6 +552,7 @@ router.get('/login', function (request, response) {
 router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
     response.status(200);
     response.render('vehiculos/nuevo', {
+        title: "Nuevo Vehículo",
         mensaje: null,
         preferencias: request.session.preferencias || {}
     });
@@ -464,24 +565,27 @@ router.get('/vehiculos', requireAuth, (request, response) => {
             console.error("Error al obtener conexión:", err);
             return response.render('vehiculos/lista', {
                 vehiculos: [],
-                mensaje: "Error en el servidor"
+                mensaje: "Error en el servidor",
+                preferencias: request.session.preferencias || {}
             });
         }
 
-        let sql = 'SELECT * FROM VEHICULOS';
-        connection.query(sql, (err, rows) => {
+    let sql = `SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos`;
+    connection.query(sql, (err, rows) => {
             connection.release();
 
             if (err) {
                 console.error("Error en la consulta:", err);
                 return response.render('vehiculos/lista', {
                     vehiculos: [],
-                    mensaje: "Error en el servidor"
+                    mensaje: "Error en el servidor",
+                    preferencias: request.session.preferencias || {}
                 });
             }
 
             console.log(`📋 ${rows.length} vehículos encontrados`);
             response.render('vehiculos/lista', {
+                title: "Lista de Vehículos",
                 vehiculos: rows,
                 mensaje: null,
                 preferencias: request.session.preferencias || {}
@@ -501,8 +605,8 @@ router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, respons
             return response.redirect('/vehiculos');
         }
 
-        let sql = "SELECT id, marca, modelo, tipo, precioHora, estado FROM VEHICULOS WHERE id = ?";
-        connection.query(sql, [vehiculoId], (err, rows) => {
+    let sql = "SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?";
+    connection.query(sql, [vehiculoId], (err, rows) => {
             connection.release();
 
             if (err) {
@@ -516,6 +620,7 @@ router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, respons
                 return response.redirect('/vehiculos');
             }
             response.render('vehiculos/editar', {
+                title: "Editar Vehículo",
                 mensaje: null,
                 vehiculo: rows[0],
                 preferencias: request.session.preferencias || {}
@@ -524,6 +629,87 @@ router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, respons
     })
 
 });
+
+
+router.get('/reservas/nuevo', requireAuth, async (req, res) => {
+    try {
+        // **PASO 1:** Obtener la lista de vehículos disponibles desde la BD.
+        // Ejemplo ficticio de datos:
+        const vehiculosDisponibles = [
+            { id: 1, nombre: 'Tesla Model 3', matricula: '1234 ABC', bateria: '80%' },
+            { id: 2, nombre: 'Nissan Leaf', matricula: '5678 DEF', bateria: '70%' },
+            // En una aplicación real, usarías: const vehiculos = await db.getVehiculosDisponibles();
+        ];
+
+        res.render('reservasformulario', {
+            title: 'Nueva Reserva de Vehículo',
+            usuario: req.session.usuario,
+            vehiculos: vehiculosDisponibles,
+            mensaje: null
+        });
+    } catch (error) {
+        console.error('Error al cargar el formulario de reserva:', error);
+        res.status(500).send('Error interno del servidor.');
+    }
+});
+
+router.get('/reservas/listado', requireAuth, async (req, res) => {
+    try {
+        const userId = req.session.usuario.id;
+
+        pool.getConnection((err, connection) => {
+            if (err) {
+                console.error('Error al obtener conexión en listar reservas:', err);
+                return res.status(500).send('Error en el servidor');
+            }
+
+            const sql = `
+                SELECT r.id_reserva AS id, r.fecha_inicio, r.fecha_fin, r.estado,
+                       v.marca, v.modelo, v.matricula
+                FROM Reservas r
+                LEFT JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
+                WHERE r.id_usuario = ?
+                ORDER BY r.fecha_inicio DESC
+            `;
+
+            connection.query(sql, [userId], (err, rows) => {
+                connection.release();
+                if (err) {
+                    console.error('Error en la consulta de reservas:', err);
+                    // En entorno de desarrollo devolvemos el mensaje de error para ayudar al debug
+                    return res.status(500).send('Error en la consulta de reservas: ' + (err.message || JSON.stringify(err)));
+                }
+
+                const misReservas = rows.map(r => {
+                    // formatear fechas a 'YYYY-MM-DD HH:MM'
+                    const inicio = r.fecha_inicio ? new Date(r.fecha_inicio).toISOString().slice(0,16).replace('T',' ') : '';
+                    const fin = r.fecha_fin ? new Date(r.fecha_fin).toISOString().slice(0,16).replace('T',' ') : '';
+                    return {
+                        id: r.id,
+                        vehiculo: `${r.marca || ''} ${r.modelo || ''}`.trim(),
+                        matricula: r.matricula || '',
+                        inicio: inicio,
+                        fin: fin,
+                        estado: r.estado
+                    };
+                });
+
+                res.render('reservas/listareservas', {
+                    title: 'Mis Reservas',
+                    usuario: req.session.usuario,
+                    reservas: misReservas,
+                    mensaje: req.session.mensaje
+                });
+                req.session.mensaje = null;
+            });
+        });
+
+    } catch (error) {
+        console.error('Error al listar reservas:', error);
+        res.status(500).send('Error interno del servidor.');
+    }
+});
+
 
 
 

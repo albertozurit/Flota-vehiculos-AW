@@ -47,7 +47,10 @@ app.use((request, response, next) => {
 
 
 const autRoutes = require ('./routes/authRoutes');
+const reservasRoutes = require('./routes/reservasRoutes');
+
 app.use('/', autRoutes);
+app.use('/reservas', reservasRoutes);
 
 
 //INICIAR EL SERVIDOR

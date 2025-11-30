@@ -79,3 +79,31 @@ body.daltonismo .btn-success:hover {
     background: #990099 !important;
     border-color: #990099 !important;
 }
+
+/* Modal custom styles */
+.modal-content {
+    border: 0;
+}
+.modal-title.fw-bold {
+    font-size: 1.25rem;
+}
+.modal-body {
+    font-size: 0.95rem;
+}
+.modal .form-label {
+    font-weight: 600;
+}
+.modal .bg-light {
+    background-color: #f8f9fa !important;
+}
+.modal .btn-outline-secondary {
+    border-radius: 0.3rem;
+}
+
+/* Small responsive tweaks */
+@media (max-width: 576px) {
+    .modal-dialog {
+        max-width: 95%;
+        margin: 1.75rem auto;
+    }
+}

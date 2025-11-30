@@ -1,68 +1,109 @@
 <%- include('../partials/head') %>
 
-<div class="container mt-5">
-    <h2 class="mb-4">Lista de Vehículos</h2>
+    <div class="container mt-5">
+        <h2 class="mb-4">Lista de Vehículos</h2>
 
-    <% if (mensaje) { %>
-        <div class="alert alert-danger"><%= mensaje %></div>
-    <% } %>
+        <% if (mensaje) { %>
+            <div class="alert alert-danger">
+                <%= mensaje %>
+            </div>
+            <% } %>
 
-    <% if (usuario && usuario.rol === 'admin') { %>
-        <a href="/vehiculos/nuevo" class="btn btn-primary mb-3">➕ Crear Nuevo Vehículo</a>
-    <% } %>
-
-    <% if (vehiculos.length === 0) { %>
-        <div class="alert alert-info">
-            No hay vehículos registrados en la plataforma.
-        </div>
-    <% } else { %>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Marca</th>
-                    <th>Modelo</th>
-                    <th>Tipo</th>
-                    <th>Precio/Hora</th>
-                    <th>Estado</th>
-                    <% if (usuario && usuario.rol === 'admin') { %>
-                        <th>Acciones</th>
+                <% if (usuario && usuario.rol==='admin' ) { %>
+                    <a href="/vehiculos/nuevo" class="btn btn-primary mb-3">➕ Crear Nuevo Vehículo</a>
                     <% } %>
-                </tr>
-            </thead>
-            <tbody>
-                <% vehiculos.forEach(vehiculo => { %>
-                    <tr>
-                        <td><%= vehiculo.id %></td>
-                        <td><%= vehiculo.marca %></td>
-                        <td><%= vehiculo.modelo %></td>
-                        <td><%= vehiculo.tipo %></td>
-                        <td><%= vehiculo.precioHora %>€</td>
-                        <td>
-                            <% if (vehiculo.estado === 'disponible') { %>
-                                <span class="badge bg-success">Disponible</span>
-                            <% } else if (vehiculo.estado === 'reservado') { %>
-                                <span class="badge bg-warning">Reservado</span>
+
+                        <% if (vehiculos.length===0) { %>
+                            <div class="alert alert-info">
+                                No hay vehículos registrados en la plataforma.
+                            </div>
                             <% } else { %>
-                                <span class="badge bg-danger">Mantenimiento</span>
-                            <% } %>
-                        </td>
-                        <% if (usuario && usuario.rol === 'admin') { %>
-                            <td>
-                                <a href="/vehiculos/<%= vehiculo.id %>/editar/" class="btn btn-sm btn-warning"> Editar</a>
-                                <form action="/vehiculos/<%= vehiculo.id %>/eliminar" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Seguro que quieres eliminar este vehículo?')"> Eliminar</button>
-                                </form>
-                            </td>
-                        <% } %>
-                    </tr>
-                <% }); %>
-            </tbody>
-        </table>
-    <% } %>
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Marca</th>
+                                            <th>Modelo</th>
+                                            <th>Matrícula</th>
+                                            <th>Año</th>
+                                            <th>Estado</th>
+                                            <% if (usuario && usuario.rol==='admin' ) { %>
+                                                <th>Acciones</th>
+                                                <% } else { %>
+                                                    <!-- AÑADIMOS LA COLUMNA DE RESERVA PARA USUARIOS NORMALES -->
+                                                    <th>Reserva</th>
+                                                    <% } %>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% vehiculos.forEach(vehiculo=> { %>
+                                            <tr>
+                                                <td>
+                                                    <%= vehiculo.id %>
+                                                </td>
+                                                <td>
+                                                    <%= vehiculo.marca %>
+                                                </td>
+                                                <td>
+                                                    <%= vehiculo.modelo %>
+                                                </td>
+                                                <td>
+                                                    <%= vehiculo.matricula %>
+                                                </td>
+                                                <td>
+                                                    <%= vehiculo.anio_matriculacion || '' %>
+                                                </td>
+                                                <td>
+                                                    <% if (vehiculo.estado==='disponible' ) { %>
+                                                        <span class="badge bg-success">Disponible</span>
+                                                        <% } else if (vehiculo.estado==='reservado' ) { %>
+                                                            <span class="badge bg-warning">Reservado</span>
+                                                            <% } else { %>
+                                                                <span class="badge bg-danger">Mantenimiento</span>
+                                                                <% } %>
+                                                </td>
 
-    <a href="/" class="btn btn-secondary mt-3">⬅️ Volver al inicio</a>
-</div>
+                                                <!-- LÓGICA DE ACCIONES/RESERVA (ESTA SECCIÓN HA SIDO MODIFICADA) -->
+                                                <% if (usuario && usuario.rol==='admin' ) { %>
+                                                    <td>
+                                                        <!-- Acciones de Admin (Editar/Eliminar) -->
+                                                        <a href="/vehiculos/<%= vehiculo.id %>/editar/"
+                                                            class="btn btn-sm btn-warning"> Editar</a>
+                                                        <form action="/vehiculos/<%= vehiculo.id %>/eliminar"
+                                                            method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                                onclick="return confirm('¿Seguro que quieres eliminar este vehículo?')">
+                                                                Eliminar</button>
+                                                        </form>
+                                                    </td>
+                                                    <% } else { %>
+                                                        <td>
+                                                            <!-- BOTÓN DE RESERVA PARA USUARIOS AUTENTICADOS -->
+                                                            <% if (vehiculo.estado==='disponible' ) { %>
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-primary reservar-btn"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#reservarModal"
+                                                                    data-id="<%= vehiculo.id %>">
+                                                                    <i class="fas fa-calendar-alt"></i> Reservar
+                                                                </button>
+                                                                <% } else { %>
+                                                                    <button class="btn btn-sm btn-secondary" disabled>No
+                                                                        disponible</button>
+                                                                    <% } %>
+                                                        </td>
+                                                        <% } %>
+                                            </tr>
+                                            <% }); %>
+                                    </tbody>
+                                </table>
+                                <% } %>
 
-</body>
-</html>
+                                    <a href="/" class="btn btn-secondary mt-3">⬅️ Volver al inicio</a>
+    </div>
+
+    <%- include('../partials/modal_reservar') %>
+
+    </body>
+
+    </html>

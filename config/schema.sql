@@ -1,80 +1,80 @@
--- Crear la base de datos
-CREATE DATABASE IF NOT EXISTS flotawei;
-USE flotawei;
+-- ***************************************************************
+-- 1. CREACIÓN DE TABLAS (Desde la tabla principal hacia las relaciones)
+-- ***************************************************************
 
--- Tabla de concesionarios (debe crearse primero porque otras tablas dependen de ella)
-CREATE TABLE IF NOT EXISTS CONCESIONARIOS (
+-- 1. Tabla Concesionarios
+CREATE TABLE Concesionarios (
     id_concesionario INT AUTO_INCREMENT PRIMARY KEY,
-    activo TINYINT(1) DEFAULT 1,
     nombre VARCHAR(100) NOT NULL,
-    ciudad VARCHAR(255),
+    ciudad VARCHAR(50) NOT NULL,
     direccion VARCHAR(255),
-    telefono VARCHAR(9)
-);
+    telefono_contacto VARCHAR(20)
+) ENGINE=InnoDB;
 
--- Tabla de usuarios
-CREATE TABLE IF NOT EXISTS USERS (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    activo TINYINT(1) DEFAULT 1,
+
+-- 2. Tabla Usuarios
+CREATE TABLE Usuarios (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    rol ENUM('admin', 'empleado') DEFAULT 'empleado',
-    concesionario_id INT,
-    preferencias_accesibilidad JSON,
-    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (concesionario_id) REFERENCES CONCESIONARIOS(id_concesionario) ON DELETE SET NULL
-);
+    correo VARCHAR(100) NOT NULL UNIQUE, -- Restricción: Correo ÚNICO
+    contrasena VARCHAR(255) NOT NULL,
+    rol ENUM('empleado', 'admin') NOT NULL DEFAULT 'empleado',
+    telefono VARCHAR(20),
+    id_concesionario INT NOT NULL,
+    preferencias_accesibilidad TEXT      -- Para JSON o datos largos
+) ENGINE=InnoDB;
 
--- Tabla de vehículos
-CREATE TABLE IF NOT EXISTS VEHICULOS ( 
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    activo TINYINT(1) DEFAULT 1,
-    matricula VARCHAR(20) UNIQUE NOT NULL,
-    marca VARCHAR(100) NOT NULL,
-    modelo VARCHAR(100) NOT NULL,
-    anio_matriculacion INT NOT NULL,
-    color VARCHAR(50),
-    num_plazas INT,
+
+-- 3. Tabla Vehiculos
+CREATE TABLE Vehiculos (
+    id_vehiculo INT AUTO_INCREMENT PRIMARY KEY,
+    matricula VARCHAR(20) NOT NULL UNIQUE, -- Restricción: Matrícula ÚNICA
+    marca VARCHAR(50) NOT NULL,
+    modelo VARCHAR(50) NOT NULL,
+    anio_matriculacion YEAR NOT NULL,
+    numero_plazas INT NOT NULL,
     autonomia_km INT,
-    imagen_url VARCHAR(255),
-    estado ENUM('disponible', 'en_mantenimiento', 'reservado') DEFAULT 'disponible',
-    concesionario_id INT,
-    FOREIGN KEY (concesionario_id) REFERENCES CONCESIONARIOS(id_concesionario) ON DELETE SET NULL
-);
+    color VARCHAR(30),
+    imagen VARCHAR(255),
+    estado ENUM('disponible', 'reservado', 'mantenimiento') NOT NULL DEFAULT 'disponible',
+    id_concesionario INT NOT NULL
+) ENGINE=InnoDB;
 
--- Tabla de reservas
-CREATE TABLE IF NOT EXISTS RESERVAS (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT,
-    vehiculo_id INT,
+
+-- 4. Tabla Reservas
+CREATE TABLE Reservas (
+    id_reserva INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_vehiculo INT NOT NULL,
     fecha_inicio DATETIME NOT NULL,
     fecha_fin DATETIME NOT NULL,
-    estado ENUM('activa', 'finalizada', 'cancelada') DEFAULT 'activa',
-    km_recorridos INT,
-    incidencias_reportadas VARCHAR(500),
-    FOREIGN KEY (usuario_id) REFERENCES USERS(id) ON DELETE CASCADE,
-    FOREIGN KEY (vehiculo_id) REFERENCES VEHICULOS(id) ON DELETE CASCADE
-);
+    estado ENUM('activa', 'finalizada', 'cancelada') NOT NULL DEFAULT 'activa',
+    kilometros_recorridos DECIMAL(10, 2),
+    incidencias_reportadas TEXT
+) ENGINE=InnoDB;
 
--- Tabla de sesiones (para express-mysql-session)
-CREATE TABLE IF NOT EXISTS sessions (
-    session_id VARCHAR(128) COLLATE utf8mb4_bin NOT NULL,
-    expires INT(11) UNSIGNED NOT NULL,
-    data MEDIUMTEXT COLLATE utf8mb4_bin,
-    PRIMARY KEY (session_id)
-);
 
--- Tabla de clientes para que la empresa guarde sus datos cuando hacen una reserva  
-CREATE TABLE IF NOT EXISTS CLIENTES (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    telefono VARCHAR(9),
-    direccion VARCHAR(255)
-);
+-- ***************************************************************
+-- 2. ESTABLECER CLAVES FORÁNEAS (RELACIONES)
+-- ***************************************************************
 
--- Insertar un usuario administrador por defecto (password: admin123)
-INSERT INTO USERS (nombre, email, password, rol) 
-VALUES ('Administrador', 'admin@flota.com', '$2b$10$8DfggNWqCqeoWf7HWvo.V.K0sYDfNEpT8pqRXYhYQTE3fjizArvxe', 'admin')
-ON DUPLICATE KEY UPDATE id=id;
+-- Relaciones para la tabla Usuarios
+ALTER TABLE Usuarios
+    ADD CONSTRAINT FK_Usuarios_Concesionario FOREIGN KEY (id_concesionario)
+    REFERENCES Concesionarios(id_concesionario)
+    ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Relaciones para la tabla Vehiculos
+ALTER TABLE Vehiculos
+    ADD CONSTRAINT FK_Vehiculos_Concesionario FOREIGN KEY (id_concesionario)
+    REFERENCES Concesionarios(id_concesionario)
+    ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Relaciones para la tabla Reservas
+ALTER TABLE Reservas
+    ADD CONSTRAINT FK_Reservas_Usuario FOREIGN KEY (id_usuario)
+    REFERENCES Usuarios(id_usuario)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+    ADD CONSTRAINT FK_Reservas_Vehiculo FOREIGN KEY (id_vehiculo)
+    REFERENCES Vehiculos(id_vehiculo)
+    ON DELETE CASCADE ON UPDATE CASCADE;
