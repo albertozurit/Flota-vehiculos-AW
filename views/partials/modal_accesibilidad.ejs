@@ -1,0 +1,56 @@
+<div class="modal fade" id="modalAccesibilidad" tabindex="-1" aria-labelledby="modalAccesibilidadLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAccesibilidadLabel">Accesibilidad</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      
+      <form action="/accesibilidad/guardar" method="POST" id="formAccesibilidad">
+        <div class="modal-body">
+          
+          <p>Configura las opciones para mejorar la compatibilidad de la aplicación:</p>
+
+          <h6 class="mt-3">Contraste y Paleta de Colores:</h6>
+          
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" role="switch" 
+                   id="switchContraste" name="contraste" value="true"
+                   <% if (typeof preferencias !== 'undefined' && preferencias.contraste) { %> checked <% } %> >
+            <label class="form-check-label" for="switchContraste">Modo Alto Contraste (Fondo Oscuro / Texto Claro)</label>
+          </div>
+
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" role="switch" 
+                   id="switchDaltonismo" name="daltonismo" value="true"
+                   <% if (typeof preferencias !== 'undefined' && preferencias.daltonismo) { %> checked <% } %> >
+            <label class="form-check-label" for="switchDaltonismo">Paleta Adaptada a Daltonismo</label>
+          </div>
+
+          <h6 class="mt-4">Tamaño de Fuente:</h6>
+          <label for="fontSizeRange" class="form-label">Ajuste de Zoom de Fuente:</label>
+          <input type="range" class="form-range" 
+                 min="80" max="120" step="20" 
+                 id="fontSizeRange" name="fontSize" 
+                 value="<%= (typeof preferencias !== 'undefined' && preferencias.fontSize) ? preferencias.fontSize : 100 %>">
+          
+          <div class="d-flex justify-content-between small mt-1">
+            <span>Pequeño (80%)</span>
+            <span>Normal (100%)</span>
+            <span>Grande (120%)</span>
+          </div>
+          
+          <h6 class="mt-4">Atajos de Teclado (Predefinidos):</h6>
+          <p class="small">
+            **Ctrl + I**: Inicio, **Ctrl + V
+            **: Vehículos, **Ctrl + R**: Reservas, **Ctrl + C**: Contacto
+          </p>  
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Guardar Preferencias</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

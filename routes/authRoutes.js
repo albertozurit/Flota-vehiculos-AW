@@ -11,7 +11,7 @@ function requireAuth(request, response, next) {
         next(); //pasa el control a lo siguiente que venga
     } else {
         console.log("Acceso denegado: usuario no registrado");
-        response.redirect('/login'); //revisar si es render o redirect TODO
+        response.redirect('/usuarios/login'); //revisar si es render o redirect TODO
     }
 }
 
@@ -36,7 +36,7 @@ function insertarUsuario(usuario, callback) {
         }
         else {
             let sql = "INSERT INTO USERS (nombre, email, password, rol) VALUES (?,?,?,?)";
-            connection.query(sql, [vehiculo.marca, vehiculo.modelo, vehiculo.tipo, vehiculo.precioHora],
+            connection.query(sql, [usuario.nombre, usuario.email, usuario.password, usuario.rol],
                 (err, results) => {
                     connection.release()
                     if (err) {
@@ -77,7 +77,7 @@ router.post('/register', (request, response) => {
     const rol = 'empleado';
     const saltRounds = 10;
     if (password.length < 8) {
-        return response.render('register', {
+        return response.render('usuarios/register', {
             usuario: null,
             mensaje: "La contraseña debe tener mínimo 8 caracteres"
         });
@@ -86,7 +86,7 @@ router.post('/register', (request, response) => {
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error al obtener conexión:", err);
-            return response.render('register', {
+            return response.render('usuarios/register', {
                 usuario: null,
                 mensaje: "Error en el servidor"
             });
@@ -97,7 +97,7 @@ router.post('/register', (request, response) => {
             if (err) {
                 connection.release();
                 console.error("Error al verificar email:", err);
-                return response.render('register', {
+                return response.render('usuarios/register', {
                     usuario: null,
                     mensaje: "Error en el servidor"
                 });
@@ -105,7 +105,7 @@ router.post('/register', (request, response) => {
 
             if (rows.length > 0) {
                 connection.release();
-                return response.render('register', {
+                return response.render('usuarios/register', {
                     usuario: null,
                     mensaje: "El correo electrónico ya está registrado"
                 });
@@ -116,7 +116,7 @@ router.post('/register', (request, response) => {
                 if (err) {
                     connection.release();
                     console.error("Error al hashear la contraseña", err);
-                    return response.render('register', {
+                    return response.render('usuarios/register', {
                         usuario: null,
                         mensaje: "Error al procesar la contraseña"
                     });
@@ -136,7 +136,7 @@ router.post('/register', (request, response) => {
                         response.redirect('/');
                     } else {
                         console.log("Error al insertar usuario", err);
-                        response.render('register', {
+                        response.render('usuarios/register', {
                             usuario: null,
                             mensaje: "Error al crear el usuario"
                         });
@@ -158,7 +158,7 @@ router.post('/login', (request, response) => {
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error al obtener conexión:", err);
-            return response.render('login', { mensaje: "Error en el servidor" });
+            return response.render('usuarios/login', { mensaje: "Error en el servidor" });
         }
 
         let sql = 'SELECT id, nombre, email, password, rol FROM USERS WHERE email = ?';
@@ -167,12 +167,12 @@ router.post('/login', (request, response) => {
 
             if (err) {
                 console.error("Error en la consulta:", err);
-                return response.render('login', { mensaje: "Error en el servidor" });
+                return response.render('usuarios/login', { mensaje: "Error en el servidor" });
             }
 
             if (rows.length === 0) {
                 console.log("Usuario no encontrado");
-                return response.render('login', { mensaje: "Usuario no encontrado" });
+                return response.render('usuarios/login', { mensaje: "Usuario no encontrado" });
             }
 
             const user = rows[0];
@@ -180,12 +180,12 @@ router.post('/login', (request, response) => {
             bcrypt.compare(password, user.password, (err, passwordOk) => {
                 if (err) {
                     console.error("Error al comparar contraseñas:", err);
-                    return response.render('login', { mensaje: "Error en el servidor" });
+                    return response.render('usuarios/login', { mensaje: "Error en el servidor" });
                 }
 
                 if (!passwordOk) {
                     console.log("Contraseña incorrecta");
-                    return response.render('login', { mensaje: "Contraseña incorrecta" });
+                    return response.render('usuarios/login', { mensaje: "Contraseña incorrecta" });
                 }
 
                 // Si se marca "recordar sesión", extender la duración de la cookie
@@ -206,7 +206,7 @@ router.post('/login', (request, response) => {
                 request.session.save((err) => {
                     if (err) {
                         console.error("Error al guardar sesión:", err);
-                        return response.render('login', { mensaje: "Error en el servidor" });
+                        return response.render('usuarios/login', { mensaje: "Error en el servidor" });
                     }
                     console.log("✅ Login correcto, sesión guardada por:", recordar ? "30 días" : "24 horas");
                     response.redirect('/');
@@ -224,10 +224,26 @@ router.post('/logout', (request, response) => {
             return response.redirect('/');
         }
         response.clearCookie('connect.sid');
-        response.redirect('/login');
+        response.redirect('usuarios/login');
     });
 });
 
+
+
+
+//Accesibilidad
+router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
+    //TODO añadir validaciones si es necesario
+    request.session.preferencias = {
+        contraste: request.body.contraste === 'true',
+        daltonismo: request.body.daltonismo === 'true',
+        fontSize: parseInt(request.body.fontSize) || 100
+    };
+
+    request.session.save(() => {
+        response.redirect(request.get('referer') || '/'); 
+    });
+});
 
 // Crear vehículo (solo admin)
 router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
@@ -393,10 +409,23 @@ router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (request, resp
 
 //RUTAS GET
 router.get('/', function (request, response) {
-    //console.log("📍 Usuario en sesión:", request.session.usuario);
+    // console.log("📍 Usuario en sesión:", request.session.usuario);
     response.status(200);
     response.render('index', {
-        title: "Pagina principal"
+        title: "Pagina principal",
+        usuario: request.session.usuario || null,
+        preferencias: request.session.preferencias || {} 
+    });
+});
+
+//Perfil
+router.get('/perfil', requireAuth, (request, response) => {
+    const usuario = request.session.usuario;
+    response.status(200);
+    response.render('usuarios/perfil', {
+        usuario: usuario,
+        title: "Perfil de usuario",
+        preferencias: request.session.preferencias || {}
     });
 });
 
@@ -404,22 +433,27 @@ router.get('/register', function (request, response) {
     response.status(200);
     response.render('register', {
         usuario: request.session.usuario || null,
-        mensaje: request.session.mensaje || null
+        mensaje: request.session.mensaje || null,
+        preferencias: request.session.preferencias || {}
     });
     request.session.mensaje = null;
 });
 
 router.get('/login', function (request, response) {
     response.status(200);
-    response.render('login');
+    response.render('login', {
+        mensaje: request.session.mensaje || null,
+        preferencias: request.session.preferencias || {}
+    });
+    request.session.mensaje = null;
 });
-
 
 // Formulario para crear vehículo (solo admin)
 router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
     response.status(200);
     response.render('vehiculos/nuevo', {
-        mensaje: null
+        mensaje: null,
+        preferencias: request.session.preferencias || {}
     });
 });
 
@@ -449,7 +483,8 @@ router.get('/vehiculos', requireAuth, (request, response) => {
             console.log(`📋 ${rows.length} vehículos encontrados`);
             response.render('vehiculos/lista', {
                 vehiculos: rows,
-                mensaje: null
+                mensaje: null,
+                preferencias: request.session.preferencias || {}
             });
         });
     });
@@ -482,7 +517,8 @@ router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, respons
             }
             response.render('vehiculos/editar', {
                 mensaje: null,
-                vehiculo: rows[0]
+                vehiculo: rows[0],
+                preferencias: request.session.preferencias || {}
             });
         })
     })

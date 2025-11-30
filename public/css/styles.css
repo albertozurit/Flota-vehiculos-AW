@@ -1,0 +1,81 @@
+body {
+    background-color: white;
+    color: #333;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+
+/* ---MODO ALTO CONTRASTE---*/
+body.alto-contraste {
+    background-color: black !important;
+    color: yellow !important;
+}
+
+/* Elementos principales y contenedores */
+body.alto-contraste .card,
+body.alto-contraste .modal-content,
+body.alto-contraste .alert,
+body.alto-contraste header,
+body.alto-contraste footer,
+body.alto-contraste nav {
+    background-color: #333 !important;
+    color: yellow !important;
+    border: 2px solid yellow !important;
+}
+
+/* Enlaces y botones (asegurando el contraste interactivo) */
+body.alto-contraste a,
+body.alto-contraste .btn {
+    color: yellow !important;
+    background-color: black !important;
+    border: 1px solid yellow !important;
+}
+
+body.alto-contraste a:hover,
+body.alto-contraste .btn:hover {
+    background-color: #555 !important;
+    color: white !important;
+}
+
+/* Formularios y campos de entrada */
+body.alto-contraste input:not([type="checkbox"]):not([type="radio"]),
+body.alto-contraste textarea,
+body.alto-contraste select {
+    background-color: #000 !important;
+    color: white !important;
+    border: 1px solid yellow !important;
+}
+
+/*MODELO PARA DALTONICOS*/
+
+/* Estado Normal del Botón Danger (Rojo -> Azul) */
+body.daltonismo .btn-danger {
+    background: #007BFF !important; 
+    border-color: #007BFF !important;
+    color: white !important; 
+}
+
+
+body.daltonismo .btn-danger:hover,
+body.daltonismo .btn-danger:focus,
+body.daltonismo .btn-danger:active {
+    background: #0056b3 !important;
+    border-color: #0056b3 !important;
+    color: white !important;
+}
+
+
+body.daltonismo .btn-danger:focus {
+    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.5) !important;
+}
+
+body.daltonismo .btn-success {
+    background: #cc00cc !important;
+    border-color: #cc00cc !important;
+    color: white !important;
+}
+body.daltonismo .btn-success:hover {
+    background: #990099 !important;
+    border-color: #990099 !important;
+}
