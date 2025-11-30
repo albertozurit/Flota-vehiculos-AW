@@ -1,0 +1,51 @@
+<!--Visualización general de usuarios registrados (opcional, listado
+simple sin edición-->
+<%- include('../partials/head',  { title: "Lista de Usuarios" }) %>
+    <div class="container mt-5">
+        <h2 class="mb-4">Lista de Usuarios</h2>
+
+        <% if (mensaje) { %>
+            <div class="alert alert-danger">
+                <%= mensaje %>
+            </div>
+            <% } %>
+
+                        <% if (usuarios.length===0) { %>
+                            <div class="alert alert-info">
+                                No hay usuarios registrados en la plataforma.
+                            </div>
+                            <% } else { %>
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Nombre</th>
+                                            <th>Email</th>
+                                            <th>Rol</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% usuarios.forEach(usuario=> { %>
+                                            <tr>
+                                                <td>
+                                                    <%= usuario.id_usuario %>
+                                                </td>
+                                                <td>
+                                                    <%= usuario.nombre %>
+                                                </td>
+                                                <td>
+                                                    <%= usuario.correo %>
+                                                </td>
+                                                <td>
+                                                    <%= usuario.rol %>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    </tbody>
+                                </table>
+                            <% } %>
+    </div>
+    <div class="text-center mt-3">
+        <a href="/admin" class="btn btn-secondary">Volver al Panel de Administración</a>
+    </div>
+</body> 

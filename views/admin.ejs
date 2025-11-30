@@ -1,0 +1,172 @@
+
+<!--TODO PROVISIONAL-->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Panel de administrador</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;max-width:1000px;margin:20px auto;padding:0 16px;color:#111}
+        header{display:flex;justify-content:space-between;align-items:center}
+        section{margin-top:20px;padding:16px;border:1px solid #eee;border-radius:8px;background:#fafafa}
+        form{display:flex;gap:8px;flex-wrap:wrap}
+        input,select{padding:8px;border:1px solid #ccc;border-radius:4px}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+        button{padding:6px 10px;border:0;background:#0366d6;color:#fff;border-radius:6px;cursor:pointer}
+        .danger{background:#d73a49}
+        .muted{color:#666;font-size:0.9em}
+        .row{display:flex;gap:8px;align-items:center}
+        .small{font-size:0.9em;padding:4px 8px}
+    </style>
+</head>
+<body>
+    <% if (!usuario || usuario.role !== 'admin') { %>
+        <script>console.log('No admin access');</script>
+        <header>
+            <h1>Acceso denegado</h1>
+        </header>
+        <section>
+            <p>No tienes permisos para ver este panel. Se requiere rol <strong>admin</strong>.</p>
+        </section>
+    <% } else { %>
+    <header>
+        <h1>Panel de administrador</h1>
+        <div class="muted">Conectado como: <strong><%= usuario.name || usuario.email %></strong> — rol: <strong><%= usuario.role %></strong></div>
+    </header>
+
+    <% if (messages) { %>
+        <section><p class="muted"><%= messages %></p></section>
+    <% } %>
+
+    <!-- Gestión de concesionarios -->
+    <section id="dealers">
+        <h2>Concesionarios</h2>
+
+        <form action="/admin/dealers" method="POST" style="align-items:center">
+            <input name="name" placeholder="Nombre" required />
+            <input name="location" placeholder="Localidad" />
+            <input name="contact" placeholder="Contacto (tel/email)" />
+            <button type="submit">Añadir concesionario</button>
+        </form>
+
+        <table aria-label="Listado de concesionarios">
+            <thead>
+                <tr><th>Nombre</th><th>Localidad</th><th>Contacto</th><th></th></tr>
+            </thead>
+            <tbody>
+                <% (dealerships || []).forEach(function(d){ %>
+                    <tr>
+                        <td><%= d.name %></td>
+                        <td class="muted"><%= d.location || '-' %></td>
+                        <td class="muted"><%= d.contact || '-' %></td>
+                        <td style="text-align:right">
+                            <form action="/admin/dealers/<%= d._id || d.id %>?_method=DELETE" method="POST" style="display:inline">
+                                <button class="danger small" type="submit" onclick="return confirm('Eliminar concesionario?')">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Gestión de vehículos -->
+    <section id="vehicles">
+        <h2>Vehículos</h2>
+
+        <form id="vehicleForm" action="/admin/vehicles" method="POST">
+            <input type="hidden" name="_id" id="v_id" />
+            <input type="hidden" name="_method" id="v_method" value="POST" />
+            <input name="make" id="v_make" placeholder="Marca" required />
+            <input name="model" id="v_model" placeholder="Modelo" required />
+            <input name="year" id="v_year" placeholder="Año" type="number" min="1900" max="2100" style="width:110px" />
+            <input name="plate" id="v_plate" placeholder="Matrícula" />
+            <select name="dealerId" id="v_dealer">
+                <option value="">-- Concesionario --</option>
+                <% (dealerships || []).forEach(function(d){ %>
+                    <option value="<%= d._id || d.id %>"><%= d.name %></option>
+                <% }) %>
+            </select>
+            <div class="row">
+                <button type="submit" id="v_submit">Crear vehículo</button>
+                <button type="button" id="v_cancel" class="small" style="display:none">Cancelar edición</button>
+            </div>
+        </form>
+
+        <table aria-label="Listado de vehículos">
+            <thead>
+                <tr><th>Marca</th><th>Modelo</th><th>Año</th><th>Matrícula</th><th>Concesionario</th><th></th></tr>
+            </thead>
+            <tbody>
+                <% (vehicles || []).forEach(function(v){ %>
+                    <tr data-id="<%= v._id || v.id %>">
+                        <td><%= v.make %></td>
+                        <td><%= v.model %></td>
+                        <td class="muted"><%= v.year || '-' %></td>
+                        <td class="muted"><%= v.plate || '-' %></td>
+                        <td class="muted"><%= (v.dealer && v.dealer.name) || '-' %></td>
+                        <td style="text-align:right">
+                            <button type="button" class="small" onclick='editVehicle(<%- JSON.stringify(v) %>)'>Editar</button>
+                            <form action="/admin/vehicles/<%= v._id || v.id %>?_method=DELETE" method="POST" style="display:inline">
+                                <button class="danger small" type="submit" onclick="return confirm('Eliminar vehículo?')">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Usuarios registrados (solo listado) -->
+    <section id="usuarios">
+        <h2>Usuarios registrados</h2>
+        <table>
+            <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th></tr></thead>
+            <tbody>
+                <% (usuarios  || []).forEach(function(u){ %>
+                    <tr>
+                        <td><%= u.name || '-' %></td>
+                        <td><%= u.email %></td>
+                        <td class="muted"><%= u.role %></td>
+                    </tr>
+                <% }) %>
+            </tbody>
+        </table>
+    </section>
+
+    <script>
+        // Rellenar formulario para editar vehículo
+        function editVehicle(v){
+            document.getElementById('v_id').value = v._id || v.id || '';
+            document.getElementById('v_make').value = v.make || '';
+            document.getElementById('v_model').value = v.model || '';
+            document.getElementById('v_year').value = v.year || '';
+            document.getElementById('v_plate').value = v.plate || '';
+            document.getElementById('v_dealer').value = (v.dealer && (v.dealer._id||v.dealer.id)) || v.dealerId || '';
+            // switch form to PUT (assumes method-override on server)
+            document.getElementById('vehicleForm').action = '/admin/vehicles/' + (v._id || v.id || '');
+            document.getElementById('v_method').value = 'PUT';
+            document.getElementById('v_submit').textContent = 'Guardar cambios';
+            document.getElementById('v_cancel').style.display = 'inline-block';
+            window.scrollTo({top: document.getElementById('vehicles').offsetTop - 20, behavior:'smooth'});
+        }
+
+        document.getElementById('v_cancel').addEventListener('click', function(){
+            document.getElementById('v_id').value = '';
+            document.getElementById('v_make').value = '';
+            document.getElementById('v_model').value = '';
+            document.getElementById('v_year').value = '';
+            document.getElementById('v_plate').value = '';
+            document.getElementById('v_dealer').value = '';
+            document.getElementById('vehicleForm').action = '/admin/vehicles';
+            document.getElementById('v_method').value = 'POST';
+            document.getElementById('v_submit').textContent = 'Crear vehículo';
+            this.style.display = 'none';
+        });
+    </script>
+
+    <% } %>
+</body>
+</html>

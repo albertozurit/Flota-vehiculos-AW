@@ -228,7 +228,7 @@ router.post('/login', (request, response) => {
                         console.error("Error al guardar sesión:", err);
                         return response.render('usuarios/login', { mensaje: "Error en el servidor" });
                     }
-                    console.log("✅ Login correcto, sesión guardada por:", recordar ? "30 días" : "24 horas");
+                    console.log("Login correcto, sesión guardada por:", recordar ? "30 días" : "24 horas");
                     response.redirect('/');
                 });
             });
@@ -361,7 +361,7 @@ router.post('/reservas/guardar', requireAuth, async (req, res) => {
             if (err) {
                 console.error('Error al obtener conexión para guardar reserva:', err);
                 req.session.mensaje = 'Error en el servidor al guardar la reserva';
-                return res.redirect('/reservas/listado');
+                return res.redirect('/reservas');
             }
 
             // Usamos transacción para insertar reserva y actualizar estado del vehículo
@@ -370,7 +370,7 @@ router.post('/reservas/guardar', requireAuth, async (req, res) => {
                     console.error('Error iniciando transacción:', transactionErr);
                     connection.release();
                     req.session.mensaje = 'Error en el servidor al guardar la reserva';
-                    return res.redirect('/reservas/listado');
+                    return res.redirect('/reservas');
                 }
 
                 const insertSql = `INSERT INTO Reservas (id_usuario, id_vehiculo, fecha_inicio, fecha_fin, estado) VALUES (?,?,?,?,?)`;
@@ -382,7 +382,7 @@ router.post('/reservas/guardar', requireAuth, async (req, res) => {
                         return connection.rollback(() => {
                             connection.release();
                             req.session.mensaje = 'Error al guardar la reserva';
-                            return res.redirect('/reservas/listado');
+                            return res.redirect('/reservas');
                         });
                     }
 
@@ -394,7 +394,7 @@ router.post('/reservas/guardar', requireAuth, async (req, res) => {
                             return connection.rollback(() => {
                                 connection.release();
                                 req.session.mensaje = 'Error al guardar la reserva';
-                                return res.redirect('/reservas/listado');
+                                return res.redirect('/reservas');
                             });
                         }
 
@@ -404,14 +404,14 @@ router.post('/reservas/guardar', requireAuth, async (req, res) => {
                                 return connection.rollback(() => {
                                     connection.release();
                                     req.session.mensaje = 'Error al guardar la reserva';
-                                    return res.redirect('/reservas/listado');
+                                    return res.redirect('/reservas');
                                 });
                             }
 
                             connection.release();
                             console.log(`Reserva creada para el vehículo ${vehiculoId} de ${inicio} a ${fin} (id_reserva=${insertRes.insertId})`);
                             req.session.mensaje = '¡Reserva realizada con éxito!';
-                            return res.redirect('/reservas/listado');
+                            return res.redirect('/reservas');
                         });
                     });
                 });
@@ -563,7 +563,7 @@ router.get('/vehiculos', requireAuth, (request, response) => {
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error al obtener conexión:", err);
-            return response.render('vehiculos/lista', {
+            return response.render('vehiculos/lista_vehiculos', {
                 vehiculos: [],
                 mensaje: "Error en el servidor",
                 preferencias: request.session.preferencias || {}
@@ -576,7 +576,7 @@ router.get('/vehiculos', requireAuth, (request, response) => {
 
             if (err) {
                 console.error("Error en la consulta:", err);
-                return response.render('vehiculos/lista', {
+                return response.render('vehiculos/lista_vehiculos', {
                     vehiculos: [],
                     mensaje: "Error en el servidor",
                     preferencias: request.session.preferencias || {}
@@ -584,7 +584,7 @@ router.get('/vehiculos', requireAuth, (request, response) => {
             }
 
             console.log(`📋 ${rows.length} vehículos encontrados`);
-            response.render('vehiculos/lista', {
+            response.render('vehiculos/lista_vehiculos', {
                 title: "Lista de Vehículos",
                 vehiculos: rows,
                 mensaje: null,
@@ -653,7 +653,7 @@ router.get('/reservas/nuevo', requireAuth, async (req, res) => {
     }
 });
 
-router.get('/reservas/listado', requireAuth, async (req, res) => {
+router.get('/reservas', requireAuth, async (req, res) => {
     try {
         const userId = req.session.usuario.id;
 
@@ -694,7 +694,7 @@ router.get('/reservas/listado', requireAuth, async (req, res) => {
                     };
                 });
 
-                res.render('reservas/listareservas', {
+                res.render('reservas/lista_reservas', {
                     title: 'Mis Reservas',
                     usuario: req.session.usuario,
                     reservas: misReservas,

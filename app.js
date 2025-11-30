@@ -46,11 +46,13 @@ app.use((request, response, next) => {
 })
 
 
-const autRoutes = require ('./routes/authRoutes');
+const authRoutes = require ('./routes/authRoutes');
 const reservasRoutes = require('./routes/reservasRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
-app.use('/', autRoutes);
+app.use('/', authRoutes);
 app.use('/reservas', reservasRoutes);
+app.use('/admin', adminRoutes);
 
 
 //INICIAR EL SERVIDOR

@@ -9,8 +9,8 @@
             </div>
             <% } %>
 
-                <% if (usuario && usuario.rol==='admin' ) { %>
-                    <a href="/vehiculos/nuevo" class="btn btn-primary mb-3">➕ Crear Nuevo Vehículo</a>
+                    <% if (usuario && usuario.rol==='admin' ) { %>
+                    <a href="/admin/vehiculos/nuevo" class="btn btn-primary mb-3">➕ Crear Nuevo Vehículo</a>
                     <% } %>
 
                         <% if (vehiculos.length===0) { %>
@@ -67,7 +67,7 @@
                                                 <% if (usuario && usuario.rol==='admin' ) { %>
                                                     <td>
                                                         <!-- Acciones de Admin (Editar/Eliminar) -->
-                                                        <a href="/vehiculos/<%= vehiculo.id %>/editar/"
+                                                        <a href="/admin/vehiculos/<%= vehiculo.id %>/editar/"
                                                             class="btn btn-sm btn-warning"> Editar</a>
                                                         <form action="/vehiculos/<%= vehiculo.id %>/eliminar"
                                                             method="POST" style="display:inline;">
