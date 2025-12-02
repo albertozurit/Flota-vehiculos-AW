@@ -13,20 +13,22 @@ document.addEventListener('DOMContentLoaded', function () {
     $.ajax({
       url: '/reservas/nuevo/' + encodeURIComponent(vehiculoId), //Ajusta la URL según tu ruta
       method: 'GET', //Usamos GET para obtener el formulario
-      headers: { 'X-Requested-With': 'XMLHttpRequest' } //indica que es una petición AJAX
-    }).done(function(html){ //Si la petición es exitosa
-      content.innerHTML = html; //Insertamos el HTML recibido en el modal
-    }).fail(function(jqXHR){
-      if (jqXHR.status === 401) { //errores
-        window.location.href = '/login';
-        return;
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }, //indica que es una petición AJAX
+      success: function(html){ //Si la petición es exitosa
+        content.innerHTML = html; //Insertamos el HTML recibido en el modal
+      },
+      error: function(jqXHR){ //Manejo de errores
+        if (jqXHR.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+        if (jqXHR.status === 404) {
+          content.innerHTML = '<div class="text-danger p-3">Vehículo no encontrado</div>';
+          return;
+        }
+        var text = jqXHR.responseText || 'Error del servidor';
+        content.innerHTML = '<div class="text-danger p-3">' + text + '</div>';
       }
-      if (jqXHR.status === 404) {
-        content.innerHTML = '<div class="text-danger p-3">Vehículo no encontrado</div>';
-        return;
-      }
-      var text = jqXHR.responseText || 'Error del servidor';
-      content.innerHTML = '<div class="text-danger p-3">' + text + '</div>';
     });
   });
 });

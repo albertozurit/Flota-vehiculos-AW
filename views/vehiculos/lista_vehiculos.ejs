@@ -134,13 +134,15 @@
             $.ajax({
               url: '/vehiculos?' + params.toString(),
               method: 'GET',
-              headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            }).done(function(html){
-              const tmp = document.createElement('div');
-              tmp.innerHTML = html;
-              const newTabla = tmp.querySelector('#vehiculosTabla');
-              if (newTabla) tabla.innerHTML = newTabla.innerHTML;
-            }).fail(function(){ /* opcional: mostrar error */ });
+              headers: { 'X-Requested-With': 'XMLHttpRequest' },
+              success: function(html){
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                const newTabla = tmp.querySelector('#vehiculosTabla');
+                if (newTabla) tabla.innerHTML = newTabla.innerHTML;
+              },
+              error: function(){ /* opcional: mostrar error */ }
+            });
         });
         limpiar.addEventListener('click', function(){
             form.reset();
