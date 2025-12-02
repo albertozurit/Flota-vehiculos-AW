@@ -131,14 +131,16 @@
         form.addEventListener('submit', function(e){
             e.preventDefault();
             const params = new URLSearchParams(new FormData(form));
-            fetch('/vehiculos?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
-              .then(r => r.text())
-              .then(html => {
-                const tmp = document.createElement('div');
-                tmp.innerHTML = html;
-                const newTabla = tmp.querySelector('#vehiculosTabla');
-                if (newTabla) tabla.innerHTML = newTabla.innerHTML;
-              }).catch(()=>{});
+            $.ajax({
+              url: '/vehiculos?' + params.toString(),
+              method: 'GET',
+              headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function(html){
+              const tmp = document.createElement('div');
+              tmp.innerHTML = html;
+              const newTabla = tmp.querySelector('#vehiculosTabla');
+              if (newTabla) tabla.innerHTML = newTabla.innerHTML;
+            }).fail(function(){ /* opcional: mostrar error */ });
         });
         limpiar.addEventListener('click', function(){
             form.reset();

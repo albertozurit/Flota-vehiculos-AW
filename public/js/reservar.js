@@ -3,42 +3,30 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!reservarModal) return;
 
   reservarModal.addEventListener('show.bs.modal', function (event) {
-    var button = event.relatedTarget; // Button that triggered the modal
+    var button = event.relatedTarget;
     var vehiculoId = button.getAttribute('data-id');
     var content = reservarModal.querySelector('#reservarModalContent');
     if (!content) return;
 
     content.innerHTML = '<div class="text-center p-3">Cargando...</div>';
-
-    fetch('/reservas/nuevo/' + encodeURIComponent(vehiculoId), {
-      credentials: 'same-origin', // incluir cookie de sesión
-      headers: {
-        'X-Requested-With': 'XMLHttpRequest'
+//Esto es una petición AJAX usando jQuery
+    $.ajax({
+      url: '/reservas/nuevo/' + encodeURIComponent(vehiculoId), //Ajusta la URL según tu ruta
+      method: 'GET', //Usamos GET para obtener el formulario
+      headers: { 'X-Requested-With': 'XMLHttpRequest' } //indica que es una petición AJAX
+    }).done(function(html){ //Si la petición es exitosa
+      content.innerHTML = html; //Insertamos el HTML recibido en el modal
+    }).fail(function(jqXHR){
+      if (jqXHR.status === 401) { //errores
+        window.location.href = '/login';
+        return;
       }
-    })
-      .then(function (resp) {
-        // Obtener el texto de la respuesta (útil para mensajes de error del servidor)
-        return resp.text().then(function (text) {
-          if (resp.status === 401) {
-            window.location.href = '/login';
-            throw new Error('No autorizado');
-          }
-          if (resp.status === 404) {
-            throw new Error(text || 'Vehículo no encontrado');
-          }
-          if (!resp.ok) {
-            throw new Error(text || 'Error del servidor');
-          }
-          return text; // HTML válido
-        });
-      })
-      .then(function (html) {
-        content.innerHTML = html;
-      })
-      .catch(function (err) {
-        console.error('Error cargando formulario de reserva:', err);
-        var message = err.message || 'Error al cargar el formulario. Inténtalo de nuevo.';
-        content.innerHTML = '<div class="text-danger p-3">' + message + '</div>';
-      });
+      if (jqXHR.status === 404) {
+        content.innerHTML = '<div class="text-danger p-3">Vehículo no encontrado</div>';
+        return;
+      }
+      var text = jqXHR.responseText || 'Error del servidor';
+      content.innerHTML = '<div class="text-danger p-3">' + text + '</div>';
+    });
   });
 });
