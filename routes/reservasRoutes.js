@@ -13,6 +13,9 @@ router.get('/nuevo/:id', (req, res) => {
         console.log('Acceso no autorizado a /reservas/nuevo/:id (AJAX)');
         return res.status(401).send('No autorizado');
     }
+    if (req.session.usuario.rol !== 'empleado') {
+        return res.status(403).send('No permitido');
+    }
 
     console.log(`Petición AJAX /reservas/nuevo/${vehiculoId} por usuario=${req.session.usuario && req.session.usuario.id}`);
 

@@ -1,0 +1,26 @@
+<main class="container py-3">
+  <h1 class="h3">Nuevo concesionario</h1>
+  <% if (mensaje) { %><div class="alert alert-warning"><%= mensaje %></div><% } %>
+  <form method="POST" action="/admin/concesionarios/nuevo" class="row g-3">
+    <div class="col-md-6">
+      <label class="form-label">Nombre</label>
+      <input name="nombre" class="form-control" required>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Ciudad</label>
+      <input name="ciudad" class="form-control">
+    </div>
+    <div class="col-12">
+      <label class="form-label">Dirección</label>
+      <input name="direccion" class="form-control">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label">Teléfono</label>
+      <input name="telefono_contacto" class="form-control">
+    </div>
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Guardar</button>
+      <a class="btn btn-secondary" href="/admin/concesionarios">Cancelar</a>
+    </div>
+  </form>
+</main>

@@ -10,16 +10,57 @@
             <%- include('partials/header', { usuario: usuario }) %>
                 <%- include('partials/modal_accesibilidad', { preferencias: preferencias || {} }) %>
 
-                    <main class="container mt-4">
-                        <h2>Contenido Principal de la Flota de Vehículos</h2>
-                        <p>¡Bienvenido al sistema de gestión de vehículos eléctricos!</p>
+                    <main class="container mt-5 pt-3">
+                        <section class="p-5 mb-4 bg-light rounded-3 shadow-sm">
+                          <div class="container py-3">
+                            <h1 class="display-6 fw-bold">Gestión de Flota WeiZhu</h1>
+                            <p class="col-lg-8 fs-6">Reserva, gestiona y analiza el estado de los vehículos de la flota. Navega con accesibilidad mejorada y sin recargar la página gracias a AJAX.</p>
+                            <div class="d-flex gap-2">
+                              <% if (usuario) { %>
+                                <% if (usuario.rol==='admin') { %>
+                                  <a class="btn btn-primary" href="/admin">Ir al panel de administración</a>
+                                <% } else { %>
+                                  <a class="btn btn-primary" href="/vehiculos">Ver vehículos disponibles</a>
+                                  <a class="btn btn-outline-secondary" href="/reservas">Mis reservas</a>
+                                <% } %>
+                              <% } else { %>
+                                <a class="btn btn-primary" href="/login">Iniciar sesión</a>
+                                <a class="btn btn-outline-secondary" href="/register">Crear cuenta</a>
+                              <% } %>
+                            </div>
+                          </div>
+                        </section>
+
+                        <section class="row g-3 mb-4">
+                          <div class="col-md-4">
+                            <div class="card h-100 shadow-sm">
+                              <div class="card-body">
+                                <h5 class="card-title">Reservas inteligentes</h5>
+                                <p class="card-text">Disponibilidad dinámica por rango de fechas y filtros por autonomía, plazas y color.</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="card h-100 shadow-sm">
+                              <div class="card-body">
+                                <h5 class="card-title">Accesibilidad</h5>
+                                <p class="card-text">Contraste, tamaño de letra y paletas adaptadas guardadas en tu sesión.</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="card h-100 shadow-sm">
+                              <div class="card-body">
+                                <h5 class="card-title">Panel de administración</h5>
+                                <p class="card-text">Alta, baja y edición de vehículos, concesionarios y usuarios con estadísticas básicas.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </section>
 
                         <% if (usuario && usuario.rol==='admin' ) { %>
-                            <div class="alert alert-warning">
-                                Modo Administrador Activo. Tienes acceso a rutas restringidas.
-                            </div>
-                            <% } %>
-
+                          <div class="alert alert-warning">Modo Administrador activo.</div>
+                        <% } %>
                     </main>
 
 

@@ -1,172 +1,384 @@
-
-<!--TODO PROVISIONAL-->
 <!doctype html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="utf-8" />
     <title>Panel de administrador</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <style>
-        body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;max-width:1000px;margin:20px auto;padding:0 16px;color:#111}
-        header{display:flex;justify-content:space-between;align-items:center}
-        section{margin-top:20px;padding:16px;border:1px solid #eee;border-radius:8px;background:#fafafa}
-        form{display:flex;gap:8px;flex-wrap:wrap}
-        input,select{padding:8px;border:1px solid #ccc;border-radius:4px}
-        table{width:100%;border-collapse:collapse;margin-top:12px}
-        th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
-        button{padding:6px 10px;border:0;background:#0366d6;color:#fff;border-radius:6px;cursor:pointer}
-        .danger{background:#d73a49}
-        .muted{color:#666;font-size:0.9em}
-        .row{display:flex;gap:8px;align-items:center}
-        .small{font-size:0.9em;padding:4px 8px}
-    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css" id="theme-link">
 </head>
-<body>
-    <% if (!usuario || usuario.role !== 'admin') { %>
-        <script>console.log('No admin access');</script>
-        <header>
-            <h1>Acceso denegado</h1>
-        </header>
-        <section>
-            <p>No tienes permisos para ver este panel. Se requiere rol <strong>admin</strong>.</p>
-        </section>
-    <% } else { %>
-    <header>
-        <h1>Panel de administrador</h1>
-        <div class="muted">Conectado como: <strong><%= usuario.name || usuario.email %></strong> — rol: <strong><%= usuario.role %></strong></div>
-    </header>
 
-    <% if (messages) { %>
-        <section><p class="muted"><%= messages %></p></section>
-    <% } %>
+<body class="bg-light">
+    <%- include('partials/header', { usuario: usuario }) %>
+    <% if (!usuario || usuario.rol !=='admin' ) { %>
+        <div class="container py-4">
+            <div class="alert alert-danger">No tienes permisos para ver este panel. Se requiere rol
+                <strong>admin</strong>.</div>
+        </div>
+        <% } else { %>
+            <main class="container py-4">
+                <header class="d-flex justify-content-between align-items-center mb-3">
+                    <h1 class="h3 mb-0">Panel de administrador</h1>
+                    <div class="text-muted">Conectado: <strong>
+                            <%= usuario.nombre || usuario.email %>
+                        </strong> • Rol: <strong>
+                            <%= usuario.rol %>
+                        </strong></div>
+                </header>
 
-    <!-- Gestión de concesionarios -->
-    <section id="dealers">
-        <h2>Concesionarios</h2>
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="history.back()">⟵ Volver</button>
+                </div>
 
-        <form action="/admin/dealers" method="POST" style="align-items:center">
-            <input name="name" placeholder="Nombre" required />
-            <input name="location" placeholder="Localidad" />
-            <input name="contact" placeholder="Contacto (tel/email)" />
-            <button type="submit">Añadir concesionario</button>
-        </form>
+                <section class="card mb-4">
+                    <div class="card-header">Estadísticas</div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="p-3 bg-white border rounded">Vehículos: <strong>
+                                        <%= (stats && stats.vehiculos) || 0 %>
+                                    </strong></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-white border rounded">Concesionarios: <strong>
+                                        <%= (stats && stats.concesionarios) || 0 %>
+                                    </strong></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-white border rounded">Usuarios: <strong>
+                                        <%= (stats && stats.usuarios) || 0 %>
+                                    </strong></div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="p-3 bg-white border rounded">Reservas: <strong>
+                                        <%= (stats && stats.reservas) || 0 %>
+                                    </strong></div>
+                            </div>
+                        </div>
+                        <p class="text-muted mt-3">Indicadores futuros: uso de flota, kms, incidencias.</p>
+                    </div>
+                </section>
 
-        <table aria-label="Listado de concesionarios">
-            <thead>
-                <tr><th>Nombre</th><th>Localidad</th><th>Contacto</th><th></th></tr>
-            </thead>
-            <tbody>
-                <% (dealerships || []).forEach(function(d){ %>
-                    <tr>
-                        <td><%= d.name %></td>
-                        <td class="muted"><%= d.location || '-' %></td>
-                        <td class="muted"><%= d.contact || '-' %></td>
-                        <td style="text-align:right">
-                            <form action="/admin/dealers/<%= d._id || d.id %>?_method=DELETE" method="POST" style="display:inline">
-                                <button class="danger small" type="submit" onclick="return confirm('Eliminar concesionario?')">Eliminar</button>
-                            </form>
-                        </td>
-                    </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </section>
+                <section class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Gestión de vehículos</span>
+                        <a href="/admin/vehiculos/nuevo" class="btn btn-sm btn-primary">➕ Alta vehículo</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Matrícula</th>
+                                        <th>Marca</th>
+                                        <th>Modelo</th>
+                                        <th>Plazas</th>
+                                        <th>Autonomía</th>
+                                        <th>Estado</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% ((typeof vehiculos !=='undefined' && Array.isArray(vehiculos)) ? vehiculos :
+                                        []).forEach(v=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= v.matricula %>
+                                            </td>
+                                            <td>
+                                                <%= v.marca %>
+                                            </td>
+                                            <td>
+                                                <%= v.modelo %>
+                                            </td>
+                                            <td>
+                                                <%= v.numero_plazas || '' %>
+                                            </td>
+                                            <td>
+                                                <%= v.autonomia_km || '' %>
+                                            </td>
+                                            <td><span
+                                                    class="badge bg-<%= v.estado==='disponible'?'success':(v.estado==='reservado'?'warning':'secondary') %>">
+                                                    <%= v.estado %>
+                                                </span></td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                                    data-bs-toggle="modal" data-bs-target="#modalEditarVehiculo"
+                                                    data-id="<%= v.id %>"
+                                                    data-matricula="<%= v.matricula || '' %>"
+                                                    data-marca="<%= v.marca || '' %>"
+                                                    data-modelo="<%= v.modelo || '' %>"
+                                                    data-anio="<%= v.anio_matriculacion || '' %>"
+                                                    data-plazas="<%= v.numero_plazas || '' %>"
+                                                    data-autonomia="<%= v.autonomia_km || '' %>"
+                                                    data-color="<%= v.color || '' %>">Editar</button>
+                                                <form action="/admin/vehiculos/<%= v.id %>/eliminar" method="POST"
+                                                    class="d-inline"
+                                                    onsubmit="return confirm('¿Eliminar/baja lógica?')">
+                                                    <button class="btn btn-sm btn-outline-danger">Baja</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% if (typeof vehiculos==='undefined' || vehiculos.length===0) { %>
+                                                <tr>
+                                                    <td colspan="7" class="text-center text-muted">Sin vehículos</td>
+                                                </tr>
+                                                <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
 
-    <!-- Gestión de vehículos -->
-    <section id="vehicles">
-        <h2>Vehículos</h2>
+                <section class="card mb-4">
+                    <div class="card-header">Gestión de concesionarios</div>
+                    <div class="card-body">
+                        <form action="/admin/concesionarios/nuevo" method="POST" class="row g-2 mb-3">
+                            <div class="col-md-4"><input class="form-control" name="nombre" placeholder="Nombre"
+                                    required></div>
+                            <div class="col-md-3"><input class="form-control" name="ciudad" placeholder="Ciudad"></div>
+                            <div class="col-md-3"><input class="form-control" name="direccion" placeholder="Dirección">
+                            </div>
+                            <div class="col-md-2"><input class="form-control" name="telefono_contacto"
+                                    placeholder="Teléfono"></div>
+                            <div class="col-12"><button class="btn btn-success btn-sm">Crear concesionario</button>
+                            </div>
+                        </form>
 
-        <form id="vehicleForm" action="/admin/vehicles" method="POST">
-            <input type="hidden" name="_id" id="v_id" />
-            <input type="hidden" name="_method" id="v_method" value="POST" />
-            <input name="make" id="v_make" placeholder="Marca" required />
-            <input name="model" id="v_model" placeholder="Modelo" required />
-            <input name="year" id="v_year" placeholder="Año" type="number" min="1900" max="2100" style="width:110px" />
-            <input name="plate" id="v_plate" placeholder="Matrícula" />
-            <select name="dealerId" id="v_dealer">
-                <option value="">-- Concesionario --</option>
-                <% (dealerships || []).forEach(function(d){ %>
-                    <option value="<%= d._id || d.id %>"><%= d.name %></option>
-                <% }) %>
-            </select>
-            <div class="row">
-                <button type="submit" id="v_submit">Crear vehículo</button>
-                <button type="button" id="v_cancel" class="small" style="display:none">Cancelar edición</button>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Ciudad</th>
+                                        <th>Dirección</th>
+                                        <th>Teléfono</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% ((typeof concesionarios !=='undefined' && Array.isArray(concesionarios)) ?
+                                        concesionarios : []).forEach(c=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= c.nombre %>
+                                            </td>
+                                            <td>
+                                                <%= c.ciudad || '' %>
+                                            </td>
+                                            <td>
+                                                <%= c.direccion || '' %>
+                                            </td>
+                                            <td>
+                                                <%= c.telefono_contacto || '' %>
+                                            </td>
+                                            <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                                    data-bs-toggle="modal" data-bs-target="#modalEditarConcesionario"
+                                                    data-id="<%= c.id_concesionario || c.id %>"
+                                                    data-nombre="<%= c.nombre || '' %>"
+                                                    data-ciudad="<%= c.ciudad || '' %>"
+                                                    data-direccion="<%= c.direccion || '' %>"
+                                                    data-telefono="<%= c.telefono_contacto || '' %>">Editar</button>
+                                                <form
+                                                    action="/admin/concesionarios/<%= c.id_concesionario || c.id %>/eliminar"
+                                                    method="POST" class="d-inline"
+                                                    onsubmit="return confirm('¿Eliminar concesionario?')">
+                                                    <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% if (typeof concesionarios==='undefined' || concesionarios.length===0) { %>
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">Sin concesionarios
+                                                    </td>
+                                                </tr>
+                                                <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card mb-4">
+                    <div class="card-header">Gestión de usuarios</div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Email</th>
+                                        <th>Rol</th>
+                                        <th>Concesionario</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% ((typeof usuarios !=='undefined' && Array.isArray(usuarios)) ? usuarios :
+                                        []).forEach(u=> { %>
+                                        <tr>
+                                            <td>
+                                                <%= u.nombre || '-' %>
+                                            </td>
+                                            <td>
+                                                <%= u.correo || u.email %>
+                                            </td>
+                                            <td>
+                                                <%= u.rol %>
+                                            </td>
+                                            <td>
+                                                <%= u.id_concesionario || '' %>
+                                            </td>
+                                            <td class="text-end">
+                                                <form action="/admin/usuarios/<%= u.id_usuario || u.id %>/rol"
+                                                    method="POST" class="d-inline">
+                                                    <select name="rol" class="form-select form-select-sm d-inline"
+                                                        style="width:auto">
+                                                        <option value="empleado" <%=u.rol==='empleado' ?'selected':'' %>
+                                                            >Empleado</option>
+                                                        <option value="admin" <%=u.rol==='admin' ?'selected':'' %>>Admin
+                                                        </option>
+                                                    </select>
+                                                    <button class="btn btn-sm btn-primary">Actualizar rol</button>
+                                                </form>
+                                                <form action="/admin/usuarios/<%= u.id_usuario || u.id %>/base"
+                                                    method="POST" class="d-inline ms-1">
+                                                    <input class="form-control form-control-sm d-inline"
+                                                        style="width:120px" name="id_concesionario"
+                                                        placeholder="ID concesionario" value="<%= u.id_concesionario || '' 
+   %>">
+                                                    <button class="btn btn-sm btn-secondary">Asignar base</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% if (typeof usuarios==='undefined' || usuarios.length===0) { %>
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">Sin usuarios</td>
+                                                </tr>
+                                                <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+            <% } %>
+
+            <!-- Modal Editar Concesionario -->
+            <div class="modal fade" id="modalEditarConcesionario" tabindex="-1" aria-labelledby="modalEditarConcesionarioLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <form method="POST" class="modal-content" id="formEditarConcesionario">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarConcesionarioLabel">Editar concesionario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="mb-2">
+                      <label class="form-label">Nombre</label>
+                      <input class="form-control" name="nombre" required>
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label">Ciudad</label>
+                      <input class="form-control" name="ciudad">
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label">Dirección</label>
+                      <input class="form-control" name="direccion">
+                    </div>
+                    <div class="mb-2">
+                      <label class="form-label">Teléfono</label>
+                      <input class="form-control" name="telefono_contacto">
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary">Guardar cambios</button>
+                  </div>
+                </form>
+              </div>
             </div>
-        </form>
 
-        <table aria-label="Listado de vehículos">
-            <thead>
-                <tr><th>Marca</th><th>Modelo</th><th>Año</th><th>Matrícula</th><th>Concesionario</th><th></th></tr>
-            </thead>
-            <tbody>
-                <% (vehicles || []).forEach(function(v){ %>
-                    <tr data-id="<%= v._id || v.id %>">
-                        <td><%= v.make %></td>
-                        <td><%= v.model %></td>
-                        <td class="muted"><%= v.year || '-' %></td>
-                        <td class="muted"><%= v.plate || '-' %></td>
-                        <td class="muted"><%= (v.dealer && v.dealer.name) || '-' %></td>
-                        <td style="text-align:right">
-                            <button type="button" class="small" onclick='editVehicle(<%- JSON.stringify(v) %>)'>Editar</button>
-                            <form action="/admin/vehicles/<%= v._id || v.id %>?_method=DELETE" method="POST" style="display:inline">
-                                <button class="danger small" type="submit" onclick="return confirm('Eliminar vehículo?')">Eliminar</button>
-                            </form>
-                        </td>
-                    </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </section>
+<!-- Modal Editar Vehículo -->
+<div class="modal fade" id="modalEditarVehiculo" tabindex="-1" aria-labelledby="modalEditarVehiculoLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" class="modal-content" id="formEditarVehiculo">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEditarVehiculoLabel">Editar vehículo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label">Matrícula</label>
+            <input class="form-control" name="matricula" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Marca</label>
+            <input class="form-control" name="marca" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Modelo</label>
+            <input class="form-control" name="modelo" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Año</label>
+            <input class="form-control" name="anio_matriculacion" type="number">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Plazas</label>
+            <input class="form-control" name="numero_plazas" type="number">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Autonomía (km)</label>
+            <input class="form-control" name="autonomia_km" type="number">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Color</label>
+            <input class="form-control" name="color">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-    <!-- Usuarios registrados (solo listado) -->
-    <section id="usuarios">
-        <h2>Usuarios registrados</h2>
-        <table>
-            <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th></tr></thead>
-            <tbody>
-                <% (usuarios  || []).forEach(function(u){ %>
-                    <tr>
-                        <td><%= u.name || '-' %></td>
-                        <td><%= u.email %></td>
-                        <td class="muted"><%= u.role %></td>
-                    </tr>
-                <% }) %>
-            </tbody>
-        </table>
-    </section>
-
-    <script>
-        // Rellenar formulario para editar vehículo
-        function editVehicle(v){
-            document.getElementById('v_id').value = v._id || v.id || '';
-            document.getElementById('v_make').value = v.make || '';
-            document.getElementById('v_model').value = v.model || '';
-            document.getElementById('v_year').value = v.year || '';
-            document.getElementById('v_plate').value = v.plate || '';
-            document.getElementById('v_dealer').value = (v.dealer && (v.dealer._id||v.dealer.id)) || v.dealerId || '';
-            // switch form to PUT (assumes method-override on server)
-            document.getElementById('vehicleForm').action = '/admin/vehicles/' + (v._id || v.id || '');
-            document.getElementById('v_method').value = 'PUT';
-            document.getElementById('v_submit').textContent = 'Guardar cambios';
-            document.getElementById('v_cancel').style.display = 'inline-block';
-            window.scrollTo({top: document.getElementById('vehicles').offsetTop - 20, behavior:'smooth'});
-        }
-
-        document.getElementById('v_cancel').addEventListener('click', function(){
-            document.getElementById('v_id').value = '';
-            document.getElementById('v_make').value = '';
-            document.getElementById('v_model').value = '';
-            document.getElementById('v_year').value = '';
-            document.getElementById('v_plate').value = '';
-            document.getElementById('v_dealer').value = '';
-            document.getElementById('vehicleForm').action = '/admin/vehicles';
-            document.getElementById('v_method').value = 'POST';
-            document.getElementById('v_submit').textContent = 'Crear vehículo';
-            this.style.display = 'none';
-        });
-    </script>
-
-    <% } %>
+<%- include('partials/modal_accesibilidad', { preferencias: preferencias || {} }) %>
+<!-- Bootstrap JS (necesario para abrir modales) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Script de accesibilidad para aplicar preferencias -->
+<script src="/js/accesibilidad.js"></script>
 </body>
+
+<script>
+  (function(){
+    const modalCon = document.getElementById('modalEditarConcesionario');
+    if (!modalCon) return;
+    modalCon.addEventListener('show.bs.modal', (e) => {
+      const btn = e.relatedTarget;
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const nombre = btn.getAttribute('data-nombre') || '';
+      const ciudad = btn.getAttribute('data-ciudad') || '';
+      const direccion = btn.getAttribute('data-direccion') || '';
+      const telefono = btn.getAttribute('data-telefono') || '';
+      const form = document.getElementById('formEditarConcesionario');
+      if (!form) return;
+      form.action = `/admin/concesionarios/${id}/editar`;
+      form.nombre.value = nombre;
+      form.ciudad.value = ciudad;
+      form.direccion.value = direccion;
+      form.telefono_contacto.value = telefono;
+    });
+  })();
+</script>
 </html>

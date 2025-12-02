@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Obtener el texto de la respuesta (útil para mensajes de error del servidor)
         return resp.text().then(function (text) {
           if (resp.status === 401) {
-            window.location.href = '/usuarios/login';
+            window.location.href = '/login';
             throw new Error('No autorizado');
           }
           if (resp.status === 404) {

@@ -11,7 +11,7 @@ function requireAuth(request, response, next) {
         next(); //pasa el control a lo siguiente que venga
     } else {
         console.log("Acceso denegado: usuario no registrado");
-        response.redirect('/usuarios/login'); //revisar si es render o redirect TODO
+        response.redirect('/login'); // redirige a login correcto
     }
 }
 
@@ -83,11 +83,24 @@ router.post('/register', (request, response) => {
     const { nombre, email, password } = request.body;
     const rol = 'empleado';
     const saltRounds = 10;
-    if (password.length < 8) {
+
+    // Validación de correo corporativo (cambia el dominio según tu organización)
+    const CORPORATE_DOMAIN = process.env.CORP_DOMAIN || 'empresa.com';
+    const emailOk = typeof email === 'string' && email.trim().toLowerCase().endsWith(`@${CORPORATE_DOMAIN}`);
+    if (!emailOk) {
         return response.render('usuarios/register', {
             title: 'Registro de usuario',
             usuario: null,
-            mensaje: "La contraseña debe tener mínimo 8 caracteres",
+            mensaje: `El correo debe ser corporativo (@${CORPORATE_DOMAIN})`,
+            preferencias: request.session.preferencias || {}
+        });
+    }
+
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+        return response.render('usuarios/register', {
+            title: 'Registro de usuario',
+            usuario: null,
+            mensaje: "La contraseña debe tener mínimo 8 caracteres, 1 mayúscula y 1 número",
             preferencias: request.session.preferencias || {}
         });
     }
@@ -103,8 +116,8 @@ router.post('/register', (request, response) => {
             });
         }
 
-    let sqlCheck = 'SELECT correo FROM Usuarios WHERE correo = ?';
-    connection.query(sqlCheck, [email], (err, rows) => {
+        let sqlCheck = 'SELECT correo FROM Usuarios WHERE correo = ?';
+        connection.query(sqlCheck, [email], (err, rows) => {
             if (err) {
                 connection.release();
                 console.error("Error al verificar email:", err);
@@ -125,7 +138,6 @@ router.post('/register', (request, response) => {
                     preferencias: request.session.preferencias || {}
                 });
             }
-
 
             bcrypt.hash(password, saltRounds, (err, hashedPassword) => {
                 if (err) {
@@ -175,14 +187,21 @@ router.post('/register', (request, response) => {
 router.post('/login', (request, response) => {
     const { email, password, recordar } = request.body;
 
+    // Validar correo corporativo también en login para mayor seguridad
+    const CORPORATE_DOMAIN = process.env.CORP_DOMAIN || 'empresa.com';
+    const emailOk = typeof email === 'string' && email.trim().toLowerCase().endsWith(`@${CORPORATE_DOMAIN}`);
+    if (!emailOk) {
+        return response.render('usuarios/login', { mensaje: `El correo debe ser corporativo (@${CORPORATE_DOMAIN})` });
+    }
+
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error al obtener conexión:", err);
             return response.render('usuarios/login', { mensaje: "Error en el servidor" });
         }
 
-    let sql = 'SELECT id_usuario AS id, nombre, correo AS email, contrasena AS password, rol FROM Usuarios WHERE correo = ?';
-    connection.query(sql, [email], (err, rows) => {
+        let sql = 'SELECT id_usuario AS id, nombre, correo AS email, contrasena AS password, rol, id_concesionario FROM Usuarios WHERE correo = ?';
+        connection.query(sql, [email], (err, rows) => {
             connection.release();
 
             if (err) {
@@ -220,7 +239,8 @@ router.post('/login', (request, response) => {
                     id: user.id,
                     nombre: user.nombre,
                     email: user.email,
-                    rol: user.rol
+                    rol: user.rol,
+                    id_concesionario: user.id_concesionario || null
                 };
 
                 request.session.save((err) => {
@@ -244,7 +264,7 @@ router.post('/logout', (request, response) => {
             return response.redirect('/');
         }
         response.clearCookie('connect.sid');
-        response.redirect('usuarios/login');
+        response.redirect('/login');
     });
 });
 
@@ -558,8 +578,94 @@ router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =>
     });
 });
 
-// Listar vehículos solo autenticados
+// Listar vehículos con filtros y exclusión por rango de reservas
 router.get('/vehiculos', requireAuth, (request, response) => {
+    const { autonomia_min, plazas, color, inicio, fin, ciudad } = request.query;
+    const usuario = request.session && request.session.usuario;
+    const baseId = usuario && usuario.id_concesionario ? parseInt(usuario.id_concesionario) : null;
+
+    // Debe estar asignado a un concesionario para ver vehículos
+    if (!baseId) {
+        return response.render('vehiculos/lista_vehiculos', {
+            title: "Vehículos disponibles",
+            vehiculos: [],
+            filtros: { autonomia_min, plazas, color, inicio, fin, ciudad },
+            mensaje: "No tienes un concesionario base asignado. Consulta con un administrador.",
+            preferencias: request.session.preferencias || {}
+        });
+    }
+
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error("Error al obtener conexión:", err);
+            return response.render('vehiculos/lista_vehiculos', {
+                title: "Vehículos disponibles",
+                vehiculos: [],
+                filtros: { autonomia_min, plazas, color, inicio, fin, ciudad },
+                mensaje: "Error en el servidor",
+                preferencias: request.session.preferencias || {}
+            });
+        }
+
+        // Construir filtros dinámicos (siempre restringidos a la base del usuario)
+        const where = ['v.id_concesionario = ?'];
+        const params = [baseId];
+        if (autonomia_min) { where.push('v.autonomia_km >= ?'); params.push(parseInt(autonomia_min)); }
+        if (plazas) { where.push('v.numero_plazas >= ?'); params.push(parseInt(plazas)); }
+        if (color) { where.push('LOWER(v.color) = LOWER(?)'); params.push(color); }
+        let joinSql = '';
+        if (ciudad) { joinSql = ' JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario'; where.push('LOWER(c.ciudad) = LOWER(?)'); params.push(ciudad); }
+
+        // Excluir vehículos reservados en el rango [inicio, fin] si ambos están presentes
+        let excludeSql = '';
+        if (inicio && fin) {
+            excludeSql = ` AND NOT EXISTS (
+                SELECT 1 FROM Reservas r
+                WHERE r.id_vehiculo = v.id_vehiculo
+                  AND r.estado = 'activa'
+                  AND NOT (r.fecha_fin <= ? OR r.fecha_inicio >= ?)
+            )`;
+        }
+
+        const baseSql = `SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.estado
+                         FROM Vehiculos v${joinSql}`;
+        const whereSql = where.length ? ` WHERE ${where.join(' AND ')}` : '';
+        const finalSql = baseSql + whereSql + (inicio && fin ? excludeSql : '') + ' ORDER BY v.id_vehiculo DESC';
+        const finalParams = params.concat(inicio && fin ? [inicio, fin] : []);
+
+        connection.query(finalSql, finalParams, (err, rows) => {
+            connection.release();
+            if (err) {
+                console.error("Error en la consulta:", err);
+                return response.render('vehiculos/lista_vehiculos', {
+                    title: "Vehículos disponibles",
+                    vehiculos: [],
+                    filtros: { autonomia_min, plazas, color, inicio, fin, ciudad },
+                    mensaje: "Error en el servidor",
+                    preferencias: request.session.preferencias || {}
+                });
+            }
+
+            const renderData = {
+                title: "Vehículos disponibles",
+                vehiculos: rows,
+                filtros: { autonomia_min, plazas, color, inicio, fin, ciudad },
+                mensaje: null,
+                preferencias: request.session.preferencias || {}
+            };
+
+            // Si es AJAX, devolver solo el fragmento de tabla para eficiencia
+            if (request.get('X-Requested-With') === 'XMLHttpRequest') {
+                return response.render('vehiculos/lista_vehiculos', renderData);
+            }
+            return response.render('vehiculos/lista_vehiculos', renderData);
+        });
+    });
+});
+
+// Panel empleado: Vehículos de mi base (filtrados por concesionario asignado)
+router.get('/mi-base/vehiculos', requireAuth, (request, response) => {
+    const usuario = request.session.usuario;
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error al obtener conexión:", err);
@@ -569,11 +675,9 @@ router.get('/vehiculos', requireAuth, (request, response) => {
                 preferencias: request.session.preferencias || {}
             });
         }
-
-    let sql = `SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos`;
-    connection.query(sql, (err, rows) => {
+        const sql = `SELECT id_vehiculo AS id, matricula, marca, modelo, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_concesionario = ?`;
+        connection.query(sql, [usuario.id_concesionario || 1], (err, rows) => {
             connection.release();
-
             if (err) {
                 console.error("Error en la consulta:", err);
                 return response.render('vehiculos/lista_vehiculos', {
@@ -582,10 +686,8 @@ router.get('/vehiculos', requireAuth, (request, response) => {
                     preferencias: request.session.preferencias || {}
                 });
             }
-
-            console.log(`📋 ${rows.length} vehículos encontrados`);
             response.render('vehiculos/lista_vehiculos', {
-                title: "Lista de Vehículos",
+                title: "Vehículos de mi base",
                 vehiculos: rows,
                 mensaje: null,
                 preferencias: request.session.preferencias || {}
@@ -632,6 +734,9 @@ router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, respons
 
 
 router.get('/reservas/nuevo', requireAuth, async (req, res) => {
+    if (!req.session || !req.session.usuario || req.session.usuario.rol !== 'empleado') {
+        return res.redirect('/');
+    }
     try {
         // **PASO 1:** Obtener la lista de vehículos disponibles desde la BD.
         // Ejemplo ficticio de datos:
@@ -698,7 +803,7 @@ router.get('/reservas', requireAuth, async (req, res) => {
                     title: 'Mis Reservas',
                     usuario: req.session.usuario,
                     reservas: misReservas,
-                    mensaje: req.session.mensaje
+                    mensaje: null
                 });
                 req.session.mensaje = null;
             });

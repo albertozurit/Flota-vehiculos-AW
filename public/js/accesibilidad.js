@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
+    const root = document.documentElement;
     
     // Controles del Modal
     const contrasteSwitch = document.getElementById('switchContraste');
@@ -30,10 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Cargar Tamaño de Fuente
         const savedSize = sessionStorage.getItem('fontSize');
         if (savedSize) {
-            body.style.fontSize = savedSize + '%';
+            root.style.fontSize = savedSize + '%';
             if (fontSizeRange) fontSizeRange.value = savedSize;
         } else if (fontSizeRange) {
-             body.style.fontSize = '100%'; // Valor por defecto
+             root.style.fontSize = '100%'; // Valor por defecto
              fontSizeRange.value = 100;
         }
     };
@@ -85,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (fontSizeRange) {
         fontSizeRange.addEventListener('input', () => {
             const newSize = fontSizeRange.value;
-            body.style.fontSize = newSize + '%';
+            root.style.fontSize = newSize + '%';
             sessionStorage.setItem('fontSize', newSize); // Guardado temporal
         });
     }

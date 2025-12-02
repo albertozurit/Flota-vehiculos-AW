@@ -1,5 +1,6 @@
 <%- include('../partials/head',  { title: "Iniciar Sesión" }) %> 
 <!--TODO REVISAR POR QUÉ NO RECIBE EL TITLE CORRECTAMENTE-->
+<%- include('../partials/header', { usuario: usuario }) %>
 
 <div class="container mt-5">
     <div class="row justify-content-center">
@@ -37,4 +38,5 @@
 </div>
 
 </body>
+<%- include('../partials/modal_accesibilidad', { preferencias: preferencias || {} }) %>
 </html>
