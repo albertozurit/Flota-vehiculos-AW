@@ -654,7 +654,7 @@ router.get('/vehiculos', requireAuth, (request, response) => {
                 preferencias: request.session.preferencias || {}
             };
 
-            // Si es AJAX, devolver solo el fragmento de tabla para eficiencia
+            // Si es AJAX, devolver la vista completa y el cliente extrae la tabla
             if (request.get('X-Requested-With') === 'XMLHttpRequest') {
                 return response.render('vehiculos/lista_vehiculos', renderData);
             }
