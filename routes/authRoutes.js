@@ -37,7 +37,7 @@ function insertarUsuario(usuario, callback) {
         else {
             // Nuevo esquema: tabla `Usuarios` (correo, contrasena). Usamos id_concesionario=1 por defecto.
             let sql = "INSERT INTO Usuarios (nombre, correo, contrasena, rol, id_concesionario) VALUES (?,?,?,?,?)";
-            connection.query(sql, [usuario.nombre, usuario.email, usuario.password, usuario.rol, 1],
+            connection.query(sql, [usuario.nombre, usuario.email, usuario.password, usuario.rol, usuario.id_concesionario || 1],
                 (err, results) => {
                     connection.release();
                     if (err) {
@@ -79,8 +79,8 @@ function insertarVehiculo(vehiculo, callback) {
 }
 
 //RUTAS POST
-router.post('/register', (request, response) => {
-    const { nombre, email, password } = request.body;
+router.post('/register', requireAuth, requireAdmin, (request, response) => {
+    const { nombre, email, password, id_concesionario } = request.body;
     const rol = 'empleado';
     const saltRounds = 10;
 
@@ -155,15 +155,15 @@ router.post('/register', (request, response) => {
                     nombre: nombre,
                     email: email,
                     password: hashedPassword,
-                    rol: rol
+                    rol: rol,
+                    id_concesionario: parseInt(id_concesionario) || 1
                 };
 
                 insertarUsuario(usuario, (err, newUserId) => {
                     connection.release();
                     if (!err) {
-                        usuario.id = newUserId;
-                        request.session.usuario = usuario;
-                        response.redirect('/');
+                        request.session.mensaje = 'Usuario creado correctamente';
+                        return response.redirect('/admin');
                     } else {
                         console.log("Error al insertar usuario", err);
                         return response.render('usuarios/register', {
@@ -531,8 +531,10 @@ router.get('/', function (request, response) {
     response.render('index', {
         title: "Pagina principal",
         usuario: request.session.usuario || null,
+        mensaje: request.session.mensaje || null,
         preferencias: request.session.preferencias || {} 
     });
+    request.session.mensaje = null;
 });
 
 //Perfil
@@ -546,15 +548,32 @@ router.get('/perfil', requireAuth, (request, response) => {
     });
 });
 
-router.get('/register', function (request, response) {
-    response.status(200);
-    response.render('usuarios/register', {
-        title: "Registro de usuario",
-        usuario: request.session.usuario || null,
-        mensaje: request.session.mensaje || null,
-        preferencias: request.session.preferencias || {}
+router.get('/register', requireAuth, requireAdmin, (request, response) => {
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error al obtener conexión para cargar concesionarios:', err);
+            response.status(200);
+            return response.render('usuarios/register', {
+                title: "Registro de usuario",
+                usuario: request.session.usuario || null,
+                mensaje: request.session.mensaje || null,
+                preferencias: request.session.preferencias || {},
+                concesionarios: []
+            });
+        }
+        connection.query('SELECT id_concesionario AS id, nombre FROM Concesionarios ORDER BY nombre', (e, rows) => {
+            connection.release();
+            response.status(200);
+            response.render('usuarios/register', {
+                title: "Registro de usuario",
+                usuario: request.session.usuario || null,
+                mensaje: request.session.mensaje || null,
+                preferencias: request.session.preferencias || {},
+                concesionarios: e ? [] : (rows || [])
+            });
+            request.session.mensaje = null;
+        });
     });
-    request.session.mensaje = null;
 });
 
 router.get('/login', function (request, response) {

@@ -11,6 +11,9 @@
                 <%- include('partials/modal_accesibilidad', { preferencias: preferencias || {} }) %>
 
                     <main class="container mt-5 pt-3">
+                        <% if (typeof mensaje !== 'undefined' && mensaje) { %>
+                          <div class="alert alert-info"><%= mensaje %></div>
+                        <% } %>
                         <section class="p-5 mb-4 bg-light rounded-3 shadow-sm">
                           <div class="container py-3">
                             <h1 class="display-6 fw-bold">Gestión de Flota WeiZhu</h1>
@@ -25,7 +28,7 @@
                                 <% } %>
                               <% } else { %>
                                 <a class="btn btn-primary" href="/login">Iniciar sesión</a>
-                                <a class="btn btn-outline-secondary" href="/register">Crear cuenta</a>
+
                               <% } %>
                             </div>
                           </div>

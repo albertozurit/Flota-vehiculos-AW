@@ -14,6 +14,7 @@
                 <div class="alert alert-warning"><%= mensaje %></div>
             <% } %>
 
+            <% const listaConcesionarios = (typeof concesionarios !== 'undefined' && Array.isArray(concesionarios)) ? concesionarios : []; %>
             <form action="/register" method="POST">
                 
                 <div class="mb-3">
@@ -23,13 +24,31 @@
 
                 <div class="mb-3">
                     <label for="email" class="form-label">Correo Corporativo</label>
-                    <input type="email" class="form-control" id="email" name="email" placeholder="ejemplo@empresa.com" required>
+                    <input type="email" class="form-control" id="email" name="email" placeholder="ejemplo@flotawei.com" required>
                 </div>
 
                 <div class="mb-3">
                     <label for="password" class="form-label">Contraseña</label>
                     <input type="password" class="form-control" id="password" name="password" minlength="8" required>
-                    <div class="form-text">Mínimo 8 caracteres (requisito de Lab 7).</div>
+                    <div class="form-text">Mínimo 8 caracteres, 1 mayúscula y 1 número.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_concesionario" class="form-label">Concesionario</label>
+                    <select id="id_concesionario" name="id_concesionario" class="form-select" required>
+                        <option value="">Seleccione...</option>
+                        <% listaConcesionarios.forEach(function(c){ %>
+                            <option value="<%= c.id %>"><%= c.nombre %></option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="rol" class="form-label">Rol</label>
+                    <select id="rol" name="rol" class="form-select">
+                        <option value="empleado" selected>Empleado</option>
+                        <option value="admin">Administrador</option>
+                    </select>
                 </div>
 
                 <button type="submit" class="btn btn-primary">Registrar</button>

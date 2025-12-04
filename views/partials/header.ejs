@@ -33,6 +33,12 @@
                         <img src="/images/universal-access-circle.svg" alt="Accesibilidad" width="20" height="20">
                     </button>
 
+                    <!-- Carga inicial (siempre visible) -->
+                    <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="modal"
+                        data-bs-target="#modalCargaJSON" aria-label="Cargar datos iniciales">
+                        Cargar datos
+                    </button>
+
                     <% if (usuario) { %>
                         <!-- Perfil (icono abre modal) -->
                         <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="modal"
@@ -57,6 +63,26 @@
 
     <!-- Modal Accesibilidad (siempre disponible) -->
     <%- include('modal_accesibilidad', { preferencias: (typeof preferencias !=='undefined' ? preferencias : {}) }) %>
+
+    <!-- Modal Carga JSON (siempre disponible) -->
+    <div class="modal fade" id="modalCargaJSON" tabindex="-1" aria-labelledby="modalCargaJSONLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="POST" action="/admin/carga-json">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCargaJSONLabel">Carga inicial desde JSON</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Se leerá el archivo <code>bd_vacia.json</code> de la raíz del proyecto.</p>
+                    <p class="text-warning mb-0">Asegúrate de que la base de datos está vacía.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Cargar datos</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
         <!-- Modal Perfil (solo tras login) -->
         <% if (usuario) { %>

@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/config');
 const { requireAuth, requireAdmin } = require('../middlewares/auth');
+const fs = require('fs');
+const path = require('path');
+const bcrypt = require('bcrypt');
 
 // Helper: insertarVehiculo (mismo comportamiento que antes, ahora en admin)
 function insertarVehiculo(vehiculo, callback) {
@@ -290,38 +293,86 @@ router.post('/concesionarios/:id/eliminar', requireAuth, requireAdmin, (req, res
 });
 
 // Carga inicial desde JSON cuando BD está vacía
-router.get('/carga-json', requireAuth, requireAdmin, (req, res) => {
-    return res.redirect('/admin');
+router.get('/carga-json', (req, res) => {
+    res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: null, preferencias: req.session.preferencias || {} });
 });
 
-router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
+router.post('/carga-json', (req, res) => {
     let datos;
-    try { datos = JSON.parse(req.body.json || '{}'); } catch (e) {
-        return res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'JSON inválido', preferencias: req.session.preferencias || {} });
+    try {
+        const filePath = path.join(__dirname, '..', 'bd_vacia.json');
+        const raw = fs.readFileSync(filePath, 'utf8');
+        datos = JSON.parse(raw || '{}');
+    } catch (e) {
+        req.session.mensaje = 'Error leyendo bd_vacia.json';
+        return res.redirect('/');
     }
     pool.getConnection((err, connection) => {
-        if (err) return res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error de conexión', preferencias: req.session.preferencias || {} });
-        connection.query('SELECT COUNT(*) AS c FROM Vehiculos; SELECT COUNT(*) AS c FROM Concesionarios', (err, results) => {
-            if (err) { connection.release(); return res.render('admin/concesionarios/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error comprobando BD', preferencias: req.session.preferencias || {} }); }
-            const vehCount = results[0][0].c; const conCount = results[1][0].c;
-            if (vehCount > 0 || conCount > 0) { connection.release(); return res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'La BD no está vacía', preferencias: req.session.preferencias || {} }); }
+        if (err) { req.session.mensaje = 'Error de conexión'; return res.redirect('/'); }
+        const countSql = 'SELECT (SELECT COUNT(*) FROM Vehiculos) AS vehiculos, (SELECT COUNT(*) FROM Concesionarios) AS concesionarios';
+        connection.query(countSql, (err, rows) => {
+            if (err) { connection.release(); req.session.mensaje = 'Error comprobando BD'; return res.redirect('/'); }
+            const row0 = (rows && rows[0]) || {};
+            const vehCount = row0.vehiculos || 0; const conCount = row0.concesionarios || 0;
+            if (vehCount > 0 || conCount > 0) { connection.release(); req.session.mensaje = 'La BD no está vacía'; return res.redirect('/'); }
             connection.beginTransaction(txErr => {
-                if (txErr) { connection.release(); return res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error iniciando transacción', preferencias: req.session.preferencias || {} }); }
+                if (txErr) { connection.release(); req.session.mensaje = 'Error iniciando transacción'; return res.redirect('/'); }
                 const concesionarios = Array.isArray(datos.concesionarios) ? datos.concesionarios : [];
-                const vehiculos = Array.isArray(datos.vehiculos) ? datos.vehiculos : [];
+                const vehiculosJson = Array.isArray(datos.vehiculos) ? datos.vehiculos : [];
+                const usuariosJson = Array.isArray(datos.usuarios) ? datos.usuarios : [];
+
                 const insertarCon = concesionarios.map(c => [c.nombre || null, c.ciudad || null, c.direccion || null, c.telefono_contacto || null]);
-                const insertarVeh = vehiculos.map(v => [v.matricula || null, v.marca || null, v.modelo || null, v.anio_matriculacion || null, v.numero_plazas || null, v.autonomia_km || null, v.color || null, v.imagen || null, v.estado || 'disponible', v.id_concesionario || 1]);
-                const doCon = insertarCon.length ? new Promise((resolve,reject)=>connection.query('INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?',[insertarCon], (e)=> e?reject(e):resolve())) : Promise.resolve();
-                const doVeh = insertarVeh.length ? new Promise((resolve,reject)=>connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (e)=> e?reject(e):resolve())) : Promise.resolve();
-                Promise.all([doCon, doVeh]).then(()=>{
+
+                const doCon = insertarCon.length ? new Promise((resolve,reject)=>connection.query('INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?',[insertarCon], (e, result)=> e?reject(e):resolve(result))) : Promise.resolve(null);
+
+                doCon
+                  .then((result)=>{
+                    // Map JSON id_concesionario (1..N) to actual inserted IDs starting at result.insertId
+                    const baseId = result && result.insertId ? result.insertId : null;
+                    const consCount = insertarCon.length;
+                    const mapId = (k)=>{
+                      if (!baseId) return null;
+                      const idx = (parseInt(k)||1) - 1; // JSON uses 1-based index
+                      return baseId + Math.max(0, Math.min(idx, Math.max(0, consCount-1)));
+                    };
+
+                    const insertarVeh = vehiculosJson.map(v => [
+                      v.matricula || null,
+                      v.marca || null,
+                      v.modelo || null,
+                      v.anio_matriculacion || null,
+                      v.numero_plazas || null,
+                      v.autonomia_km || null,
+                      v.color || null,
+                      v.imagen || null,
+                      v.estado || 'disponible',
+                      mapId(v.id_concesionario || 1)
+                    ]);
+
+                    const insertarUsr = usuariosJson.map(u => [
+                      u.nombre || null,
+                      u.correo || null,
+                      bcrypt.hashSync(u.contrasena || 'Admin1234', 10),
+                      (u.rol === 'admin' ? 'admin' : 'empleado'),
+                      mapId(u.id_concesionario || 1)
+                    ]);
+
+                    const doVeh = insertarVeh.length ? new Promise((resolve,reject)=>connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (e)=> e?reject(e):resolve())) : Promise.resolve();
+                    const doUsr = insertarUsr.length ? new Promise((resolve,reject)=>connection.query('INSERT INTO Usuarios (nombre, correo, contrasena, rol, id_concesionario) VALUES ?', [insertarUsr], (e)=> e?reject(e):resolve())) : Promise.resolve();
+
+                    return doVeh.then(()=> doUsr);
+                  })
+                  .then(()=>{
                     connection.commit(cErr=>{
                         connection.release();
-                        if (cErr) return res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error confirmando transacción', preferencias: req.session.preferencias || {} });
-                        res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Datos cargados correctamente', preferencias: req.session.preferencias || {} });
+                        if (cErr) { req.session.mensaje = 'Error confirmando transacción'; return res.redirect('/'); }
+                        req.session.mensaje = 'Datos cargados correctamente';
+                        return res.redirect('/');
                     });
-                }).catch(err2=>{
-                    connection.rollback(()=>{ connection.release(); res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error cargando datos: '+(err2.message||''), preferencias: req.session.preferencias || {} }); });
-                });
+                  })
+                  .catch(err2=>{
+                    connection.rollback(()=>{ connection.release(); req.session.mensaje = 'Error cargando datos: '+(err2.message||''); return res.redirect('/'); });
+                  });
             });
         });
     });
