@@ -9,5 +9,3 @@ npm-debug.log
 *.sqlite
 *.sqlite3
 
-# No subir configuración local de BD (usar valores por defecto de XAMPP)
-config/database.js
