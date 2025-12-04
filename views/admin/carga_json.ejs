@@ -1,13 +1,9 @@
 <main class="container py-3">
   <h1 class="h3">Carga inicial desde JSON</h1>
   <% if (mensaje) { %><div class="alert alert-info"><%= mensaje %></div><% } %>
-  <p class="text-muted">Esta operación solo funciona si la BD está vacía (sin concesionarios ni vehículos).</p>
+  <p class="text-muted">Se cargará desde el archivo bd_vacia.json en la raíz del proyecto. Requiere BD vacía.</p>
   <form method="POST" action="/admin/carga-json">
-    <div class="mb-3">
-      <label class="form-label">Pegue el JSON</label>
-      <textarea name="json" class="form-control" rows="10" placeholder='{"concesionarios":[{"nombre":"Concesionario A"}],"vehiculos":[{"matricula":"1234ABC","marca":"Tesla","modelo":"Model 3","id_concesionario":1}]}'></textarea>
-    </div>
-    <button class="btn btn-primary" type="submit">Cargar</button>
+    <button class="btn btn-primary" type="submit">Cargar desde bd_vacia.json</button>
     <a class="btn btn-secondary" href="/admin/concesionarios">Volver</a>
   </form>
 </main>
