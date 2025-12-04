@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/config');
 const bcrypt = require('bcrypt');
+const {
+    validarRegistro,
+    validarLogin,
+    validarReserva,
+    validarVehiculo,
+    handleValidationErrors
+} = require('../validators/validators');
 
 
 //MIDDLEWARE DE PROTECCION: sirven como para restringir rutas (para usarlos los ponemos en los get app.get('/reservas', requireAuth, (req, res))
@@ -79,7 +86,17 @@ function insertarVehiculo(vehiculo, callback) {
 }
 
 //RUTAS POST
-router.post('/register', (request, response) => {
+router.post('/register', validarRegistro, handleValidationErrors, (request, response) => {
+    // Si hay errores de validación, mostrar formulario con mensaje
+    if (request.validationErrors) {
+        return response.render('usuarios/register', {
+            title: 'Registro de usuario',
+            usuario: null,
+            mensaje: request.validationMessage,
+            preferencias: request.session.preferencias || {}
+        });
+    }
+
     const { nombre, email, password } = request.body;
     const rol = 'empleado';
     const saltRounds = 10;
@@ -184,7 +201,12 @@ router.post('/register', (request, response) => {
 
 
 
-router.post('/login', (request, response) => {
+router.post('/login', validarLogin, handleValidationErrors, (request, response) => {
+    // Si hay errores de validación
+    if (request.validationErrors) {
+        return response.render('usuarios/login', { mensaje: request.validationMessage });
+    }
+
     const { email, password, recordar } = request.body;
 
     // Validar correo corporativo también en login para mayor seguridad
@@ -281,7 +303,7 @@ router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
     };
 
     request.session.save(() => {
-        response.redirect(request.get('referer') || '/'); 
+        response.redirect(request.get('referer') || '/');
     });
 });
 
@@ -358,7 +380,17 @@ router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, respon
 
 //Crear reserva 
 //TODO revisar si un empleado puede hacer las reservas o debe hacerlo también un admin
-router.post('/reservas/guardar', requireAuth, async (req, res) => {
+router.post('/reservas/guardar', requireAuth, validarReserva, handleValidationErrors, async (req, res) => {
+    // Si hay errores de validación
+    if (req.validationErrors) {
+        return res.status(400).render('reservasformulario', {
+            title: 'Nueva Reserva de Vehículo',
+            usuario: req.session.usuario,
+            vehiculos: [],
+            mensaje: req.validationMessage
+        });
+    }
+
     const { vehiculoId, fechaInicio, horaInicio, fechaFin, horaFin } = req.body;
     const userId = req.session.usuario.id;
 
@@ -503,7 +535,7 @@ function eliminarVehiculo(vehiculoId, callback) {
     });
 }
 
-  
+
 // Baja lógica del vehículo
 router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (request, response) => {
     const vehiculoId = request.params.id;
@@ -531,7 +563,7 @@ router.get('/', function (request, response) {
     response.render('index', {
         title: "Pagina principal",
         usuario: request.session.usuario || null,
-        preferencias: request.session.preferencias || {} 
+        preferencias: request.session.preferencias || {}
     });
 });
 
@@ -699,24 +731,24 @@ router.get('/mi-base/vehiculos', requireAuth, (request, response) => {
 //Formulario para editar un vehiculo pasando su id como argumento
 router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
     const vehiculoId = request.params.id;
-    
+
     pool.getConnection((err, connection) => {
         if (err) {
             console.error("Error en el servidor");
             return response.redirect('/vehiculos');
         }
 
-    let sql = "SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?";
-    connection.query(sql, [vehiculoId], (err, rows) => {
+        let sql = "SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?";
+        connection.query(sql, [vehiculoId], (err, rows) => {
             connection.release();
 
             if (err) {
                 console.error("Error en la consulta:", err);
-                return  response.redirect('/vehiculos');
+                return response.redirect('/vehiculos');
             }
 
             console.log(`vehiculo editado`);
-            if(rows.length === 0) {
+            if (rows.length === 0) {
                 console.log("Vehículo no encontrado");
                 return response.redirect('/vehiculos');
             }
@@ -786,8 +818,8 @@ router.get('/reservas', requireAuth, async (req, res) => {
 
                 const misReservas = rows.map(r => {
                     // formatear fechas a 'YYYY-MM-DD HH:MM'
-                    const inicio = r.fecha_inicio ? new Date(r.fecha_inicio).toISOString().slice(0,16).replace('T',' ') : '';
-                    const fin = r.fecha_fin ? new Date(r.fecha_fin).toISOString().slice(0,16).replace('T',' ') : '';
+                    const inicio = r.fecha_inicio ? new Date(r.fecha_inicio).toISOString().slice(0, 16).replace('T', ' ') : '';
+                    const fin = r.fecha_fin ? new Date(r.fecha_fin).toISOString().slice(0, 16).replace('T', ' ') : '';
                     return {
                         id: r.id,
                         vehiculo: `${r.marca || ''} ${r.modelo || ''}`.trim(),

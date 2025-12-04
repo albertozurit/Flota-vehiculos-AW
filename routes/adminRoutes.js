@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/config');
 const { requireAuth, requireAdmin } = require('../middlewares/auth');
+const {
+    validarVehiculo,
+    validarConcesionario,
+    validarCambioRol,
+    validarAsignarBase,
+    handleValidationErrors
+} = require('../validators/validators');
 
 // Helper: insertarVehiculo (mismo comportamiento que antes, ahora en admin)
 function insertarVehiculo(vehiculo, callback) {
@@ -110,7 +117,11 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
 });
 
 // === Usuarios (acciones rápidas) ===
-router.post('/usuarios/:id/rol', requireAuth, requireAdmin, (req, res) => {
+router.post('/usuarios/:id/rol', requireAuth, requireAdmin, validarCambioRol, handleValidationErrors, (req, res) => {
+    if (req.validationErrors) {
+        return res.redirect('/admin');
+    }
+
     const id = parseInt(req.params.id);
     const rol = req.body.rol === 'admin' ? 'admin' : 'empleado';
     pool.getConnection((err, connection) => {
@@ -131,7 +142,11 @@ router.post('/usuarios/:id/rol', requireAuth, requireAdmin, (req, res) => {
     });
 });
 
-router.post('/usuarios/:id/base', requireAuth, requireAdmin, (req, res) => {
+router.post('/usuarios/:id/base', requireAuth, requireAdmin, validarAsignarBase, handleValidationErrors, (req, res) => {
+    if (req.validationErrors) {
+        return res.redirect('/admin');
+    }
+
     const id = parseInt(req.params.id);
     const base = parseInt(req.body.id_concesionario) || null;
     pool.getConnection((err, connection) => {
@@ -246,7 +261,16 @@ router.get('/concesionarios/nuevo', requireAuth, requireAdmin, (req, res) => {
     res.render('admin/nuevo_concesionario', { title: 'Nuevo Concesionario', mensaje: null, preferencias: req.session.preferencias || {} });
 });
 
-router.post('/concesionarios/nuevo', requireAuth, requireAdmin, (req, res) => {
+router.post('/concesionarios/nuevo', requireAuth, requireAdmin, validarConcesionario, handleValidationErrors, (req, res) => {
+    // Si hay errores de validación
+    if (req.validationErrors) {
+        return res.render('admin/nuevo_concesionario', {
+            title: 'Nuevo Concesionario',
+            mensaje: req.validationMessage,
+            preferencias: req.session.preferencias || {}
+        });
+    }
+
     const { nombre, ciudad, direccion, telefono_contacto } = req.body;
     if (!nombre) return res.redirect('/admin');
     pool.getConnection((err, connection) => {
@@ -311,16 +335,16 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
                 const vehiculos = Array.isArray(datos.vehiculos) ? datos.vehiculos : [];
                 const insertarCon = concesionarios.map(c => [c.nombre || null, c.ciudad || null, c.direccion || null, c.telefono_contacto || null]);
                 const insertarVeh = vehiculos.map(v => [v.matricula || null, v.marca || null, v.modelo || null, v.anio_matriculacion || null, v.numero_plazas || null, v.autonomia_km || null, v.color || null, v.imagen || null, v.estado || 'disponible', v.id_concesionario || 1]);
-                const doCon = insertarCon.length ? new Promise((resolve,reject)=>connection.query('INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?',[insertarCon], (e)=> e?reject(e):resolve())) : Promise.resolve();
-                const doVeh = insertarVeh.length ? new Promise((resolve,reject)=>connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (e)=> e?reject(e):resolve())) : Promise.resolve();
-                Promise.all([doCon, doVeh]).then(()=>{
-                    connection.commit(cErr=>{
+                const doCon = insertarCon.length ? new Promise((resolve, reject) => connection.query('INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?', [insertarCon], (e) => e ? reject(e) : resolve())) : Promise.resolve();
+                const doVeh = insertarVeh.length ? new Promise((resolve, reject) => connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (e) => e ? reject(e) : resolve())) : Promise.resolve();
+                Promise.all([doCon, doVeh]).then(() => {
+                    connection.commit(cErr => {
                         connection.release();
                         if (cErr) return res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error confirmando transacción', preferencias: req.session.preferencias || {} });
                         res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Datos cargados correctamente', preferencias: req.session.preferencias || {} });
                     });
-                }).catch(err2=>{
-                    connection.rollback(()=>{ connection.release(); res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error cargando datos: '+(err2.message||''), preferencias: req.session.preferencias || {} }); });
+                }).catch(err2 => {
+                    connection.rollback(() => { connection.release(); res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error cargando datos: ' + (err2.message || ''), preferencias: req.session.preferencias || {} }); });
                 });
             });
         });
