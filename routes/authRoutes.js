@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
+const pool = require('../config/config');
 const bcrypt = require('bcrypt');
 
 
@@ -85,7 +85,7 @@ router.post('/register', (request, response) => {
     const saltRounds = 10;
 
     // Validación de correo corporativo (cambia el dominio según tu organización)
-    const CORPORATE_DOMAIN = process.env.CORP_DOMAIN || 'empresa.com';
+    const CORPORATE_DOMAIN = 'flotawei.com';
     const emailOk = typeof email === 'string' && email.trim().toLowerCase().endsWith(`@${CORPORATE_DOMAIN}`);
     if (!emailOk) {
         return response.render('usuarios/register', {
@@ -188,7 +188,7 @@ router.post('/login', (request, response) => {
     const { email, password, recordar } = request.body;
 
     // Validar correo corporativo también en login para mayor seguridad
-    const CORPORATE_DOMAIN = process.env.CORP_DOMAIN || 'empresa.com';
+    const CORPORATE_DOMAIN = 'flotawei.com';
     const emailOk = typeof email === 'string' && email.trim().toLowerCase().endsWith(`@${CORPORATE_DOMAIN}`);
     if (!emailOk) {
         return response.render('usuarios/login', { mensaje: `El correo debe ser corporativo (@${CORPORATE_DOMAIN})` });
@@ -527,7 +527,6 @@ router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (request, resp
 
 //RUTAS GET
 router.get('/', function (request, response) {
-    // console.log("📍 Usuario en sesión:", request.session.usuario);
     response.status(200);
     response.render('index', {
         title: "Pagina principal",

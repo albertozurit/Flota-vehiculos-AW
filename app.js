@@ -1,7 +1,7 @@
 //BLOQUE DE IMPORTANCIONES
 const express = require('express');
 const session = require('express-session');
-const pool = require('./config/database');
+const pool = require('./config/config');
 
 //CONFIGURACION SESION PARA LA BD
 const mysqlSession = require ('express-mysql-session');

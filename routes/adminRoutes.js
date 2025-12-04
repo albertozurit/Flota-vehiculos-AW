@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
+const pool = require('../config/config');
 const { requireAuth, requireAdmin } = require('../middlewares/auth');
 
 // Helper: insertarVehiculo (mismo comportamiento que antes, ahora en admin)

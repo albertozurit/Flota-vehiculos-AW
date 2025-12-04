@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/database');
+const pool = require('../config/config');
 // No usamos el middleware que redirige en peticiones AJAX; haremos una comprobación manual
 
 // Ruta asíncrona para obtener el formulario de reserva de un vehículo
