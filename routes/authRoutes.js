@@ -86,7 +86,6 @@ function insertarVehiculo(vehiculo, callback) {
 }
 
 //RUTAS POST
-<<<<<<< HEAD
 router.post('/register', validarRegistro, handleValidationErrors, (request, response) => {
     // Si hay errores de validación, mostrar formulario con mensaje
     if (request.validationErrors) {
@@ -99,10 +98,6 @@ router.post('/register', validarRegistro, handleValidationErrors, (request, resp
     }
 
     const { nombre, email, password } = request.body;
-=======
-router.post('/register', requireAuth, requireAdmin, (request, response) => {
-    const { nombre, email, password, id_concesionario } = request.body;
->>>>>>> 9b46905d3d171b78bf6061f1577a56b0ba0e0657
     const rol = 'empleado';
     const saltRounds = 10;
 
@@ -568,12 +563,7 @@ router.get('/', function (request, response) {
     response.render('index', {
         title: "Pagina principal",
         usuario: request.session.usuario || null,
-<<<<<<< HEAD
         preferencias: request.session.preferencias || {}
-=======
-        mensaje: request.session.mensaje || null,
-        preferencias: request.session.preferencias || {} 
->>>>>>> 9b46905d3d171b78bf6061f1577a56b0ba0e0657
     });
     request.session.mensaje = null;
 });
