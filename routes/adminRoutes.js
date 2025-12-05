@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/config');
 const { requireAuth, requireAdmin } = require('../middlewares/auth');
+const fs = require('fs');
+const path = require('path');
 const {
     validarVehiculo,
     validarConcesionario,
@@ -189,13 +191,18 @@ router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (req, res) => {
 });
 
 // Crear
-router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (req, res) => {
+router.post('/vehiculos/nuevo', requireAuth, requireAdmin, validarVehiculo, handleValidationErrors, (req, res) => {
     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = req.body;
-    if (!matricula || !marca || !modelo) {
+    if (!req.validationErrors) {
         return res.render('vehiculos/nuevo', { title: 'Nuevo Vehículo', mensaje: 'Completa matrícula, marca y modelo', preferencias: req.session.preferencias || {} });
     }
 
-    const vehiculo = { matricula, marca, modelo, anio_matriculacion: anio_matriculacion || null, numero_plazas: numero_plazas ? parseInt(numero_plazas) : null, autonomia_km: autonomia_km ? parseInt(autonomia_km) : null, color: color || null, estado: 'disponible', id_concesionario: 1 };
+    const vehiculo = {
+        matricula, marca, modelo, anio_matriculacion: anio_matriculacion || null,
+        numero_plazas: numero_plazas ? parseInt(numero_plazas) : null,
+        autonomia_km: autonomia_km ? parseInt(autonomia_km) : null,
+        color: color || null, estado: 'disponible', id_concesionario: 1
+    };
 
     insertarVehiculo(vehiculo, (err, id) => {
         if (err) {
@@ -221,9 +228,12 @@ router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (req, res) => {
 });
 
 // Editar - guardar
-router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, (req, res) => {
+router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo, handleValidationErrors, (req, res) => {
     const id = req.params.id;
     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = req.body;
+    if (!req.validationErrors) {
+        return res.render('vehiculos/editar', { title: 'Editar Vehículo', vehiculo: { id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color }, mensaje: 'Completa matrícula, marca y modelo', preferencias: req.session.preferencias || {} });
+    }
     pool.getConnection((err, connection) => {
         if (err) return res.redirect('/admin/vehiculos');
         const sql = `UPDATE Vehiculos SET matricula = ?, marca = ?, modelo = ?, anio_matriculacion = ?, numero_plazas = ?, autonomia_km = ?, color = ? WHERE id_vehiculo = ?`;
@@ -343,7 +353,7 @@ router.post('/carga-json', (req, res) => {
                 const usuariosJson = Array.isArray(datos.usuarios) ? datos.usuarios : [];
 
                 const insertarCon = concesionarios.map(c => [c.nombre || null, c.ciudad || null, c.direccion || null, c.telefono_contacto || null]);
-                const insertarVeh = vehiculos.map(v => [v.matricula || null, v.marca || null, v.modelo || null, v.anio_matriculacion || null, v.numero_plazas || null, v.autonomia_km || null, v.color || null, v.imagen || null, v.estado || 'disponible', v.id_concesionario || 1]);
+                const insertarVeh = vehiculosJson.map(v => [v.matricula || null, v.marca || null, v.modelo || null, v.anio_matriculacion || null, v.numero_plazas || null, v.autonomia_km || null, v.color || null, v.imagen || null, v.estado || 'disponible', v.id_concesionario || 1]);
                 const doCon = insertarCon.length ? new Promise((resolve, reject) => connection.query('INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?', [insertarCon], (e) => e ? reject(e) : resolve())) : Promise.resolve();
                 const doVeh = insertarVeh.length ? new Promise((resolve, reject) => connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (e) => e ? reject(e) : resolve())) : Promise.resolve();
                 Promise.all([doCon, doVeh]).then(() => {

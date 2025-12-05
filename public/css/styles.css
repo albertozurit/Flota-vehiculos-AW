@@ -1,112 +1,524 @@
+/* ESTILOS BASE - WeiZhu Fleet */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-    background: #0f172a; /* dark slate */
-    color: #e5e7eb; /* gray-200 */
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 16px;
     line-height: 1.6;
-    padding-top: 64px; /* space for fixed navbar */
+    color: #212529;
+    background-color: #ffffff;
 }
 
-
-/* ---MODO ALTO CONTRASTE---*/
-body.alto-contraste {
-    background-color: black !important;
-    color: yellow !important;
+/* NAVEGACIÓN */
+.main-nav {
+    background: linear-gradient(135deg, #3e2610 0%, #5a3a1f 100%);
+    height: 80px;
+    box-shadow: 0 2px 8px rgba(62, 38, 16, 0.12);
+    border-bottom: 2px solid rgba(193, 217, 239, 0.15);
 }
 
-/* Elementos principales y contenedores */
-body.alto-contraste .card,
-body.alto-contraste .modal-content,
-body.alto-contraste .alert,
-body.alto-contraste header,
-body.alto-contraste footer,
-body.alto-contraste nav {
-    background-color: #333 !important;
-    color: yellow !important;
-    border: 2px solid yellow !important;
+.main-nav .container-fluid {
+    height: 100%;
+    padding: 0 2rem;
 }
 
-/* Enlaces y botones (asegurando el contraste interactivo) */
-body.alto-contraste a,
-body.alto-contraste .btn {
-    color: yellow !important;
-    background-color: black !important;
-    border: 1px solid yellow !important;
+.main-nav .d-flex {
+    height: 100%;
 }
 
-body.alto-contraste a:hover,
-body.alto-contraste .btn:hover {
-    background-color: #555 !important;
-    color: white !important;
+/* LOGO */
+.logo-marca {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+
 }
 
-/* Formularios y campos de entrada */
-body.alto-contraste input:not([type="checkbox"]):not([type="radio"]),
-body.alto-contraste textarea,
-body.alto-contraste select {
-    background-color: #000 !important;
-    color: white !important;
-    border: 1px solid yellow !important;
+.logo-marca:hover {}
+
+.logo-marca img {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+
 }
 
-/*MODELO PARA DALTONICOS*/
+.logo-marca:hover img {}
 
-/* Estado Normal del Botón Danger (Rojo -> Azul) */
-body.daltonismo .btn-danger {
-    background: #007BFF !important; 
-    border-color: #007BFF !important;
-    color: white !important; 
-}
-
-
-body.daltonismo .btn-danger:hover,
-body.daltonismo .btn-danger:focus,
-body.daltonismo .btn-danger:active {
-    background: #0056b3 !important;
-    border-color: #0056b3 !important;
-    color: white !important;
+/* LISTA DE NAVEGACIÓN */
+.nav-list {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0 0 0 2rem;
+    padding: 0;
 }
 
-
-body.daltonismo .btn-danger:focus {
-    box-shadow: 0 0 0 0.25rem rgba(0, 123, 255, 0.5) !important;
+/* ENLACES DE NAVEGACIÓN */
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.5rem;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
 }
 
-body.daltonismo .btn-success {
-    background: #cc00cc !important;
-    border-color: #cc00cc !important;
-    color: white !important;
-}
-body.daltonismo .btn-success:hover {
-    background: #990099 !important;
-    border-color: #990099 !important;
+.nav-link:hover {
+    background: none !important;
+    color: #c1d9ef !important;
 }
 
-/* Modal custom styles */
-.modal-content {
-    border: 0;
-    background: #0b1220;
-    color: #e5e7eb;
-}
-.modal-title.fw-bold {
-    font-size: 1.25rem;
-}
-.modal-body {
-    font-size: 0.95rem;
-}
-.modal .form-label {
+.nav-link.active {
+    background: none !important;
+    color: #c1d9ef !important;
     font-weight: 600;
 }
-.modal .bg-light {
-    background-color: #121a2a !important;
-}
-.modal .btn-outline-secondary {
-    border-radius: 0.3rem;
+
+.nav-link:focus,
+.nav-link:focus-visible {
+    background: none !important;
+    color: #c1d9ef !important;
+    outline: 2px solid #c1d9ef !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
 }
 
-/* Small responsive tweaks */
-@media (max-width: 576px) {
-    .modal-dialog {
-        max-width: 95%;
-        margin: 1.75rem auto;
+/* ACCIONES DE NAVEGACIÓN */
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* BOTONES DE ICONO */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    background: rgba(193, 217, 239, 0.1);
+    border: 1px solid rgba(193, 217, 239, 0.2);
+    border-radius: 0.5rem;
+    color: #c1d9ef;
+    cursor: pointer;
+
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    gap: 0.25rem;
+}
+
+.btn-icon:hover {
+    background: rgba(193, 217, 239, 0.2);
+    border-color: #c1d9ef;
+
+    box-shadow: 0 4px 12px rgba(193, 217, 239, 0.2);
+}
+
+.btn-icon img {
+    filter: brightness(0) invert(1);
+
+}
+
+.btn-icon:hover img {}
+
+/* BOTÓN CERRAR SESIÓN */
+.logout-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.5rem;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.9), rgba(200, 35, 51, 0.95));
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+    color: #c1d9ef;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    text-decoration: none;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, rgba(200, 35, 51, 1), rgba(180, 25, 41, 1));
+
+    box-shadow: 0 4px 16px rgba(220, 53, 69, 0.4);
+}
+
+/* MODALES */
+.modal-content {
+    border: none;
+    border-radius: 0.75rem;
+    box-shadow: 0 20px 40px rgba(62, 38, 16, 0.15);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #3e2610, #5a3a1f);
+    color: #c1d9ef;
+    border-bottom: none;
+    padding: 1.5rem 2rem;
+}
+
+.modal-title {
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.modal-body {
+    padding: 2rem;
+    background: #ffffff;
+}
+
+.modal-footer {
+    background: #f8f9fa;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 1.5rem 2rem;
+}
+
+.btn-close {
+    filter: brightness(0) invert(1);
+    opacity: 0.8;
+
+}
+
+.btn-close:hover {
+    opacity: 1;
+
+}
+
+/* BOTONES ESTÁNDAR */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+
+    text-decoration: none;
+    gap: 0.25rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3e2610, #5a3a1f);
+    color: #c1d9ef;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2a1a0a, #3e2610);
+
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.btn-secondary {
+    background: #e9ecef;
+    color: #212529;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+    background: #f8f9fa;
+
+}
+
+.btn-outline-danger {
+    background: transparent;
+    color: #dc3545;
+    border: 2px solid #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background: #dc3545;
+    color: white;
+
+}
+
+/* UTILIDADES */
+.text-muted {
+    color: #adb5bd !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.fw-semibold {
+    font-weight: 600 !important;
+}
+
+.gap-3 {
+    gap: 1rem !important;
+}
+
+.m-0 {
+    margin: 0 !important;
+}
+
+.mb-0 {
+    margin-bottom: 0 !important;
+}
+
+code {
+    padding: 2px 6px;
+    background: #dbeafb;
+    color: #3e2610;
+    border-radius: 0.375rem;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.9em;
+}
+
+/* ACCESIBILIDAD */
+*:focus-visible {
+    outline: 2px solid #c1d9ef;
+    outline-offset: 2px;
+}
+
+/* CONTENIDO PRINCIPAL */
+main {
+    padding-top: 80px;
+    min-height: calc(100vh - 80px);
+}
+
+/* FOOTER */
+.main-footer {
+    background: linear-gradient(135deg, #3e2610 0%, #2a1a0a 100%);
+    color: #c1d9ef;
+    padding: 3rem 0 1rem;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Tabla Principal del Footer */
+.footer-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 3rem 0;
+    margin-bottom: 2rem;
+}
+
+.footer-cell {
+    vertical-align: top;
+    padding: 0;
+}
+
+.footer-brand-cell {
+    width: 35%;
+}
+
+/* Logo y Marca */
+.footer-logo {
+    display: inline-block;
+    margin-bottom: 1rem;
+
+}
+
+.footer-logo:hover {}
+
+.footer-logo img {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+
+}
+
+.footer-logo:hover img {}
+
+.footer-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #c1d9ef;
+    margin: 0.5rem 0;
+}
+
+.footer-description {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0.5rem 0 0 0;
+}
+
+/* Títulos de Sección */
+.footer-heading {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #c1d9ef;
+    margin: 0 0 1rem 0;
+    border-bottom: 2px solid rgba(193, 217, 239, 0.3);
+    padding-bottom: 0.5rem;
+}
+
+/* Tablas de Enlaces y Contacto */
+.footer-links-table,
+.footer-contact-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.footer-links-table td,
+.footer-contact-table td {
+    padding: 0.5rem 0;
+    border: none;
+}
+
+/* Enlaces del Footer */
+.footer-links-table a,
+.footer-btn {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.9rem;
+
+    display: inline-block;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+}
+
+.footer-links-table a:hover,
+.footer-btn:hover {
+    color: #c1d9ef;
+}
+
+/* Tabla de Contacto */
+.footer-contact-table .contact-icon {
+    width: 2rem;
+    font-size: 1.2rem;
+    text-align: center;
+    color: #c1d9ef;
+}
+
+.footer-contact-table td {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+}
+
+.footer-contact-table a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+
+}
+
+.footer-contact-table a:hover {
+    color: #c1d9ef;
+}
+
+/* Parte Inferior del Footer */
+.footer-bottom {
+    border-top: 1px solid rgba(193, 217, 239, 0.2);
+    padding-top: 1.5rem;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.footer-copyright {
+    margin: 0.5rem 0;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.875rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 992px) {
+    .footer-table {
+        border-spacing: 2rem 2rem;
+    }
+
+    .footer-table tr {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .footer-brand-cell {
+        width: 100%;
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-nav {
+        height: 65px;
+    }
+
+    .main-nav .container-fluid {
+        padding: 0 1rem;
+    }
+
+    .nav-list {
+        display: none;
+    }
+
+    .logo-marca img {
+        width: 50px;
+        height: 50px;
+    }
+
+    main {
+        padding-top: 65px;
+        min-height: calc(100vh - 65px);
+    }
+
+    .main-footer {
+        padding: 2rem 0 1rem;
+    }
+
+    .footer-content {
+        padding: 0 1rem;
+    }
+
+    .footer-table {
+        border-spacing: 0;
+    }
+
+    .footer-table,
+    .footer-table tbody,
+    .footer-table tr,
+    .footer-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .footer-cell {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .footer-brand-cell {
+        width: 100%;
+    }
+
+    .footer-logo {
+        display: block;
+        text-align: center;
+        margin: 0 auto 1rem;
+    }
+
+    .footer-links-table,
+    .footer-contact-table {
+        margin: 0 auto;
+    }
+
+    .footer-contact-table td {
+        text-align: center;
+    }
+
+    .main-nav .nav-link {
+        color: #ffffff !important;
     }
 }

@@ -1,3 +1,20 @@
+# CAMBIOS A HACER 
+Resumen Ejecutivo
+Tu proyecto tiene una base sólida con autenticación, roles, validaciones y funcionalidades CRUD. Sin embargo, hay oportunidades importantes de mejora en arquitectura, seguridad, rendimiento y mantenibilidad.
+
+- ¿¿¿¿¿¿¿ Callback hell y error handling inconsistente: Muchas callbacks anidadas sin manejo robusto de errores
+
+Importantes (Arquitectura/Código)
+Código duplicado: 
+requireAuth y requireAdmin están duplicados en authRoutes.js y middlewares/auth.js
+Lógica de negocio en rutas: Las rutas contienen demasiada lógica (consultas SQL, validaciones)
+Rutas largas y monolíticas: 
+authRoutes.js tiene 870 líneas con múltiples responsabilidades
+Migración incompleta: 
+reservasRoutes.js está prácticamente vacío pero se usa en app.js
+Falta capa de acceso a datos (DAO/Repository): Las queries SQL están esparcidas por todas partes
+
+
 # Práctica de Gestión de Flotas de Vehículos Eléctricos
 
 ## Descripción

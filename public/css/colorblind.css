@@ -1,0 +1,215 @@
+/* MODO DALTÓNICO */
+
+/* NAVEGACIÓN */
+.main-nav {
+    background: linear-gradient(135deg, #0066CC 0%, #004999 100%) !important;
+    border-bottom: 3px solid #FF9500 !important;
+}
+
+.main-nav::before,
+.main-nav::after {
+    display: none !important;
+}
+
+/* LOGO */
+.logo-marca {
+    background: rgba(255, 149, 0, 0.1) !important;
+    border: 2px solid #FF9500 !important;
+}
+
+.logo-marca:hover {
+    background: rgba(255, 149, 0, 0.2) !important;
+    border-color: #FFB84D !important;
+}
+
+/* ENLACES DE NAVEGACIÓN */
+.nav-link {
+    color: #FFFFFF !important;
+}
+
+.nav-link:hover {
+    color: #FF9500 !important;
+    background: rgba(255, 149, 0, 0.15) !important;
+}
+
+.nav-link.active {
+    color: #FF9500 !important;
+    background: rgba(255, 149, 0, 0.2) !important;
+    border-left: 3px solid #FF9500 !important;
+    border-right: 3px solid #FF9500 !important;
+}
+
+/* BOTONES DE ICONO */
+.btn-icon {
+    background: rgba(255, 149, 0, 0.15) !important;
+    border: 2px solid #FF9500 !important;
+    color: #FFFFFF !important;
+}
+
+.btn-icon:hover {
+    background: #FF9500 !important;
+    border-color: #CC7700 !important;
+    color: #333333 !important;
+}
+
+/* BOTÓN CERRAR SESIÓN */
+.logout-btn {
+    background: linear-gradient(135deg, #FF6600, #CC7700) !important;
+    border: 2px solid #CC7700 !important;
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #CC7700, #FF6600) !important;
+    border-color: #FF9500 !important;
+}
+
+/* MODALES */
+.modal-content {
+    border: 3px solid #0066CC !important;
+}
+
+.modal-header {
+    background: linear-gradient(135deg, #0066CC, #4D94DB) !important;
+    color: #FFFFFF !important;
+    border-bottom: 3px solid #FF9500 !important;
+}
+
+.modal-title {
+    color: #FFFFFF !important;
+}
+
+.modal-body {
+    background: #FFFFFF !important;
+    color: #1A1A1A !important;
+}
+
+.modal-footer {
+    background: #F5F5F5 !important;
+    border-top: 2px solid #CCCCCC !important;
+}
+
+.btn-close {
+    filter: brightness(0) invert(1) !important;
+    background: #FF6600 !important;
+    border: 2px solid #FFFFFF !important;
+    border-radius: 50% !important;
+}
+
+.btn-close:hover {
+    background: #FF9500 !important;
+}
+
+/* BOTONES */
+.btn-primary {
+    background: linear-gradient(135deg, #0066CC, #4D94DB) !important;
+    color: #FFFFFF !important;
+    border: 2px solid #004999 !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #004999, #0066CC) !important;
+    border-color: #FF9500 !important;
+}
+
+.btn-secondary {
+    background: #F5F5F5 !important;
+    color: #1A1A1A !important;
+    border: 2px solid #CCCCCC !important;
+}
+
+.btn-secondary:hover {
+    background: #CCCCCC !important;
+}
+
+.btn-outline-danger {
+    background: transparent !important;
+    color: #FF6600 !important;
+    border: 2px solid #FF6600 !important;
+}
+
+.btn-outline-danger:hover {
+    background: #FF6600 !important;
+    color: white !important;
+}
+
+/* UTILIDADES */
+.text-muted {
+    color: #666666 !important;
+    font-style: italic !important;
+}
+
+.text-warning {
+    color: #FFCC00 !important;
+    font-weight: 600 !important;
+}
+
+code {
+    background: #FFB84D !important;
+    color: #333333 !important;
+    border: 1px solid #FF9500 !important;
+}
+
+/* FORMULARIOS */
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #FF9500 !important;
+    outline: 2px solid #FF9500 !important;
+}
+
+/* ENLACES */
+a {
+    color: #0066CC !important;
+}
+
+a:hover {
+    color: #FF9500 !important;
+}
+
+/* ENFOQUE */
+*:focus-visible {
+    outline: 3px solid #FF9500 !important;
+    outline-offset: 2px !important;
+}
+
+/* ALERTAS */
+.alert-success {
+    background: rgba(0, 153, 204, 0.15) !important;
+    color: #004999 !important;
+    border: 3px solid #0099CC !important;
+    border-left-width: 8px !important;
+}
+
+.alert-warning {
+    background: rgba(255, 204, 0, 0.15) !important;
+    color: #664400 !important;
+    border: 3px solid #FFCC00 !important;
+    border-left-width: 8px !important;
+}
+
+.alert-danger {
+    background: rgba(255, 102, 0, 0.15) !important;
+    color: #CC7700 !important;
+    border: 3px solid #FF6600 !important;
+    border-left-width: 8px !important;
+}
+
+/* TABLAS */
+th {
+    background: #0066CC !important;
+    color: #FFFFFF !important;
+    border: 2px solid #004999 !important;
+}
+
+tr:nth-child(even) {
+    background: rgba(0, 102, 204, 0.05) !important;
+}
+
+tr:hover {
+    background: rgba(255, 149, 0, 0.1) !important;
+}
+
+/* CONTENIDO */
+main {
+    background: #FFFFFF !important;
+}

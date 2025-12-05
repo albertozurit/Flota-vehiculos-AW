@@ -1,0 +1,71 @@
+<footer class="main-footer">
+    <div class="footer-content">
+        <!-- Tabla Principal del Footer -->
+        <table class="footer-table">
+            <tr>
+                <!-- Logo y Descripción -->
+                <td class="footer-cell footer-brand-cell">
+                    <a href="/" class="footer-logo">
+                        <img src="/images/LogoRueda.png" alt="WeiZhu Fleet" width="120" height="120">
+                    </a>
+                    <h3 class="footer-title">WeiZhu Fleet</h3>
+                    <p class="footer-description">
+                        Sistema de gestión de flota de vehículos.
+                        Reserva, administra y gestiona vehículos de forma eficiente y accesible.
+                    </p>
+                </td>
+
+                <!-- Enlaces Rápidos -->
+                <td class="footer-cell">
+                    <h4 class="footer-heading">Enlaces Rápidos</h4>
+                    <table class="footer-links-table">
+                        <tr>
+                            <td><a href="/">Inicio</a></td>
+                        </tr>
+                        <% if (usuario && (usuario.rol==='empleado' || usuario.rol==='admin' )) { %>
+                            <tr>
+                                <td><a href="/vehiculos">Vehículos disponibles</a></td>
+                            </tr>
+                            <% } %>
+                                <% if (usuario && usuario.rol==='empleado' ) { %>
+                                    <tr>
+                                        <td><a href="/reservas/nueva">Reservar vehículo</a></td>
+                                    </tr>
+                                    <% } %>
+                                        <% if (usuario && usuario.rol==='admin' ) { %>
+                                            <tr>
+                                                <td><a href="/admin">Administración</a></td>
+                                            </tr>
+                                            <% } %>
+                    </table>
+                </td>
+
+                <!-- Información de Contacto -->
+                <td class="footer-cell">
+                    <h4 class="footer-heading">Contacto</h4>
+                    <table class="footer-contact-table">
+                        <tr>
+                            <td class="contact-icon"><i class="bi bi-envelope"></i></td>
+                            <td><a href="mailto:info@weizhufeet.com">info@weizhufleet.com</a></td>
+                        </tr>
+                        <tr>
+                            <td class="contact-icon"><i class="bi bi-telephone"></i></td>
+                            <td><a href="tel:+34900000000">+34 900 000 000</a></td>
+                        </tr>
+                        <tr>
+                            <td class="contact-icon"><i class="bi bi-geo-alt"></i></td>
+                            <td>Madrid, España</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Copyright -->
+        <div class="footer-bottom">
+            <p class="footer-copyright">
+                &copy; <%= new Date().getFullYear() %> WeiZhu Fleet. Todos los derechos reservados.
+            </p>
+        </div>
+    </div>
+</footer>

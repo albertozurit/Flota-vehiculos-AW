@@ -1,88 +1,101 @@
 <header>
-    <nav class="navbar fixed-top navbar-expand-lg navbar-light" aria-label="Barra de navegación"
-        style="background:#06b6d4; padding:8px 12px; z-index:1030;">
+    <!-- Navegación única -->
+    <nav class="main-nav fixed-top" aria-label="Navegación principal">
         <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <img src="/images/logo.png" alt="WeiZhu" width="40" height="40"
-                    style="border-radius:6px; object-fit:cover;">
-            </a>
+            <div class="d-flex align-items-center justify-content-between">
+                <!-- Logo y Enlaces de Navegación juntos -->
+                <div class="d-flex align-items-center">
+                    <!-- Logo -->
+                    <a class="logo-marca" href="/">
+                        <img src="/images/LogoRueda.png" alt="WeiZhu" width="60" height="60">
+                    </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-                aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                    <!-- Navigation Links -->
+                    <ul class="nav-list">
+                        <!-- Inicio - Siempre visible -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/" accesskey="i">Inicio</a>
+                        </li>
 
-            <div class="collapse navbar-collapse" id="mainNavbar">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item"><a class="nav-link" href="/" accesskey="i">Inicio</a></li>
-                    <% if (usuario && usuario.rol === 'empleado') { %>
-                        <li class="nav-item"><a class="nav-link" href="/vehiculos" accesskey="v">Vehículos disponibles</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/reservas" accesskey="m">Mis reservas</a></li>
-                       <!--<li class="nav-item"><a class="nav-link" href="/reservas/nuevo" accesskey="r">Reservar vehículo</a></li>--> 
-                    <% } %>
+                        <% if (usuario && usuario.rol==='empleado' ) { %>
+                            <!-- Vehículos disponibles - Para empleados -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="/vehiculos" accesskey="v">Vehículos disponibles</a>
+                            </li>
 
-                    <% if (usuario && usuario.rol === 'admin') { %>
-                        <li class="nav-item"><a class="nav-link" href="/admin" accesskey="a">Administración</a></li>
-                    <% } %>
-                </ul>
+                            <!-- Reservar vehículo - Para empleados -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="/reservas/nueva" accesskey="r">Reservar vehículo</a>
+                            </li>
+                            <% } %>
 
-                <div class="d-flex align-items-center ms-auto gap-2">
-                    <!-- Accesibilidad (siempre visible) -->
-                    <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="modal"
-                        data-bs-target="#modalAccesibilidad" aria-label="Accesibilidad">
+                                <% if (usuario && usuario.rol==='admin' ) { %>
+                                    <!-- Vehículos disponibles - Para admin -->
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/vehiculos" accesskey="v">Vehículos disponibles</a>
+                                    </li>
+
+                                    <!-- Administración - Solo admin -->
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="/admin" accesskey="a">Administración</a>
+                                    </li>
+                                    <% } %>
+                    </ul>
+                </div>
+
+                <!-- Right Side Actions -->
+                <div class="nav-actions">
+                    <!-- Accesibilidad - Siempre visible -->
+                    <button class="btn-icon" type="button" data-bs-toggle="modal" data-bs-target="#modalAccesibilidad"
+                        aria-label="Accesibilidad" title="Accesibilidad">
                         <img src="/images/universal-access-circle.svg" alt="Accesibilidad" width="20" height="20">
                     </button>
 
-                    <!-- Carga inicial (siempre visible) -->
-                    <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="modal"
-                        data-bs-target="#modalCargaJSON" aria-label="Cargar datos iniciales">
-                        Cargar datos
-                    </button>
-
                     <% if (usuario) { %>
-                        <!-- Perfil (icono abre modal) -->
-                        <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="modal"
-                            data-bs-target="#modalPerfil" aria-label="Perfil de usuario">
+                        <!-- Perfil de usuario - Visible tras login -->
+                        <button class="btn-icon" type="button" data-bs-toggle="modal" data-bs-target="#modalPerfil"
+                            aria-label="Perfil" title="Mi Perfil">
                             <img src="/images/person-circle.svg" alt="Perfil" width="20" height="20">
                         </button>
-                        <!-- Cerrar sesión -->
-                        <form class="d-flex align-items-center m-0" action="/logout" method="POST">
-                            <button type="submit" class="btn btn-sm btn-danger">Cerrar sesión</button>
+
+                        <!-- Cerrar sesión - Disponible tras login -->
+                        <form action="/logout" method="POST" class="m-0">
+                            <button type="submit" class="logout-btn">Cerrar sesión</button>
                         </form>
                         <% } else { %>
-                            <!-- Ir a Login si no hay sesión -->
-                            <a class="btn btn-outline-light btn-sm" href="/login" aria-label="Iniciar sesión">
+                            <!-- Iniciar sesión -->
+                            <a class="btn-icon" href="/login" aria-label="Iniciar sesión" title="Iniciar sesión">
                                 <img src="/images/person-circle.svg" alt="Login" width="20" height="20">
                             </a>
                             <% } %>
                 </div>
             </div>
         </div>
-
     </nav>
 
     <!-- Modal Accesibilidad (siempre disponible) -->
     <%- include('modal_accesibilidad', { preferencias: (typeof preferencias !=='undefined' ? preferencias : {}) }) %>
 
-    <!-- Modal Carga JSON (siempre disponible) -->
-    <div class="modal fade" id="modalCargaJSON" tabindex="-1" aria-labelledby="modalCargaJSONLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <form class="modal-content" method="POST" action="/admin/carga-json">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalCargaJSONLabel">Carga inicial desde JSON</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Se leerá el archivo <code>bd_vacia.json</code> de la raíz del proyecto.</p>
-                    <p class="text-warning mb-0">Asegúrate de que la base de datos está vacía.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Cargar datos</button>
-                </div>
-            </form>
+        <!-- Modal Carga JSON (siempre disponible) -->
+        <div class="modal fade" id="modalCargaJSON" tabindex="-1" aria-labelledby="modalCargaJSONLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content" method="POST" action="/admin/carga-json">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalCargaJSONLabel">Carga inicial desde JSON</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Se leerá el archivo <code>bd_vacia.json</code> de la raíz del proyecto.</p>
+                        <p class="text-warning mb-0">Asegúrate de que la base de datos está vacía.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Cargar datos</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
         <!-- Modal Perfil (solo tras login) -->
         <% if (usuario) { %>
@@ -91,12 +104,13 @@
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="modalPerfilLabel">Perfil</h5> <button type="button"
-                                class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            <h5 class="modal-title" id="modalPerfilLabel">Perfil</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Cerrar"></button>
                         </div>
                         <div class="modal-body">
-                            <div class="d-flex align-items-center gap-3"> <img src="/images/person-circle.svg"
-                                    alt="Usuario" width="40" height="40">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="/images/person-circle.svg" alt="Usuario" width="40" height="40">
                                 <div>
                                     <div class="fw-semibold">
                                         <%= usuario.nombre || usuario.email %>
@@ -106,9 +120,11 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer"> <a href="/perfil" class="btn btn-primary">Ver perfil completo</a>
-                            <form action="/logout" method="POST"> <button class="btn btn-outline-danger">Cerrar
-                                    sesión</button> </form>
+                        <div class="modal-footer">
+                            <a href="/perfil" class="btn btn-primary">Ver perfil completo</a>
+                            <form action="/logout" method="POST">
+                                <button class="btn btn-outline-danger">Cerrar sesión</button>
+                            </form>
                         </div>
                     </div>
                 </div>

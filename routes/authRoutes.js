@@ -7,7 +7,7 @@ const {
     validarLogin,
     validarReserva,
     validarVehiculo,
-    handleValidationErrors
+    validationResult
 } = require('../validators/validators');
 
 
@@ -86,13 +86,14 @@ function insertarVehiculo(vehiculo, callback) {
 }
 
 //RUTAS POST
-router.post('/register', validarRegistro, handleValidationErrors, (request, response) => {
-    // Si hay errores de validación, mostrar formulario con mensaje
-    if (request.validationErrors) {
+router.post('/register', validarRegistro, (request, response) => {
+    // Verificar errores de validación
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
         return response.render('usuarios/register', {
             title: 'Registro de usuario',
             usuario: null,
-            mensaje: request.validationMessage,
+            mensaje: errors.array().map(e => e.msg).join('. '),
             preferencias: request.session.preferencias || {}
         });
     }
@@ -201,10 +202,13 @@ router.post('/register', validarRegistro, handleValidationErrors, (request, resp
 
 
 
-router.post('/login', validarLogin, handleValidationErrors, (request, response) => {
-    // Si hay errores de validación
-    if (request.validationErrors) {
-        return response.render('usuarios/login', { mensaje: request.validationMessage });
+router.post('/login', validarLogin, (request, response) => {
+    // Verificar errores de validación
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
+        return response.render('usuarios/login', {
+            mensaje: errors.array().map(e => e.msg).join('. ')
+        });
     }
 
     const { email, password, recordar } = request.body;
@@ -379,15 +383,15 @@ router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, respon
 });
 
 //Crear reserva 
-//TODO revisar si un empleado puede hacer las reservas o debe hacerlo también un admin
-router.post('/reservas/guardar', requireAuth, validarReserva, handleValidationErrors, async (req, res) => {
-    // Si hay errores de validación
-    if (req.validationErrors) {
+router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) => {
+    // Verificar errores de validación
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
         return res.status(400).render('reservasformulario', {
             title: 'Nueva Reserva de Vehículo',
             usuario: req.session.usuario,
             vehiculos: [],
-            mensaje: req.validationMessage
+            mensaje: errors.array().map(e => e.msg).join('. ')
         });
     }
 

@@ -1,0 +1,253 @@
+/* MODO ALTO CONTRASTE */
+
+/* ESTILOS BASE */
+body {
+    background-color: #000000 !important;
+    color: #FFFFFF !important;
+    font-size: 1.125rem !important;
+}
+
+* {
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+}
+
+/* NAVEGACIÓN */
+.main-nav {
+    background: #000000 !important;
+    border-bottom: 5px solid #FFFFFF !important;
+}
+
+.main-nav::before,
+.main-nav::after {
+    display: none !important;
+}
+
+/* LOGO */
+.logo-marca {
+    background: transparent !important;
+    border: 3px solid #FFFFFF !important;
+    padding: 0.5rem !important;
+}
+
+.logo-marca:hover {
+    background: #FFFFFF !important;
+    transform: none !important;
+}
+
+.logo-marca img {
+    filter: invert(1) contrast(2) !important;
+}
+
+.logo-marca:hover img {
+    filter: invert(0) contrast(2) !important;
+    transform: none !important;
+}
+
+/* ENLACES DE NAVEGACIÓN */
+.nav-link {
+    color: #FFFFFF !important;
+    background: transparent !important;
+    border: 3px solid transparent !important;
+    font-weight: 700 !important;
+    font-size: 1.125rem !important;
+    padding: 0.75rem 1.25rem !important;
+}
+
+.nav-link::before {
+    display: none !important;
+}
+
+.nav-link:hover,
+.nav-link:focus {
+    color: #000000 !important;
+    background: #FFFF00 !important;
+    border-color: #FFFF00 !important;
+    transform: none !important;
+}
+
+.nav-link.active {
+    color: #000000 !important;
+    background: #FFFFFF !important;
+    border-color: #FFFFFF !important;
+}
+
+/* BOTONES DE ICONO */
+.btn-icon {
+    background: transparent !important;
+    border: 3px solid #FFFFFF !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+.btn-icon:hover,
+.btn-icon:focus {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    transform: none !important;
+}
+
+.btn-icon img {
+    filter: invert(1) contrast(2) !important;
+}
+
+.btn-icon:hover img {
+    filter: invert(0) contrast(2) !important;
+}
+
+/* BOTÓN CERRAR SESIÓN */
+.logout-btn {
+    background: #FF0000 !important;
+    color: #000000 !important;
+    border: 3px solid #FF0000 !important;
+    font-weight: 700 !important;
+}
+
+.logout-btn:hover {
+    background: #000000 !important;
+    color: #FF0000 !important;
+    transform: none !important;
+}
+
+/* MODALES */
+.modal-content {
+    background: #000000 !important;
+    border: 5px solid #FFFFFF !important;
+}
+
+.modal-header {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+    border-bottom: 3px solid #FFFFFF !important;
+}
+
+.modal-title {
+    color: #FFFF00 !important;
+    font-weight: 700 !important;
+}
+
+.modal-body {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+}
+
+.modal-footer {
+    background: #000000 !important;
+    border-top: 3px solid #FFFFFF !important;
+}
+
+.btn-close {
+    filter: invert(1) contrast(2) !important;
+    opacity: 1 !important;
+    border: 3px solid #FFFFFF !important;
+}
+
+.btn-close:hover {
+    background: #FF0000 !important;
+}
+
+/* BOTONES */
+.btn {
+    font-weight: 700 !important;
+    border-width: 3px !important;
+    padding: 0.75rem 1.5rem !important;
+}
+
+.btn-primary {
+    background: #FFFF00 !important;
+    color: #000000 !important;
+    border: 3px solid #FFFF00 !important;
+}
+
+.btn-primary:hover {
+    background: #000000 !important;
+    color: #FFFF00 !important;
+    transform: none !important;
+}
+
+.btn-secondary {
+    background: transparent !important;
+    color: #FFFFFF !important;
+    border: 3px solid #FFFFFF !important;
+}
+
+.btn-secondary:hover {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+}
+
+.btn-outline-danger {
+    background: transparent !important;
+    color: #FF0000 !important;
+    border: 3px solid #FF0000 !important;
+}
+
+.btn-outline-danger:hover {
+    background: #FF0000 !important;
+    color: #000000 !important;
+}
+
+/* UTILIDADES */
+.text-muted {
+    color: #00FFFF !important;
+}
+
+.text-warning {
+    color: #FFA500 !important;
+}
+
+code {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    border: 3px solid #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+/* FORMULARIOS */
+input,
+textarea,
+select {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+    border: 3px solid #FFFFFF !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #FFFF00 !important;
+    outline: 3px solid #FFFF00 !important;
+}
+
+/* ENLACES */
+a {
+    color: #00FFFF !important;
+    text-decoration: underline !important;
+    font-weight: 700 !important;
+}
+
+a:hover {
+    color: #FFFF00 !important;
+}
+
+/* ENFOQUE */
+*:focus,
+*:focus-visible {
+    outline: 5px solid #FFA500 !important;
+    outline-offset: 3px !important;
+}
+
+/* CONTENIDO */
+main {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+}
+
+/* DESACTIVAR ANIMACIONES */
+*,
+*::before,
+*::after {
+    animation: none !important;
+    transition: none !important;
+}
