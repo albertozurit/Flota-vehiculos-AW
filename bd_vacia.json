@@ -5,9 +5,6 @@
   "vehiculos": [
     {"matricula": "1234ABC", "marca": "Tesla", "modelo": "Model 3", "anio_matriculacion": 2022, "numero_plazas": 5, "autonomia_km": 450, "color": "blanco", "estado": "disponible", "id_concesionario": 1},
     {"matricula": "5678DEF", "marca": "Nissan", "modelo": "Leaf", "anio_matriculacion": 2021, "numero_plazas": 5, "autonomia_km": 270, "color": "azul", "estado": "disponible", "id_concesionario": 1}
-  ],
-  "usuarios": [
-    {"nombre": "Admin", "correo": "admin@flotawei.com", "contrasena": "Admin1234", "rol": "admin", "id_concesionario": 1}
   ]
 }
   

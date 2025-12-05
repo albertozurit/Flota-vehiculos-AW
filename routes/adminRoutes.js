@@ -192,7 +192,7 @@ router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (req, res) => {
 
 // Crear
 router.post('/vehiculos/nuevo', requireAuth, requireAdmin, validarVehiculo, handleValidationErrors, (req, res) => {
-    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = req.body;
+    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, id_concesionario } = req.body;
     if (!req.validationErrors) {
         return res.render('vehiculos/nuevo', { title: 'Nuevo Vehículo', mensaje: 'Completa matrícula, marca y modelo', preferencias: req.session.preferencias || {} });
     }
@@ -201,7 +201,7 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, validarVehiculo, hand
         matricula, marca, modelo, anio_matriculacion: anio_matriculacion || null,
         numero_plazas: numero_plazas ? parseInt(numero_plazas) : null,
         autonomia_km: autonomia_km ? parseInt(autonomia_km) : null,
-        color: color || null, estado: 'disponible', id_concesionario: 1
+        color: color || null, estado: 'disponible', id_concesionario: parseInt(id_concesionario) || 1
     };
 
     insertarVehiculo(vehiculo, (err, id) => {

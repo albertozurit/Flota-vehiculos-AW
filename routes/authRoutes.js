@@ -86,7 +86,7 @@ function insertarVehiculo(vehiculo, callback) {
 }
 
 //RUTAS POST
-router.post('/register', validarRegistro, (request, response) => {
+router.post('/register', requireAuth, requireAdmin, validarRegistro, (request, response) => {
     // Verificar errores de validación
     const errors = validationResult(request);
     if (!errors.isEmpty()) {
@@ -98,8 +98,8 @@ router.post('/register', validarRegistro, (request, response) => {
         });
     }
 
-    const { nombre, email, password } = request.body;
-    const rol = 'empleado';
+    const { nombre, email, password, id_concesionario, rol } = request.body;
+    const rolFinal = (rol === 'admin') ? 'admin' : 'empleado';
     const saltRounds = 10;
 
     // Validación de correo corporativo (cambia el dominio según tu organización)
@@ -173,7 +173,7 @@ router.post('/register', validarRegistro, (request, response) => {
                     nombre: nombre,
                     email: email,
                     password: hashedPassword,
-                    rol: rol,
+                    rol: rolFinal,
                     id_concesionario: parseInt(id_concesionario) || 1
                 };
 
@@ -300,10 +300,15 @@ router.post('/logout', (request, response) => {
 //Accesibilidad
 router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
     //TODO añadir validaciones si es necesario
+    const prev = request.session.preferencias || {};
     request.session.preferencias = {
         contraste: request.body.contraste === 'true',
         daltonismo: request.body.daltonismo === 'true',
-        fontSize: parseInt(request.body.fontSize) || 100
+        fontSize: parseInt(request.body.fontSize) || 100,
+        atajos: {
+            reservar: (request.body.atajo_reservar || '').trim() || (prev.atajos && prev.atajos.reservar) || '',
+            misReservas: (request.body.atajo_mis_reservas || '').trim() || (prev.atajos && prev.atajos.misReservas) || ''
+        }
     };
 
     request.session.save(() => {
@@ -826,7 +831,7 @@ router.get('/reservas', requireAuth, async (req, res) => {
                        v.marca, v.modelo, v.matricula
                 FROM Reservas r
                 LEFT JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
-                WHERE r.id_usuario = ?
+                WHERE r.id_usuario = ? AND r.estado <> 'Cancelada'
                 ORDER BY r.fecha_inicio DESC
             `;
 
@@ -856,7 +861,7 @@ router.get('/reservas', requireAuth, async (req, res) => {
                     title: 'Mis Reservas',
                     usuario: req.session.usuario,
                     reservas: misReservas,
-                    mensaje: null
+                    mensaje: req.session.mensaje || null
                 });
                 req.session.mensaje = null;
             });
