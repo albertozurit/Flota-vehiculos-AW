@@ -207,6 +207,29 @@ router.post('/usuarios/:id/editar', requireAuth, requireAdmin, (req, res) => {
     });
 });
 
+// Eliminar usuario
+router.post('/usuarios/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
+    const id = parseInt(req.params.id);
+
+    // Evitar que el admin se elimine a sí mismo
+    if (req.session && req.session.usuario && req.session.usuario.id === id) {
+        console.log('⚠️ Un admin intentó eliminarse a sí mismo');
+        return res.redirect('/admin');
+    }
+
+    pool.getConnection((err, connection) => {
+        if (err) return res.redirect('/admin');
+
+        connection.query('DELETE FROM Usuarios WHERE id_usuario = ?', [id], (e) => {
+            connection.release();
+            if (e) {
+                console.error('Error eliminando usuario:', e);
+            }
+            res.redirect('/admin');
+        });
+    });
+});
+
 // === Vehículos (CRUD) ===
 // Listar
 router.get('/vehiculos', requireAuth, requireAdmin, (req, res) => {
@@ -229,9 +252,10 @@ router.get('/vehiculos', requireAuth, requireAdmin, (req, res) => {
 });
 
 // Form nuevo (reusa vista existente)
-router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (req, res) => {
-    res.render('vehiculos/nuevo', { title: 'Nuevo Vehículo', mensaje: null, preferencias: req.session.preferencias || {} });
-});
+// RUTA COMENTADA: Ya no se usa, la creación de vehículos se hace desde el modal del panel de admin
+// router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (req, res) => {
+//     res.render('vehiculos/nuevo', { title: 'Nuevo Vehículo', mensaje: null, preferencias: req.session.preferencias || {} });
+// });
 
 // Crear (con subida de imagen)
 router.post('/vehiculos/nuevo', requireAuth, requireAdmin, upload.single('imagen'), validarVehiculo, handleValidationErrors, (req, res) => {
@@ -324,9 +348,10 @@ router.get('/concesionarios', requireAuth, requireAdmin, (req, res) => {
     return res.redirect('/admin');
 });
 
-router.get('/concesionarios/nuevo', requireAuth, requireAdmin, (req, res) => {
-    res.render('admin/nuevo_concesionario', { title: 'Nuevo Concesionario', mensaje: null, preferencias: req.session.preferencias || {} });
-});
+// RUTA COMENTADA: Ya no se usa, la creación de concesionarios se hace desde el modal del panel de admin
+// router.get('/concesionarios/nuevo', requireAuth, requireAdmin, (req, res) => {
+//     res.render('admin/nuevo_concesionario', { title: 'Nuevo Concesionario', mensaje: null, preferencias: req.session.preferencias || {} });
+// });
 
 router.post('/concesionarios/nuevo', requireAuth, requireAdmin, validarConcesionario, handleValidationErrors, (req, res) => {
     // Si hay errores de validación
@@ -409,10 +434,11 @@ router.post('/vaciar-bd', requireAuth, requireAdmin, (req, res) => {
             }
 
             // Orden importante: primero las que tienen FK
+            // NOTA: NO se borran usuarios (FK con ON DELETE SET NULL)
             const queries = [
                 'DELETE FROM Reservas',
                 'DELETE FROM Vehiculos',
-                'DELETE FROM Concesionarios',
+                'DELETE FROM Concesionarios',  // Los usuarios quedarán con id_concesionario = NULL automáticamente
                 'ALTER TABLE Concesionarios AUTO_INCREMENT = 1',
                 'ALTER TABLE Vehiculos AUTO_INCREMENT = 1'
             ];
@@ -519,6 +545,7 @@ router.post('/carga-json', (req, res) => {
 
                 const insertarCon = concesionarios.map(c => [c.nombre || null, c.ciudad || null, c.direccion || null, c.telefono_contacto || null]);
                 const insertarVeh = vehiculosJson.map(v => [v.matricula || null, v.marca || null, v.modelo || null, v.anio_matriculacion || null, v.numero_plazas || null, v.autonomia_km || null, v.color || null, v.imagen || null, v.estado || 'disponible', v.id_concesionario || 1]);
+                const insertarUsr = usuariosJson.map(u => [u.nombre || null, u.correo || null, u.contrasena || null, u.rol || 'empleado', u.telefono || null, u.id_concesionario || null, u.preferencias_accesibilidad || null]);
 
                 // Función async para ejecutar en orden
                 (async () => {
@@ -533,7 +560,17 @@ router.post('/carga-json', (req, res) => {
                             });
                         }
 
-                        // 2. LUEGO insertar vehículos (ahora los concesionarios ya existen)
+                        // 2. Insertar usuarios (después de concesionarios)
+                        if (insertarUsr.length > 0) {
+                            await new Promise((resolve, reject) => {
+                                connection.query('INSERT INTO Usuarios (nombre, correo, contrasena, rol, telefono, id_concesionario, preferencias_accesibilidad) VALUES ?', [insertarUsr], (err, result) => {
+                                    if (err) return reject(err);
+                                    resolve(result);
+                                });
+                            });
+                        }
+
+                        // 3. Insertar vehículos (al final)
                         if (insertarVeh.length > 0) {
                             await new Promise((resolve, reject) => {
                                 connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (err, result) => {
@@ -543,7 +580,7 @@ router.post('/carga-json', (req, res) => {
                             });
                         }
 
-                        // 3. Confirmar transacción
+                        // 4. Confirmar transacción
                         connection.commit(cErr => {
                             connection.release();
                             if (cErr) {
@@ -556,7 +593,7 @@ router.post('/carga-json', (req, res) => {
                             }
                             return res.render('admin/carga_json', {
                                 title: 'Cargar datos iniciales',
-                                mensaje: `✅ Éxito: Se cargaron ${concesionarios.length} concesionarios y ${vehiculosJson.length} vehículos correctamente.`,
+                                mensaje: `✅ Éxito: Se cargaron ${concesionarios.length} concesionarios, ${usuariosJson.length} usuarios y ${vehiculosJson.length} vehículos correctamente.`,
                                 tipo: 'success',
                                 preferencias: req.session.preferencias || {}
                             });

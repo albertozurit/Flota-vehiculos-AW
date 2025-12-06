@@ -355,8 +355,8 @@
                   </div>
                 </div>
                 <div class="modal-footer">
-                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                  <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                  <button class="btn btn-primary">Guardar cambios</button>
                 </div>
               </form>
             </div>
@@ -400,37 +400,36 @@
           <div class="modal fade" id="modalCrearVehiculo" tabindex="-1" aria-labelledby="modalCrearVehiculoLabel"
             aria-hidden="true">
             <div class="modal-dialog">
-              <form method="POST" action="/admin/vehiculos/nuevo" class="modal-content" enctype="multipart/form-data">
+              <form method="POST" action="/admin/vehiculos/nuevo" class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="modalCrearVehiculoLabel"><i class="bi bi-car-front me-2"></i>Nuevo
-                    vehículo</h5>
+                  <h5 class="modal-title" id="modalCrearVehiculoLabel">Nuevo vehículo</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
                   <div class="row g-2">
                     <div class="col-md-4">
-                      <label class="form-label">Matrícula *</label>
+                      <label class="form-label">Matrícula</label>
                       <input class="form-control" name="matricula" required>
                     </div>
                     <div class="col-md-4">
-                      <label class="form-label">Marca *</label>
+                      <label class="form-label">Marca</label>
                       <input class="form-control" name="marca" required>
                     </div>
                     <div class="col-md-4">
-                      <label class="form-label">Modelo *</label>
+                      <label class="form-label">Modelo</label>
                       <input class="form-control" name="modelo" required>
                     </div>
                     <div class="col-md-4">
                       <label class="form-label">Año</label>
-                      <input class="form-control" name="anio_matriculacion" type="number" min="1900" max="2100">
+                      <input class="form-control" name="anio_matriculacion" type="number">
                     </div>
                     <div class="col-md-4">
                       <label class="form-label">Plazas</label>
-                      <input class="form-control" name="numero_plazas" type="number" min="1">
+                      <input class="form-control" name="numero_plazas" type="number">
                     </div>
                     <div class="col-md-4">
                       <label class="form-label">Autonomía (km)</label>
-                      <input class="form-control" name="autonomia_km" type="number" min="0">
+                      <input class="form-control" name="autonomia_km" type="number">
                     </div>
                     <div class="col-md-6">
                       <label class="form-label">Color</label>
@@ -447,17 +446,11 @@
                           <% }) %>
                       </select>
                     </div>
-                    <div class="col-12">
-                      <label class="form-label"><i class="bi bi-camera me-1"></i>Foto del vehículo</label>
-                      <input class="form-control" type="file" name="imagen"
-                        accept="image/jpeg,image/png,image/gif,image/webp">
-                      <small class="text-muted">Formatos: JPEG, PNG, GIF, WebP. Máx 5MB.</small>
-                    </div>
                   </div>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                  <button class="btn btn-primary"><i class="bi bi-check-circle me-1"></i>Crear</button>
+                  <button class="btn btn-primary">Crear</button>
                 </div>
               </form>
             </div>

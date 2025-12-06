@@ -630,33 +630,34 @@ router.get('/perfil', requireAuth, (request, response) => {
     });
 });
 
-router.get('/register', requireAuth, requireAdmin, (request, response) => {
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error('Error al obtener conexión para cargar concesionarios:', err);
-            response.status(200);
-            return response.render('usuarios/register', {
-                title: "Registro de usuario",
-                usuario: request.session.usuario || null,
-                mensaje: request.session.mensaje || null,
-                preferencias: request.session.preferencias || {},
-                concesionarios: []
-            });
-        }
-        connection.query('SELECT id_concesionario AS id, nombre FROM Concesionarios ORDER BY nombre', (e, rows) => {
-            connection.release();
-            response.status(200);
-            response.render('usuarios/register', {
-                title: "Registro de usuario",
-                usuario: request.session.usuario || null,
-                mensaje: request.session.mensaje || null,
-                preferencias: request.session.preferencias || {},
-                concesionarios: e ? [] : (rows || [])
-            });
-            request.session.mensaje = null;
-        });
-    });
-});
+// RUTA COMENTADA: Ya no se usa, el registro se hace desde el modal del panel de admin
+// router.get('/register', requireAuth, requireAdmin, (request, response) => {
+//     pool.getConnection((err, connection) => {
+//         if (err) {
+//             console.error('Error al obtener conexión para cargar concesionarios:', err);
+//             response.status(200);
+//             return response.render('usuarios/register', {
+//                 title: "Registro de usuario",
+//                 usuario: request.session.usuario || null,
+//                 mensaje: request.session.mensaje || null,
+//                 preferencias: request.session.preferencias || {},
+//                 concesionarios: []
+//             });
+//         }
+//         connection.query('SELECT id_concesionario AS id, nombre FROM Concesionarios ORDER BY nombre', (e, rows) => {
+//             connection.release();
+//             response.status(200);
+//             response.render('usuarios/register', {
+//                 title: "Registro de usuario",
+//                 usuario: request.session.usuario || null,
+//                 mensaje: request.session.mensaje || null,
+//                 preferencias: request.session.preferencias || {},
+//                 concesionarios: e ? [] : (rows || [])
+//             });
+//             request.session.mensaje = null;
+//         });
+//     });
+// });
 
 router.get('/login', function (request, response) {
     response.status(200);
