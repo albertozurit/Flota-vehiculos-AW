@@ -57,63 +57,69 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
             reservas: 'SELECT COUNT(*) AS c FROM Reservas'
         };
 
-        connection.query(`${queries.vehiculos}; ${queries.concesionarios}; ${queries.usuarios}; ${queries.reservas}`, (err, results) => {
-            connection.release();
-            const stats = {};
-            if (!err && Array.isArray(results)) {
-                stats.vehiculos = results[0][0].c;
-                stats.concesionarios = results[1][0].c;
-                stats.usuarios = results[2][0].c;
-                stats.reservas = results[3][0].c;
-            }
-            // Extra stats: reservas por concesionario y vehículo más usado
-            pool.getConnection((errS, connS) => {
-                const sqlResCon = `SELECT c.nombre, COUNT(r.id_reserva) AS total
-                                   FROM Reservas r
-                                   JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
-                                   JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
-                                   GROUP BY c.id_concesionario
-                                   ORDER BY total DESC`;
-                const sqlTopVeh = `SELECT v.matricula, v.marca, v.modelo, COUNT(r.id_reserva) AS usos
-                                   FROM Reservas r
-                                   JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
-                                   GROUP BY v.id_vehiculo
-                                   ORDER BY usos DESC
-                                   LIMIT 1`;
-                if (errS) {
-                    stats.reservasPorConcesionario = [];
-                    stats.vehiculoMasUsado = null;
-                } else {
-                    connS.query(sqlResCon, (eA, rowsA) => {
-                        connS.query(sqlTopVeh, (eB, rowsB) => {
-                            connS.release();
-                            stats.reservasPorConcesionario = eA ? [] : (rowsA || []);
-                            stats.vehiculoMasUsado = eB ? null : ((rowsB && rowsB[0]) || null);
-                            // Also show short lists on dashboard (avoid multi-statements)
-                            const sqlVeh = 'SELECT id_vehiculo AS id, matricula, marca, modelo, numero_plazas, autonomia_km, estado FROM Vehiculos ORDER BY id_vehiculo DESC LIMIT 20';
-                            const sqlCon = 'SELECT id_concesionario AS id, nombre, ciudad, direccion, telefono_contacto FROM Concesionarios ORDER BY id_concesionario DESC LIMIT 20';
-                            const sqlUsr = 'SELECT id_usuario AS id, nombre, correo, rol, id_concesionario FROM Usuarios ORDER BY id_usuario DESC LIMIT 20';
-                            pool.getConnection((err2, conn2) => {
-                                if (err2) {
-                                    return res.render('admin', { title: 'Panel de administración', stats, vehiculos: [], concesionarios: [], usuarios: [], preferencias: req.session.preferencias || {} });
-                                }
-                                conn2.query(sqlVeh, (e1, rowsVeh) => {
-                                    conn2.query(sqlCon, (e2, rowsCon) => {
-                                        conn2.query(sqlUsr, (e3, rowsUsr) => {
-                                            conn2.release();
-                                            const vehiculos = e1 ? [] : (rowsVeh || []);
-                                            const concesionarios = e2 ? [] : (rowsCon || []);
-                                            const usuarios = e3 ? [] : (rowsUsr || []);
-                                            res.render('admin', { title: 'Panel de administración', stats, vehiculos, concesionarios, usuarios, preferencias: req.session.preferencias || {} });
+        // Ejecutar consultas por separado
+        connection.query(queries.vehiculos, (err1, rows1) => {
+            connection.query(queries.concesionarios, (err2, rows2) => {
+                connection.query(queries.usuarios, (err3, rows3) => {
+                    connection.query(queries.reservas, (err4, rows4) => {
+                        connection.release();
+
+                        const stats = {};
+                        stats.vehiculos = (!err1 && rows1 && rows1[0]) ? rows1[0].c : 0;
+                        stats.concesionarios = (!err2 && rows2 && rows2[0]) ? rows2[0].c : 0;
+                        stats.usuarios = (!err3 && rows3 && rows3[0]) ? rows3[0].c : 0;
+                        stats.reservas = (!err4 && rows4 && rows4[0]) ? rows4[0].c : 0;
+
+                        // Extra stats: reservas por concesionario y vehículo más usado
+                        pool.getConnection((errS, connS) => {
+                            const sqlResCon = `SELECT c.nombre, COUNT(r.id_reserva) AS total
+                                           FROM Reservas r
+                                           JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
+                                           JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
+                                           GROUP BY c.id_concesionario
+                                           ORDER BY total DESC`;
+                            const sqlTopVeh = `SELECT v.matricula, v.marca, v.modelo, COUNT(r.id_reserva) AS usos
+                                           FROM Reservas r
+                                           JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
+                                           GROUP BY v.id_vehiculo
+                                           ORDER BY usos DESC
+                                           LIMIT 1`;
+                            if (errS) {
+                                stats.reservasPorConcesionario = [];
+                                stats.vehiculoMasUsado = null;
+                            } else {
+                                connS.query(sqlResCon, (eA, rowsA) => {
+                                    connS.query(sqlTopVeh, (eB, rowsB) => {
+                                        connS.release();
+                                        stats.reservasPorConcesionario = eA ? [] : (rowsA || []);
+                                        stats.vehiculoMasUsado = eB ? null : ((rowsB && rowsB[0]) || null);
+                                        // Also show short lists on dashboard (avoid multi-statements)
+                                        const sqlVeh = 'SELECT id_vehiculo AS id, matricula, marca, modelo, numero_plazas, autonomia_km, estado FROM Vehiculos ORDER BY id_vehiculo DESC LIMIT 20';
+                                        const sqlCon = 'SELECT id_concesionario AS id, nombre, ciudad, direccion, telefono_contacto FROM Concesionarios ORDER BY id_concesionario DESC LIMIT 20';
+                                        const sqlUsr = 'SELECT id_usuario AS id, nombre, correo, rol, id_concesionario FROM Usuarios ORDER BY id_usuario DESC LIMIT 20';
+                                        pool.getConnection((err2, conn2) => {
+                                            if (err2) {
+                                                return res.render('admin', { title: 'Panel de administración', stats, vehiculos: [], concesionarios: [], usuarios: [], preferencias: req.session.preferencias || {} });
+                                            }
+                                            conn2.query(sqlVeh, (e1, rowsVeh) => {
+                                                conn2.query(sqlCon, (e2, rowsCon) => {
+                                                    conn2.query(sqlUsr, (e3, rowsUsr) => {
+                                                        conn2.release();
+                                                        const vehiculos = e1 ? [] : (rowsVeh || []);
+                                                        const concesionarios = e2 ? [] : (rowsCon || []);
+                                                        const usuarios = e3 ? [] : (rowsUsr || []);
+                                                        res.render('admin', { title: 'Panel de administración', stats, vehiculos, concesionarios, usuarios, preferencias: req.session.preferencias || {} });
+                                                    });
+                                                });
+                                            });
                                         });
                                     });
                                 });
-                            });
+                            }
                         });
                     });
-                }
+                });
             });
-
         });
     });
 });

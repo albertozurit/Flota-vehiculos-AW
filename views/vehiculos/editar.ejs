@@ -1,54 +1,92 @@
-<%- include('../partials/head') %>
+<%- include('../partials/head', { title: 'Editar Vehículo' }) %>
 
-<div class="container mt-5">
-    <h2 class="mb-4">✏️ Editar Vehículo</h2>
+    <body>
+        <%- include('../partials/header', { usuario: usuario }) %>
 
-    <% if (mensaje) { %>
-        <div class="alert alert-danger"><%= mensaje %></div>
-    <% } %>
+            <main class="container mt-5 pt-3">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-primary text-white">
+                                <h2 class="h4 mb-0"><i class="bi bi-pencil"></i> Editar Vehículo</h2>
+                            </div>
+                            <div class="card-body p-4">
+                                <% if (mensaje) { %>
+                                    <div class="alert alert-danger">
+                                        <%= mensaje %>
+                                    </div>
+                                    <% } %>
 
-    <form action="/admin/vehiculos/<%= vehiculo.id %>/editar" method="POST">
-        
-        <div class="mb-3">
-            <label for="marca" class="form-label">Marca:</label>
-            <input type="text" class="form-control" id="marca" name="marca" value="<%= vehiculo.marca %>" required>
-        </div>
-<!--modelo-->
-        <div class="mb-3">
-            <label for="modelo" class="form-label">Modelo:</label>
-            <input type="text" class="form-control" id="modelo" name="modelo" value="<%= vehiculo.modelo %>" required>
-        </div>
-<!--Tipo de coche-->
-        <div class="mb-3">
-            <label for="matricula" class="form-label">Matrícula:</label>
-            <input type="text" class="form-control" id="matricula" name="matricula" value="<%= vehiculo.matricula %>" required>
-        </div>
+                                        <form action="/admin/vehiculos/<%= vehiculo.id %>/editar" method="POST">
 
-        <div class="mb-3">
-            <label for="anio_matriculacion" class="form-label">Año de matriculación:</label>
-            <input type="number" class="form-control" id="anio_matriculacion" name="anio_matriculacion" value="<%= vehiculo.anio_matriculacion %>" min="1900" max="2100">
-        </div>
+                                            <div class="mb-3">
+                                                <label for="marca" class="form-label">Marca:</label>
+                                                <input type="text" class="form-control" id="marca" name="marca"
+                                                    value="<%= vehiculo.marca %>" required>
+                                            </div>
 
-        <div class="mb-3">
-            <label for="numero_plazas" class="form-label">Número de plazas:</label>
-            <input type="number" class="form-control" id="numero_plazas" name="numero_plazas" value="<%= vehiculo.numero_plazas %>" min="1">
-        </div>
+                                            <div class="mb-3">
+                                                <label for="modelo" class="form-label">Modelo:</label>
+                                                <input type="text" class="form-control" id="modelo" name="modelo"
+                                                    value="<%= vehiculo.modelo %>" required>
+                                            </div>
 
-        <div class="mb-3">
-            <label for="autonomia_km" class="form-label">Autonomía (km):</label>
-            <input type="number" class="form-control" id="autonomia_km" name="autonomia_km" value="<%= vehiculo.autonomia_km %>" min="0">
-        </div>
+                                            <div class="mb-3">
+                                                <label for="matricula" class="form-label">Matrícula:</label>
+                                                <input type="text" class="form-control" id="matricula" name="matricula"
+                                                    value="<%= vehiculo.matricula %>" required>
+                                            </div>
 
-        <div class="mb-3">
-            <label for="color" class="form-label">Color:</label>
-            <input type="text" class="form-control" id="color" name="color" value="<%= vehiculo.color %>">
-        </div>
+                                            <div class="mb-3">
+                                                <label for="anio_matriculacion" class="form-label">Año de
+                                                    matriculación:</label>
+                                                <input type="number" class="form-control" id="anio_matriculacion"
+                                                    name="anio_matriculacion" value="<%= vehiculo.anio_matriculacion %>"
+                                                    min="1900" max="2100">
+                                            </div>
 
-        <button type="submit" class="btn btn-success">💾 Guardar Cambios</button>
-    <a href="/admin/vehiculos" class="btn btn-secondary">❌ Cancelar</a>
-    </form>
+                                            <div class="mb-3">
+                                                <label for="numero_plazas" class="form-label">Número de plazas:</label>
+                                                <input type="number" class="form-control" id="numero_plazas"
+                                                    name="numero_plazas" value="<%= vehiculo.numero_plazas %>" min="1">
+                                            </div>
 
-</div>
+                                            <div class="mb-3">
+                                                <label for="autonomia_km" class="form-label">Autonomía (km):</label>
+                                                <input type="number" class="form-control" id="autonomia_km"
+                                                    name="autonomia_km" value="<%= vehiculo.autonomia_km %>" min="0">
+                                            </div>
 
-</body>
-</html>
+                                            <div class="mb-3">
+                                                <label for="color" class="form-label">Color:</label>
+                                                <input type="text" class="form-control" id="color" name="color"
+                                                    value="<%= vehiculo.color %>">
+                                            </div>
+
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" class="btn btn-success"><i class="bi bi-save"></i>
+                                                    Guardar
+                                                    Cambios</button>
+                                                <a href="/admin/vehiculos" class="btn btn-secondary"><i
+                                                        class="bi bi-x-circle"></i> Cancelar</a>
+                                            </div>
+                                        </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                window.appShortcuts = (typeof preferencias !== 'undefined' && preferencias.atajos) ? preferencias.atajos : {};
+                window.currentUserRole = "<%= usuario ? usuario.rol : '' %>";
+            </script>
+            <script src="/js/atajos.js"></script>
+            <script src="/js/accesibilidad.js"></script>
+
+            <%- include('../partials/footer', { usuario: usuario }) %>
+
+    </body>
+
+    </html>

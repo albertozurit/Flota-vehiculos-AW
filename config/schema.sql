@@ -35,7 +35,7 @@ CREATE TABLE Vehiculos (
     numero_plazas INT NOT NULL,
     autonomia_km INT,
     color VARCHAR(30),
-    imagen VARCHAR(255),
+    imagen BLOB,
     estado ENUM('disponible', 'reservado', 'mantenimiento') NOT NULL DEFAULT 'disponible',
     id_concesionario INT NOT NULL
 ) ENGINE=InnoDB;

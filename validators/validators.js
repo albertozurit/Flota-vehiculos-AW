@@ -1,9 +1,4 @@
-/**
- * VALIDACIONES SIMPLIFICADAS CON EXPRESS-VALIDATOR
- * 
- * Uso: Importar check y validationResult, luego usar directamente en las rutas
- * Ejemplo: router.post('/ruta', [validaciones...], (req, res) => {...});
- */
+/*VALIDACIONES CON EXPRESS-VALIDATOR*/
 
 const { check, validationResult } = require('express-validator');
 
@@ -84,8 +79,6 @@ const handleValidationErrors = (req, res, next) => {
     }
     next();
 };
-
-// ============ EXPORTAR ============
 
 module.exports = {
     // Middlewares
