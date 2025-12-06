@@ -94,9 +94,9 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
                                         stats.reservasPorConcesionario = eA ? [] : (rowsA || []);
                                         stats.vehiculoMasUsado = eB ? null : ((rowsB && rowsB[0]) || null);
                                         // Also show short lists on dashboard (avoid multi-statements)
-                                        const sqlVeh = 'SELECT id_vehiculo AS id, matricula, marca, modelo, numero_plazas, autonomia_km, estado FROM Vehiculos ORDER BY id_vehiculo DESC LIMIT 20';
+                                        const sqlVeh = 'SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.estado, c.nombre AS concesionario_nombre FROM Vehiculos v LEFT JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario ORDER BY v.id_vehiculo DESC LIMIT 20';
                                         const sqlCon = 'SELECT id_concesionario AS id, nombre, ciudad, direccion, telefono_contacto FROM Concesionarios ORDER BY id_concesionario DESC LIMIT 20';
-                                        const sqlUsr = 'SELECT id_usuario AS id, nombre, correo, rol, id_concesionario FROM Usuarios ORDER BY id_usuario DESC LIMIT 20';
+                                        const sqlUsr = 'SELECT u.id_usuario AS id, u.nombre, u.correo, u.rol, u.id_concesionario, c.nombre AS concesionario_nombre FROM Usuarios u LEFT JOIN Concesionarios c ON u.id_concesionario = c.id_concesionario ORDER BY u.id_usuario DESC LIMIT 20';
                                         pool.getConnection((err2, conn2) => {
                                             if (err2) {
                                                 return res.render('admin', { title: 'Panel de administración', stats, vehiculos: [], concesionarios: [], usuarios: [], preferencias: req.session.preferencias || {} });
@@ -170,6 +170,42 @@ router.post('/usuarios/:id/base', requireAuth, requireAdmin, validarAsignarBase,
     });
 });
 
+// Ruta combinada para editar rol y concesionario desde el modal
+router.post('/usuarios/:id/editar', requireAuth, requireAdmin, (req, res) => {
+    const id = parseInt(req.params.id);
+    const rol = req.body.rol === 'admin' ? 'admin' : 'empleado';
+    const idConcesionario = req.body.id_concesionario ? parseInt(req.body.id_concesionario) : null;
+    
+    pool.getConnection((err, connection) => {
+        if (err) return res.redirect('/admin');
+        
+        connection.query(
+            'UPDATE Usuarios SET rol = ?, id_concesionario = ? WHERE id_usuario = ?', 
+            [rol, idConcesionario, id], 
+            (e) => {
+                connection.release();
+                if (e) {
+                    console.error('Error actualizando usuario:', e);
+                    return res.redirect('/admin');
+                }
+                
+                // Sincronizar sesión si el admin se edita a sí mismo
+                if (req.session && req.session.usuario && req.session.usuario.id === id) {
+                    req.session.usuario.rol = rol;
+                    req.session.usuario.id_concesionario = idConcesionario;
+                }
+                
+                // Si el usuario editado ya no es admin y es el mismo, redirigir a inicio
+                if (req.session && req.session.usuario && req.session.usuario.id === id && rol !== 'admin') {
+                    return res.redirect('/');
+                }
+                
+                res.redirect('/admin');
+            }
+        );
+    });
+});
+
 // === Vehículos (CRUD) ===
 // Listar
 router.get('/vehiculos', requireAuth, requireAdmin, (req, res) => {
@@ -219,40 +255,40 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, validarVehiculo, hand
     });
 });
 
-// Editar - formulario
-router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (req, res) => {
-    const id = req.params.id;
-    pool.getConnection((err, connection) => {
-        if (err) return res.redirect('/admin/vehiculos');
-        const sql = 'SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?';
-        connection.query(sql, [id], (err, rows) => {
-            connection.release();
-            if (err || rows.length === 0) return res.redirect('/admin/vehiculos');
-            res.render('vehiculos/editar', { title: 'Editar Vehículo', vehiculo: rows[0], mensaje: null, preferencias: req.session.preferencias || {} });
-        });
-    });
-});
+// RUTA COMENTADA: Ya no es necesaria, se edita mediante modal en /vehiculos
+// router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (req, res) => {
+//     const id = req.params.id;
+//     pool.getConnection((err, connection) => {
+//         if (err) return res.redirect('/admin/vehiculos');
+//         const sql = 'SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?';
+//         connection.query(sql, [id], (err, rows) => {
+//             connection.release();
+//             if (err || rows.length === 0) return res.redirect('/admin/vehiculos');
+//             res.render('vehiculos/editar', { title: 'Editar Vehículo', vehiculo: rows[0], mensaje: null, preferencias: req.session.preferencias || {} });
+//         });
+//     });
+// });
 
-// Editar - guardar
-router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo, handleValidationErrors, (req, res) => {
-    const id = req.params.id;
-    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = req.body;
-    if (!req.validationErrors) {
-        return res.render('vehiculos/editar', { title: 'Editar Vehículo', vehiculo: { id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color }, mensaje: 'Completa matrícula, marca y modelo', preferencias: req.session.preferencias || {} });
-    }
-    pool.getConnection((err, connection) => {
-        if (err) return res.redirect('/admin/vehiculos');
-        const sql = `UPDATE Vehiculos SET matricula = ?, marca = ?, modelo = ?, anio_matriculacion = ?, numero_plazas = ?, autonomia_km = ?, color = ? WHERE id_vehiculo = ?`;
-        const params = [matricula, marca, modelo, anio_matriculacion || null, numero_plazas ? parseInt(numero_plazas) : null, autonomia_km ? parseInt(autonomia_km) : null, color || null, id];
-        connection.query(sql, params, (err) => {
-            connection.release();
-            if (err) {
-                console.error('Error actualizando vehiculo (admin):', err);
-            }
-            res.redirect('/admin/vehiculos');
-        });
-    });
-});
+// RUTA COMENTADA: Ya existe la misma funcionalidad en authRoutes.js
+// router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo, handleValidationErrors, (req, res) => {
+//     const id = req.params.id;
+//     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = req.body;
+//     if (!req.validationErrors) {
+//         return res.render('vehiculos/editar', { title: 'Editar Vehículo', vehiculo: { id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color }, mensaje: 'Completa matrícula, marca y modelo', preferencias: req.session.preferencias || {} });
+//     }
+//     pool.getConnection((err, connection) => {
+//         if (err) return res.redirect('/admin/vehiculos');
+//         const sql = `UPDATE Vehiculos SET matricula = ?, marca = ?, modelo = ?, anio_matriculacion = ?, numero_plazas = ?, autonomia_km = ?, color = ? WHERE id_vehiculo = ?`;
+//         const params = [matricula, marca, modelo, anio_matriculacion || null, numero_plazas ? parseInt(numero_plazas) : null, autonomia_km ? parseInt(autonomia_km) : null, color || null, id];
+//         connection.query(sql, params, (err) => {
+//             connection.release();
+//             if (err) {
+//                 console.error('Error actualizando vehiculo (admin):', err);
+//             }
+//             res.redirect('/admin/vehiculos');
+//         });
+//     });
+// });
 
 // Eliminar / baja lógica
 router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
@@ -334,6 +370,79 @@ router.get('/carga-json', (req, res) => {
     res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: null, preferencias: req.session.preferencias || {} });
 });
 
+// Ruta para vaciar la BD
+router.post('/vaciar-bd', requireAuth, requireAdmin, (req, res) => {
+    pool.getConnection((err, connection) => {
+        if (err) {
+            return res.render('admin/carga_json', { 
+                title: 'Cargar datos iniciales', 
+                mensaje: '❌ Error de conexión', 
+                tipo: 'danger',
+                preferencias: req.session.preferencias || {} 
+            });
+        }
+        
+        connection.beginTransaction(txErr => {
+            if (txErr) {
+                connection.release();
+                return res.render('admin/carga_json', { 
+                    title: 'Cargar datos iniciales', 
+                    mensaje: '❌ Error iniciando transacción', 
+                    tipo: 'danger',
+                    preferencias: req.session.preferencias || {} 
+                });
+            }
+            
+            // Orden importante: primero las que tienen FK
+            const queries = [
+                'DELETE FROM Reservas',
+                'DELETE FROM Vehiculos',
+                'DELETE FROM Concesionarios',
+                'ALTER TABLE Concesionarios AUTO_INCREMENT = 1',
+                'ALTER TABLE Vehiculos AUTO_INCREMENT = 1'
+            ];
+            
+            let completed = 0;
+            queries.forEach((sql, index) => {
+                connection.query(sql, (err) => {
+                    if (err) {
+                        return connection.rollback(() => {
+                            connection.release();
+                            res.render('admin/carga_json', { 
+                                title: 'Cargar datos iniciales', 
+                                mensaje: `❌ Error vaciando BD: ${err.message}`, 
+                                tipo: 'danger',
+                                preferencias: req.session.preferencias || {} 
+                            });
+                        });
+                    }
+                    
+                    completed++;
+                    if (completed === queries.length) {
+                        connection.commit((cErr) => {
+                            connection.release();
+                            if (cErr) {
+                                return res.render('admin/carga_json', { 
+                                    title: 'Cargar datos iniciales', 
+                                    mensaje: '❌ Error confirmando cambios', 
+                                    tipo: 'danger',
+                                    preferencias: req.session.preferencias || {} 
+                                });
+                            }
+                            res.render('admin/carga_json', { 
+                                title: 'Cargar datos iniciales', 
+                                mensaje: '✅ Base de datos vaciada correctamente. Ahora puedes cargar los datos del JSON.', 
+                                tipo: 'success',
+                                preferencias: req.session.preferencias || {} 
+                            });
+                        });
+                    }
+                });
+            });
+        });
+    });
+});
+
 router.post('/carga-json', (req, res) => {
     let datos;
     try {
@@ -341,37 +450,114 @@ router.post('/carga-json', (req, res) => {
         const raw = fs.readFileSync(filePath, 'utf8');
         datos = JSON.parse(raw || '{}');
     } catch (e) {
-        req.session.mensaje = 'Error leyendo bd_vacia.json';
-        return res.redirect('/');
+        return res.render('admin/carga_json', { 
+            title: 'Cargar datos iniciales', 
+            mensaje: '❌ Error: No se pudo leer el archivo bd_vacia.json. Verifica que existe en la raíz del proyecto.', 
+            tipo: 'danger',
+            preferencias: req.session.preferencias || {} 
+        });
     }
     pool.getConnection((err, connection) => {
-        if (err) { req.session.mensaje = 'Error de conexión'; return res.redirect('/'); }
+        if (err) { 
+            return res.render('admin/carga_json', { 
+                title: 'Cargar datos iniciales', 
+                mensaje: '❌ Error: No se pudo conectar a la base de datos.', 
+                tipo: 'danger',
+                preferencias: req.session.preferencias || {} 
+            }); 
+        }
         const countSql = 'SELECT (SELECT COUNT(*) FROM Vehiculos) AS vehiculos, (SELECT COUNT(*) FROM Concesionarios) AS concesionarios';
         connection.query(countSql, (err, rows) => {
-            if (err) { connection.release(); req.session.mensaje = 'Error comprobando BD'; return res.redirect('/'); }
+            if (err) { 
+                connection.release(); 
+                return res.render('admin/carga_json', { 
+                    title: 'Cargar datos iniciales', 
+                    mensaje: '❌ Error: No se pudo verificar el estado de la base de datos.', 
+                    tipo: 'danger',
+                    preferencias: req.session.preferencias || {} 
+                }); 
+            }
             const row0 = (rows && rows[0]) || {};
             const vehCount = row0.vehiculos || 0; const conCount = row0.concesionarios || 0;
-            if (vehCount > 0 || conCount > 0) { connection.release(); req.session.mensaje = 'La BD no está vacía'; return res.redirect('/'); }
+            if (vehCount > 0 || conCount > 0) { 
+                connection.release(); 
+                return res.render('admin/carga_json', { 
+                    title: 'Cargar datos iniciales', 
+                    mensaje: `⚠️ La base de datos NO está vacía (${vehCount} vehículos, ${conCount} concesionarios). Usa el botón "Vaciar BD" primero.`, 
+                    tipo: 'warning',
+                    preferencias: req.session.preferencias || {} 
+                }); 
+            }
             connection.beginTransaction(txErr => {
-                if (txErr) { connection.release(); req.session.mensaje = 'Error iniciando transacción'; return res.redirect('/'); }
+                if (txErr) { 
+                    connection.release(); 
+                    return res.render('admin/carga_json', { 
+                        title: 'Cargar datos iniciales', 
+                        mensaje: '❌ Error: No se pudo iniciar la transacción en la base de datos.', 
+                        tipo: 'danger',
+                        preferencias: req.session.preferencias || {} 
+                    }); 
+                }
                 const concesionarios = Array.isArray(datos.concesionarios) ? datos.concesionarios : [];
                 const vehiculosJson = Array.isArray(datos.vehiculos) ? datos.vehiculos : [];
                 const usuariosJson = Array.isArray(datos.usuarios) ? datos.usuarios : [];
 
                 const insertarCon = concesionarios.map(c => [c.nombre || null, c.ciudad || null, c.direccion || null, c.telefono_contacto || null]);
                 const insertarVeh = vehiculosJson.map(v => [v.matricula || null, v.marca || null, v.modelo || null, v.anio_matriculacion || null, v.numero_plazas || null, v.autonomia_km || null, v.color || null, v.imagen || null, v.estado || 'disponible', v.id_concesionario || 1]);
-                const doCon = insertarCon.length ? new Promise((resolve, reject) => connection.query('INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?', [insertarCon], (e) => e ? reject(e) : resolve())) : Promise.resolve();
-                const doVeh = insertarVeh.length ? new Promise((resolve, reject) => connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (e) => e ? reject(e) : resolve())) : Promise.resolve();
-                Promise.all([doCon, doVeh]).then(() => {
-                    connection.commit(cErr => {
-                        connection.release();
-                        if (cErr) { req.session.mensaje = 'Error confirmando transacción'; return res.redirect('/'); }
-                        req.session.mensaje = 'Datos cargados correctamente';
-                        return res.redirect('/');
-                    });
-                }).catch(err2 => {
-                    connection.rollback(() => { connection.release(); res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: 'Error cargando datos: ' + (err2.message || ''), preferencias: req.session.preferencias || {} }); });
-                });
+                
+                // Función async para ejecutar en orden
+                (async () => {
+                    try {
+                        // 1. Insertar concesionarios PRIMERO
+                        if (insertarCon.length > 0) {
+                            await new Promise((resolve, reject) => {
+                                connection.query('INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?', [insertarCon], (err, result) => {
+                                    if (err) return reject(err);
+                                    resolve(result);
+                                });
+                            });
+                        }
+                        
+                        // 2. LUEGO insertar vehículos (ahora los concesionarios ya existen)
+                        if (insertarVeh.length > 0) {
+                            await new Promise((resolve, reject) => {
+                                connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (err, result) => {
+                                    if (err) return reject(err);
+                                    resolve(result);
+                                });
+                            });
+                        }
+                        
+                        // 3. Confirmar transacción
+                        connection.commit(cErr => {
+                            connection.release();
+                            if (cErr) { 
+                                return res.render('admin/carga_json', { 
+                                    title: 'Cargar datos iniciales', 
+                                    mensaje: '❌ Error: No se pudieron confirmar los cambios. Inténtalo de nuevo.', 
+                                    tipo: 'danger',
+                                    preferencias: req.session.preferencias || {} 
+                                }); 
+                            }
+                            return res.render('admin/carga_json', { 
+                                title: 'Cargar datos iniciales', 
+                                mensaje: `✅ Éxito: Se cargaron ${concesionarios.length} concesionarios y ${vehiculosJson.length} vehículos correctamente.`, 
+                                tipo: 'success',
+                                preferencias: req.session.preferencias || {} 
+                            });
+                        });
+                    } catch (err2) {
+                        connection.rollback(() => { 
+                            connection.release(); 
+                            res.render('admin/carga_json', { 
+                                title: 'Cargar datos iniciales', 
+                                mensaje: `❌ Error: ${err2.message || 'Error desconocido'}. Verifica que la base de datos esté vacía y el JSON sea válido.`, 
+                                tipo: 'danger',
+                                preferencias: req.session.preferencias || {} 
+                            }); 
+                        });
+                    }
+                })();
             });
         });
     });

@@ -1,0 +1,89 @@
+<!-- Modal Editar Vehículo -->
+<div class="modal fade" id="modalEditarVehiculo" tabindex="-1" aria-labelledby="modalEditarVehiculoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEditarVehiculoLabel">Editar Vehículo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="formEditarVehiculo" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" id="edit_vehiculo_id" name="id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="edit_marca" class="form-label">Marca *</label>
+                            <input type="text" class="form-control" id="edit_marca" name="marca" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_modelo" class="form-label">Modelo *</label>
+                            <input type="text" class="form-control" id="edit_modelo" name="modelo" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_matricula" class="form-label">Matrícula *</label>
+                            <input type="text" class="form-control" id="edit_matricula" name="matricula" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_anio" class="form-label">Año</label>
+                            <input type="number" class="form-control" id="edit_anio" name="anio_matriculacion" min="1900" max="2100" step="1"
+                                onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                placeholder="Ej: 2024">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_plazas" class="form-label">Plazas</label>
+                            <input type="number" class="form-control" id="edit_plazas" name="numero_plazas" min="1" max="9" step="1"
+                                onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                placeholder="Ej: 5">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_autonomia" class="form-label">Autonomía (km)</label>
+                            <input type="number" class="form-control" id="edit_autonomia" name="autonomia_km" min="0" step="1"
+                                onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                                placeholder="Ej: 450">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="edit_color" class="form-label">Color</label>
+                            <input type="text" class="form-control" id="edit_color" name="color">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function initModalEditarVehiculo() {
+            const modal = document.getElementById('modalEditarVehiculo');
+            if (!modal) {
+                setTimeout(initModalEditarVehiculo, 100);
+                return;
+            }
+            
+            modal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                if (!button) return;
+                
+                document.getElementById('edit_vehiculo_id').value = button.getAttribute('data-id') || '';
+                document.getElementById('edit_matricula').value = button.getAttribute('data-matricula') || '';
+                document.getElementById('edit_marca').value = button.getAttribute('data-marca') || '';
+                document.getElementById('edit_modelo').value = button.getAttribute('data-modelo') || '';
+                document.getElementById('edit_anio').value = button.getAttribute('data-anio') || '';
+                document.getElementById('edit_plazas').value = button.getAttribute('data-plazas') || '';
+                document.getElementById('edit_autonomia').value = button.getAttribute('data-autonomia') || '';
+                document.getElementById('edit_color').value = button.getAttribute('data-color') || '';
+                document.getElementById('formEditarVehiculo').action = '/vehiculos/' + button.getAttribute('data-id') + '/editar';
+            });
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initModalEditarVehiculo);
+        } else {
+            initModalEditarVehiculo();
+        }
+    })();
+</script>

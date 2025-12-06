@@ -79,6 +79,7 @@
                       <th>Matrícula</th>
                       <th>Marca</th>
                       <th>Modelo</th>
+                      <th>Concesionario</th>
                       <th>Plazas</th>
                       <th>Autonomía</th>
                       <th>Estado</th>
@@ -96,6 +97,9 @@
                         </td>
                         <td>
                           <%= v.modelo %>
+                        </td>
+                        <td>
+                          <small class="text-muted"><%= v.concesionario_nombre || '-' %></small>
                         </td>
                         <td>
                           <%= v.numero_plazas || '' %>
@@ -225,27 +229,32 @@
                           <%= u.correo || u.email %>
                         </td>
                         <td>
-                          <%= u.rol %>
+                          <span class="badge bg-<%= u.rol === 'admin' ? 'danger' : 'primary' %>">
+                            <%= u.rol %>
+                          </span>
                         </td>
                         <td>
-                          <%= u.id_concesionario || '' %>
+                          <% if (u.concesionario_nombre) { %>
+                            <small class="text-muted"><%= u.concesionario_nombre %></small>
+                          <% } else { %>
+                            <small class="text-muted fst-italic">Sin asignar</small>
+                          <% } %>
                         </td>
                         <td class="text-end">
-                          <form action="/admin/usuarios/<%= u.id_usuario || u.id %>/rol" method="POST" class="d-inline">
-                            <select name="rol" class="form-select form-select-sm d-inline" style="width:auto">
-                              <option value="empleado" <%=u.rol==='empleado' ?'selected':'' %>
-                                >Empleado</option>
-                              <option value="admin" <%=u.rol==='admin' ?'selected':'' %>>Admin
-                              </option>
-                            </select>
-                            <button class="btn btn-sm btn-primary">Actualizar rol</button>
-                          </form>
-                          <form action="/admin/usuarios/<%= u.id_usuario || u.id %>/base" method="POST"
-                            class="d-inline ms-1">
-                            <input class="form-control form-control-sm d-inline" style="width:120px"
-                              name="id_concesionario" placeholder="ID concesionario" value="<%= u.id_concesionario || '' 
-   %>">
-                            <button class="btn btn-sm btn-secondary">Asignar base</button>
+                          <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                  data-bs-toggle="modal"
+                                  data-bs-target="#modalEditarUsuario" 
+                                  data-id="<%= u.id_usuario || u.id %>"
+                                  data-nombre="<%= u.nombre || '-' %>"
+                                  data-email="<%= u.correo || u.email %>"
+                                  data-rol="<%= u.rol %>"
+                                  data-concesionario-id="<%= u.id_concesionario || '' %>"
+                                  title="Editar rol y concesionario">
+                                  Editar
+                          </button>
+                          <form action="/admin/usuarios/<%= u.id_usuario || u.id %>/eliminar" method="POST" class="d-inline"
+                            onsubmit="return confirm('¿Eliminar usuario?')">
+                            <button class="btn btn-sm btn-outline-danger" title="Eliminar usuario">Eliminar</button>
                           </form>
                         </td>
                       </tr>
@@ -264,7 +273,6 @@
         </main>
         <% } %>
 
-          <!-- Modal Crear Usuario -->
           <div class="modal fade" id="modalCrearUsuario" tabindex="-1" aria-labelledby="modalCrearUsuarioLabel"
             aria-hidden="true">
             <div class="modal-dialog">
@@ -314,7 +322,45 @@
             </div>
           </div>
 
-          <!-- Modal Editar Concesionario -->
+          <div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <form method="POST" class="modal-content" id="formEditarUsuario">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="modalEditarUsuarioLabel">Editar usuario: <span id="usuarioNombre"></span></h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                  <p class="text-muted">Email: <strong id="usuarioEmail"></strong></p>
+                  
+                  <div class="mb-3">
+                    <label class="form-label">Rol</label>
+                    <select class="form-select" name="rol" id="editUsuarioRol">
+                      <option value="empleado">Empleado</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label">Concesionario base</label>
+                    <select class="form-select" name="id_concesionario" id="editUsuarioConcesionario">
+                      <option value="">Sin asignar</option>
+                      <% (concesionarios||[]).forEach(function(c){ %>
+                        <option value="<%= c.id_concesionario || c.id %>">
+                          <%= c.nombre %>
+                        </option>
+                      <% }) %>
+                    </select>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                  <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+
           <div class="modal fade" id="modalEditarConcesionario" tabindex="-1"
             aria-labelledby="modalEditarConcesionarioLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -349,7 +395,6 @@
             </div>
           </div>
 
-          <!-- Modal Crear Vehículo -->
           <div class="modal fade" id="modalCrearVehiculo" tabindex="-1" aria-labelledby="modalCrearVehiculoLabel"
             aria-hidden="true">
             <div class="modal-dialog">
@@ -409,87 +454,76 @@
             </div>
           </div>
 
-          <!-- Modal Editar Vehículo -->
-          <div class="modal fade" id="modalEditarVehiculo" tabindex="-1" aria-labelledby="modalEditarVehiculoLabel"
-            aria-hidden="true">
-            <div class="modal-dialog">
-              <form method="POST" class="modal-content" id="formEditarVehiculo">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="modalEditarVehiculoLabel">Editar vehículo</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                  <div class="row g-2">
-                    <div class="col-md-4">
-                      <label class="form-label">Matrícula</label>
-                      <input class="form-control" name="matricula" required>
-                    </div>
-                    <div class="col-md-4">
-                      <label class="form-label">Marca</label>
-                      <input class="form-control" name="marca" required>
-                    </div>
-                    <div class="col-md-4">
-                      <label class="form-label">Modelo</label>
-                      <input class="form-control" name="modelo" required>
-                    </div>
-                    <div class="col-md-4">
-                      <label class="form-label">Año</label>
-                      <input class="form-control" name="anio_matriculacion" type="number">
-                    </div>
-                    <div class="col-md-4">
-                      <label class="form-label">Plazas</label>
-                      <input class="form-control" name="numero_plazas" type="number">
-                    </div>
-                    <div class="col-md-4">
-                      <label class="form-label">Autonomía (km)</label>
-                      <input class="form-control" name="autonomia_km" type="number">
-                    </div>
-                    <div class="col-md-6">
-                      <label class="form-label">Color</label>
-                      <input class="form-control" name="color">
-                    </div>
-                  </div>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                  <button class="btn btn-primary">Guardar cambios</button>
-                </div>
-              </form>
-            </div>
-          </div>
+          <%- include('partials/modal_editar_vehiculo') %>
 
           <%- include('partials/modal_accesibilidad', { preferencias: preferencias || {} }) %>
-            <!-- Bootstrap JS (necesario para abrir modales) -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
             <script>
               window.appShortcuts = (typeof preferencias !== 'undefined' && preferencias.atajos) ? preferencias.atajos : {};
               window.currentUserRole = 'admin';
             </script>
             <script src="/js/atajos.js"></script>
-            <!-- Script de accesibilidad para aplicar preferencias -->
             <script src="/js/accesibilidad.js"></script>
 </body>
 
 <script>
   (function () {
+    // Script para Modal Editar Concesionario
     const modalCon = document.getElementById('modalEditarConcesionario');
-    if (!modalCon) return;
-    modalCon.addEventListener('show.bs.modal', (e) => {
-      const btn = e.relatedTarget;
-      if (!btn) return;
-      const id = btn.getAttribute('data-id');
-      const nombre = btn.getAttribute('data-nombre') || '';
-      const ciudad = btn.getAttribute('data-ciudad') || '';
-      const direccion = btn.getAttribute('data-direccion') || '';
-      const telefono = btn.getAttribute('data-telefono') || '';
-      const form = document.getElementById('formEditarConcesionario');
-      if (!form) return;
-      form.action = `/admin/concesionarios/${id}/editar`;
-      form.nombre.value = nombre;
-      form.ciudad.value = ciudad;
-      form.direccion.value = direccion;
-      form.telefono_contacto.value = telefono;
-    });
+    if (modalCon) {
+      modalCon.addEventListener('show.bs.modal', (e) => {
+        const btn = e.relatedTarget;
+        if (!btn) return;
+        const id = btn.getAttribute('data-id');
+        const nombre = btn.getAttribute('data-nombre') || '';
+        const ciudad = btn.getAttribute('data-ciudad') || '';
+        const direccion = btn.getAttribute('data-direccion') || '';
+        const telefono = btn.getAttribute('data-telefono') || '';
+        const form = document.getElementById('formEditarConcesionario');
+        if (!form) return;
+        form.action = `/admin/concesionarios/${id}/editar`;
+        form.nombre.value = nombre;
+        form.ciudad.value = ciudad;
+        form.direccion.value = direccion;
+        form.telefono_contacto.value = telefono;
+      });
+    }
+
+    // Script para Modal Editar Usuario (NUEVO)
+    const modalUser = document.getElementById('modalEditarUsuario');
+    if (modalUser) {
+      modalUser.addEventListener('show.bs.modal', (e) => {
+        const btn = e.relatedTarget;
+        if (!btn) return;
+        
+        const id = btn.getAttribute('data-id');
+        const nombre = btn.getAttribute('data-nombre') || '';
+        const email = btn.getAttribute('data-email') || '';
+        const rol = btn.getAttribute('data-rol') || 'empleado';
+        const concesionarioId = btn.getAttribute('data-concesionario-id') || '';
+
+        const form = document.getElementById('formEditarUsuario');
+        const nombreSpan = document.getElementById('usuarioNombre');
+        const emailStrong = document.getElementById('usuarioEmail');
+        const selectRol = document.getElementById('editUsuarioRol');
+        const selectConcesionario = document.getElementById('editUsuarioConcesionario');
+
+        // 1. Configurar la acción del formulario
+        // Asegúrate de que este endpoint sea el correcto en tu servidor para editar roles y concesionarios
+        form.action = `/admin/usuarios/${id}/editar`; 
+
+        // 2. Rellenar la información visible en el modal
+        nombreSpan.textContent = nombre;
+        emailStrong.textContent = email;
+
+        // 3. Seleccionar el Rol correcto
+        selectRol.value = rol;
+
+        // 4. Seleccionar el Concesionario correcto
+        selectConcesionario.value = concesionarioId;
+      });
+    }
+
   })();
 </script>
 

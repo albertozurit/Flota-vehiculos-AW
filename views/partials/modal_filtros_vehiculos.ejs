@@ -1,0 +1,90 @@
+<!-- Modal de Filtros de Vehículos -->
+<div class="modal fade" id="modalFiltros" tabindex="-1" aria-labelledby="modalFiltrosLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalFiltrosLabel">Filtrar vehículos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filtrosForm" class="row g-3">
+                    <div class="col-sm-6">
+                        <label class="form-label">Autonomía mínima (km)</label>
+                        <input type="number" min="0" step="1" name="autonomia_min" class="form-control" 
+                            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                            placeholder="Ej: 300"
+                            value="<%= (typeof filtros!=='undefined' && filtros.autonomia_min) || '' %>">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Número de plazas</label>
+                        <input type="number" min="1" max="9" step="1" name="plazas" class="form-control"
+                            onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                            placeholder="Ej: 5"
+                            value="<%= (typeof filtros!=='undefined' && filtros.plazas) || '' %>">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Color</label>
+                        <input type="text" name="color" class="form-control"
+                            value="<%= (typeof filtros!=='undefined' && filtros.color) || '' %>">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Ciudad</label>
+                        <input type="text" name="ciudad" class="form-control"
+                            value="<%= (typeof filtros!=='undefined' && filtros.ciudad) || '' %>">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Inicio</label>
+                        <input type="datetime-local" name="inicio" class="form-control"
+                            value="<%= (typeof filtros!=='undefined' && filtros.inicio) || '' %>">
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label">Fin</label>
+                        <input type="datetime-local" name="fin" class="form-control"
+                            value="<%= (typeof filtros!=='undefined' && filtros.fin) || '' %>">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="limpiarFiltros" class="btn btn-outline-secondary">Limpiar</button>
+                <button type="submit" form="filtrosForm" class="btn btn-primary" data-bs-dismiss="modal">Aplicar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        function initModalFiltros() {
+            const form = document.getElementById('filtrosForm');
+            const limpiar = document.getElementById('limpiarFiltros');
+            const grid = document.getElementById('vehiculosGrid');
+            const modal = document.getElementById('modalFiltros');
+            
+            if (!form || !limpiar || !grid || !modal) {
+                setTimeout(initModalFiltros, 100);
+                return;
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                
+                // Cerrar modal primero
+                const bsModal = bootstrap.Modal.getInstance(modal);
+                if (bsModal) bsModal.hide();
+                
+                const params = new URLSearchParams(new FormData(form));
+                window.location.href = '/vehiculos?' + params.toString();
+            });
+
+            limpiar.addEventListener('click', function () {
+                window.location.href = '/vehiculos';
+            });
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initModalFiltros);
+        } else {
+            initModalFiltros();
+        }
+    })();
+</script>

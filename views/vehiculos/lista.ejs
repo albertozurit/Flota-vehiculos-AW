@@ -68,8 +68,16 @@
                                                 <% if (usuario && usuario.rol==='admin' ) { %>
                                                     <td>
                                                         <!-- Acciones de Admin (Editar/Eliminar) -->
-                                                        <a href="/admin/vehiculos/<%= vehiculo.id %>/editar/"
-                                                            class="btn btn-sm btn-warning"> Editar</a>
+                                                        <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalEditarVehiculo"
+                                                            data-id="<%= vehiculo.id %>"
+                                                            data-matricula="<%= vehiculo.matricula || '' %>"
+                                                            data-marca="<%= vehiculo.marca || '' %>"
+                                                            data-modelo="<%= vehiculo.modelo || '' %>"
+                                                            data-anio="<%= vehiculo.anio_matriculacion || '' %>"
+                                                            data-plazas="<%= vehiculo.numero_plazas || '' %>"
+                                                            data-autonomia="<%= vehiculo.autonomia_km || '' %>"
+                                                            data-color="<%= vehiculo.color || '' %>"
+                                                            data-imagen="<%= vehiculo.imagen || '' %>">Editar</button>
                                                         <form action="/vehiculos/<%= vehiculo.id %>/eliminar"
                                                             method="POST" style="display:inline;">
                                                             <button type="submit" class="btn btn-sm btn-danger"

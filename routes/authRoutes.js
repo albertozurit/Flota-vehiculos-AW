@@ -683,9 +683,10 @@ router.get('/vehiculos', requireAuth, (request, response) => {
     const { autonomia_min, plazas, color, inicio, fin, ciudad } = request.query;
     const usuario = request.session && request.session.usuario;
     const baseId = usuario && usuario.id_concesionario ? parseInt(usuario.id_concesionario) : null;
+    const esAdmin = usuario && usuario.rol === 'admin';
 
-    // Debe estar asignado a un concesionario para ver vehículos
-    if (!baseId) {
+    // Si no es admin y no tiene concesionario asignado, no puede ver nada
+    if (!esAdmin && !baseId) {
         return response.render('vehiculos/lista_vehiculos', {
             title: "Vehículos disponibles",
             vehiculos: [],
@@ -707,14 +708,22 @@ router.get('/vehiculos', requireAuth, (request, response) => {
             });
         }
 
-        // Construir filtros dinámicos (siempre restringidos a la base del usuario)
-        const where = ['v.id_concesionario = ?'];
-        const params = [baseId];
+        // Construir filtros dinámicos
+        // ADMIN: ve todos los vehículos
+        // EMPLEADO: solo los de su concesionario
+        const where = [];
+        const params = [];
+        
+        if (!esAdmin) {
+            // Empleado: restringir a su concesionario
+            where.push('v.id_concesionario = ?');
+            params.push(baseId);
+        }
         if (autonomia_min) { where.push('v.autonomia_km >= ?'); params.push(parseInt(autonomia_min)); }
         if (plazas) { where.push('v.numero_plazas >= ?'); params.push(parseInt(plazas)); }
-        if (color) { where.push('LOWER(v.color) = LOWER(?)'); params.push(color); }
-        let joinSql = '';
-        if (ciudad) { joinSql = ' JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario'; where.push('LOWER(c.ciudad) = LOWER(?)'); params.push(ciudad); }
+        if (color) { where.push('LOWER(v.color) LIKE LOWER(?)'); params.push(`%${color}%`); }
+        let joinSql = ' JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario';
+        if (ciudad) { where.push('LOWER(c.ciudad) LIKE LOWER(?)'); params.push(`%${ciudad}%`); }
 
         // Excluir vehículos reservados en el rango [inicio, fin] si ambos están presentes
         let excludeSql = '';
@@ -727,10 +736,13 @@ router.get('/vehiculos', requireAuth, (request, response) => {
             )`;
         }
 
-        const baseSql = `SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.estado
+        const baseSql = `SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.estado, c.nombre AS concesionario_nombre, c.ciudad AS concesionario_ciudad
                          FROM Vehiculos v${joinSql}`;
         const whereSql = where.length ? ` WHERE ${where.join(' AND ')}` : '';
-        const finalSql = baseSql + whereSql + (inicio && fin ? excludeSql : '') + ' ORDER BY v.id_vehiculo DESC';
+        // Admin: ordenar por concesionario, luego por ID
+        // Empleado: ordenar solo por ID (ya solo ve su concesionario)
+        const orderSql = esAdmin ? ' ORDER BY c.nombre ASC, v.id_vehiculo DESC' : ' ORDER BY v.id_vehiculo DESC';
+        const finalSql = baseSql + whereSql + (inicio && fin ? excludeSql : '') + orderSql;
         const finalParams = params.concat(inicio && fin ? [inicio, fin] : []);
 
         connection.query(finalSql, finalParams, (err, rows) => {
@@ -797,66 +809,58 @@ router.get('/mi-base/vehiculos', requireAuth, (request, response) => {
 });
 
 
-//Formulario para editar un vehiculo pasando su id como argumento
-router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
-    const vehiculoId = request.params.id;
-
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error("Error en el servidor");
-            return response.redirect('/vehiculos');
-        }
-
-        let sql = "SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?";
-        connection.query(sql, [vehiculoId], (err, rows) => {
-            connection.release();
-
-            if (err) {
-                console.error("Error en la consulta:", err);
-                return response.redirect('/vehiculos');
-            }
-
-            console.log(`vehiculo editado`);
-            if (rows.length === 0) {
-                console.log("Vehículo no encontrado");
-                return response.redirect('/vehiculos');
-            }
-            response.render('vehiculos/editar', {
-                title: "Editar Vehículo",
-                mensaje: null,
-                vehiculo: rows[0],
-                preferencias: request.session.preferencias || {}
-            });
-        })
-    })
-
-});
+// RUTA COMENTADA: Ya no es necesaria, se edita mediante modal en /vehiculos
+// router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
+//     const vehiculoId = request.params.id;
+//     pool.getConnection((err, connection) => {
+//         if (err) {
+//             console.error("Error en el servidor");
+//             return response.redirect('/vehiculos');
+//         }
+//         let sql = "SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?";
+//         connection.query(sql, [vehiculoId], (err, rows) => {
+//             connection.release();
+//             if (err) {
+//                 console.error("Error en la consulta:", err);
+//                 return response.redirect('/vehiculos');
+//             }
+//             console.log(`vehiculo editado`);
+//             if (rows.length === 0) {
+//                 console.log("Vehículo no encontrado");
+//                 return response.redirect('/vehiculos');
+//             }
+//             response.render('vehiculos/editar', {
+//                 title: "Editar Vehículo",
+//                 mensaje: null,
+//                 vehiculo: rows[0],
+//                 preferencias: request.session.preferencias || {}
+//             });
+//         })
+//     })
+// });
 
 
-router.get('/reservas/nuevo', requireAuth, async (req, res) => {
-    if (!req.session || !req.session.usuario || req.session.usuario.rol !== 'empleado') {
-        return res.redirect('/');
-    }
-    try {
-        // **PASO 1:** Obtener la lista de vehículos disponibles desde la BD.
-        // Ejemplo ficticio de datos:
-        const vehiculosDisponibles = [
-            { id: 1, nombre: 'Tesla Model 3', matricula: '1234 ABC', bateria: '80%' },
-            { id: 2, nombre: 'Nissan Leaf', matricula: '5678 DEF', bateria: '70%' },
-            // En una aplicación real, usarías: const vehiculos = await db.getVehiculosDisponibles();
-        ];
-
-        res.render('reservasformulario', {
-            title: 'Nueva Reserva de Vehículo',
-            usuario: req.session.usuario,
-            vehiculos: vehiculosDisponibles,
-            mensaje: null
-        });
-    } catch (error) {
-        console.error('Error al cargar el formulario de reserva:', error);
-        res.status(500).send('Error interno del servidor.');
-    }
-});
+// RUTA COMENTADA: Ya no es necesaria, se reserva mediante modal en /vehiculos
+// router.get('/reservas/nuevo', requireAuth, async (req, res) => {
+//     if (!req.session || !req.session.usuario || req.session.usuario.rol !== 'empleado') {
+//         return res.redirect('/');
+//     }
+//     try {
+//         const vehiculosDisponibles = [
+//             { id: 1, nombre: 'Tesla Model 3', matricula: '1234 ABC', bateria: '80%' },
+//             { id: 2, nombre: 'Nissan Leaf', matricula: '5678 DEF', bateria: '70%' },
+//         ];
+//         res.render('reservasformulario', {
+//             title: 'Nueva Reserva de Vehículo',
+//             usuario: req.session.usuario,
+//             vehiculos: vehiculosDisponibles,
+//             mensaje: null
+//         });
+//     } catch (error) {
+//         console.error('Error al cargar el formulario de reserva:', error);
+//         res.status(500).send('Error interno del servidor.');
+//     }
+// });
 
 router.get('/reservas', requireAuth, async (req, res) => {
     try {
