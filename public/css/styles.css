@@ -893,3 +893,204 @@ body.daltonismo .page-title {
     color: #003d7a !important;
     /* Azul del modo daltonismo */
 }
+/* ========================================
+   CARRUSEL HERO ESTILO BMW
+   ======================================== */
+
+.hero-carousel {
+    margin-top: 0;
+    position: relative;
+}
+
+.hero-carousel .carousel-inner {
+    border-radius: 0;
+}
+
+.hero-carousel .carousel-item {
+    height: 75vh;
+    min-height: 500px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-carousel .carousel-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    filter: brightness(0.75);
+}
+
+.carousel-caption-custom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 4rem 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%);
+    text-align: left;
+    color: white;
+}
+
+.carousel-caption-custom h1 {
+    font-weight: 700;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+    margin-bottom: 1rem;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+.carousel-caption-custom p {
+    font-size: 1.25rem;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+    max-width: 600px;
+    animation: fadeInUp 1s ease-out;
+}
+
+.carousel-caption-custom .btn {
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    animation: fadeInUp 1.2s ease-out;
+}
+
+.carousel-caption-custom .btn-light {
+    background-color: white;
+    color: #000;
+    border: 2px solid white;
+}
+
+.carousel-caption-custom .btn-light:hover {
+    background-color: transparent;
+    color: white;
+    border-color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255,255,255,0.3);
+}
+
+/* Indicadores del carrusel */
+.hero-carousel .carousel-indicators {
+    margin-bottom: 2rem;
+}
+
+.hero-carousel .carousel-indicators button {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.5);
+    border: 2px solid white;
+    transition: all 0.3s ease;
+}
+
+.hero-carousel .carousel-indicators button.active {
+    background-color: white;
+    width: 40px;
+    border-radius: 6px;
+}
+
+/* Controles del carrusel */
+.hero-carousel .carousel-control-prev,
+.hero-carousel .carousel-control-next {
+    width: 80px;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.hero-carousel .carousel-control-prev:hover,
+.hero-carousel .carousel-control-next:hover {
+    opacity: 1;
+}
+
+.hero-carousel .carousel-control-prev-icon,
+.hero-carousel .carousel-control-next-icon {
+    width: 3rem;
+    height: 3rem;
+    background-color: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    padding: 1rem;
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Efecto hover en tarjetas de características */
+.hover-lift {
+    transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
+}
+
+.feature-icon {
+    display: inline-block;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-carousel .carousel-item {
+        height: 60vh;
+        min-height: 400px;
+    }
+    
+    .carousel-caption-custom {
+        padding: 2rem 0;
+    }
+    
+    .carousel-caption-custom h1 {
+        font-size: 2rem;
+    }
+    
+    .carousel-caption-custom p {
+        font-size: 1rem;
+    }
+    
+    .carousel-caption-custom .btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-carousel .carousel-item {
+        height: 50vh;
+        min-height: 350px;
+    }
+    
+    .carousel-caption-custom h1 {
+        font-size: 1.75rem;
+    }
+    
+    .carousel-caption-custom .d-flex {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+    
+    .carousel-caption-custom .btn {
+        width: 100%;
+    }
+}
+
