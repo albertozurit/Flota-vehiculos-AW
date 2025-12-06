@@ -314,13 +314,18 @@ router.post('/logout', (request, response) => {
 //Accesibilidad
 router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
     const prev = request.session.preferencias || {};
+
+    // Validar y sanitizar entradas
+    const fontSizeRaw = parseInt(request.body.fontSize) || 100;
+    const fontSizeSanitized = Math.min(Math.max(fontSizeRaw, 80), 120); // Clamped entre 80-120
+
     const nuevasPreferencias = {
         contraste: request.body.contraste === 'true',
         daltonismo: request.body.daltonismo === 'true',
-        fontSize: parseInt(request.body.fontSize) || 100,
+        fontSize: fontSizeSanitized,
         atajos: {
-            reservar: (request.body.atajo_reservar || '').trim() || (prev.atajos && prev.atajos.reservar) || '',
-            misReservas: (request.body.atajo_mis_reservas || '').trim() || (prev.atajos && prev.atajos.misReservas) || ''
+            reservar: (request.body.atajo_reservar || '').trim().substring(0, 20) || (prev.atajos && prev.atajos.reservar) || '',
+            misReservas: (request.body.atajo_mis_reservas || '').trim().substring(0, 20) || (prev.atajos && prev.atajos.misReservas) || ''
         }
     };
 
@@ -359,7 +364,13 @@ router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
 });
 
 // Crear vehículo (solo admin)
-router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
+router.post('/vehiculos/nuevo', requireAuth, requireAdmin, validarVehiculo, (request, response) => {
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
+        return response.render('vehiculos/nuevo', {
+            mensaje: errors.array().map(e => e.msg).join('. ')
+        });
+    }
     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = request.body;
 
     // Validaciones básicas: matrícula, marca y modelo son obligatorios
@@ -395,7 +406,11 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) =
 });
 
 //editar vehiculo solo admin
-router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
+router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo, (request, response) => {
+    const errors = validationResult(request);
+    if (!errors.isEmpty()) {
+        return response.redirect('/vehiculos');
+    }
     const vehiculoId = request.params.id;
     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = request.body;
 
@@ -476,24 +491,39 @@ router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) =
                     return res.redirect('/reservas');
                 }
 
-                const insertSql = `INSERT INTO Reservas (id_usuario, id_vehiculo, fecha_inicio, fecha_fin, estado) VALUES (?,?,?,?,?)`;
-                const insertParams = [userId, vehiculoId, inicio, fin, 'activa'];
-
-                connection.query(insertSql, insertParams, (insertErr, insertRes) => {
-                    if (insertErr) {
-                        console.error('Error insertando reserva:', insertErr);
+                // VALIDACIÓN DE SOLAPAMIENTO: Verificar que no haya reservas activas que se solapen
+                const checkOverlapSql = `
+                    SELECT id_reserva FROM Reservas 
+                    WHERE id_vehiculo = ? 
+                    AND estado = 'activa'
+                    AND NOT (fecha_fin <= ? OR fecha_inicio >= ?)
+                `;
+                connection.query(checkOverlapSql, [vehiculoId, inicio, fin], (checkErr, overlapRows) => {
+                    if (checkErr) {
+                        console.error('Error verificando solapamiento:', checkErr);
                         return connection.rollback(() => {
                             connection.release();
-                            req.session.mensaje = 'Error al guardar la reserva';
+                            req.session.mensaje = 'Error al verificar disponibilidad';
                             return res.redirect('/reservas');
                         });
                     }
 
-                    // Actualizar estado del vehículo a 'reservado'
-                    const updateSql = `UPDATE Vehiculos SET estado = 'reservado' WHERE id_vehiculo = ?`;
-                    connection.query(updateSql, [vehiculoId], (updateErr) => {
-                        if (updateErr) {
-                            console.error('Error actualizando estado del vehículo:', updateErr);
+                    if (overlapRows && overlapRows.length > 0) {
+                        // Ya existe una reserva activa en ese rango
+                        return connection.rollback(() => {
+                            connection.release();
+                            req.session.mensaje = '⚠️ El vehículo ya tiene una reserva activa en ese horario. Por favor, elige otro rango de fechas.';
+                            return res.redirect('/reservas');
+                        });
+                    }
+
+                    // No hay solapamiento, proceder con la inserción
+                    const insertSql = `INSERT INTO Reservas (id_usuario, id_vehiculo, fecha_inicio, fecha_fin, estado) VALUES (?,?,?,?,?)`;
+                    const insertParams = [userId, vehiculoId, inicio, fin, 'activa'];
+
+                    connection.query(insertSql, insertParams, (insertErr, insertRes) => {
+                        if (insertErr) {
+                            console.error('Error insertando reserva:', insertErr);
                             return connection.rollback(() => {
                                 connection.release();
                                 req.session.mensaje = 'Error al guardar la reserva';
@@ -501,9 +531,11 @@ router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) =
                             });
                         }
 
-                        connection.commit(commitErr => {
-                            if (commitErr) {
-                                console.error('Error al confirmar transacción:', commitErr);
+                        // Actualizar estado del vehículo a 'reservado'
+                        const updateSql = `UPDATE Vehiculos SET estado = 'reservado' WHERE id_vehiculo = ?`;
+                        connection.query(updateSql, [vehiculoId], (updateErr) => {
+                            if (updateErr) {
+                                console.error('Error actualizando estado del vehículo:', updateErr);
                                 return connection.rollback(() => {
                                     connection.release();
                                     req.session.mensaje = 'Error al guardar la reserva';
@@ -511,10 +543,21 @@ router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) =
                                 });
                             }
 
-                            connection.release();
-                            console.log(`Reserva creada para el vehículo ${vehiculoId} de ${inicio} a ${fin} (id_reserva=${insertRes.insertId})`);
-                            req.session.mensaje = '¡Reserva realizada con éxito!';
-                            return res.redirect('/reservas');
+                            connection.commit(commitErr => {
+                                if (commitErr) {
+                                    console.error('Error al confirmar transacción:', commitErr);
+                                    return connection.rollback(() => {
+                                        connection.release();
+                                        req.session.mensaje = 'Error al guardar la reserva';
+                                        return res.redirect('/reservas');
+                                    });
+                                }
+
+                                connection.release();
+                                console.log(`Reserva creada para el vehículo ${vehiculoId} de ${inicio} a ${fin} (id_reserva=${insertRes.insertId})`);
+                                req.session.mensaje = '¡Reserva realizada con éxito!';
+                                return res.redirect('/reservas');
+                            });
                         });
                     });
                 });

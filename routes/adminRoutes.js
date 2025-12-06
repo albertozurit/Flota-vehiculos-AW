@@ -172,7 +172,11 @@ router.post('/usuarios/:id/base', requireAuth, requireAdmin, validarAsignarBase,
 });
 
 // Ruta combinada para editar rol y concesionario desde el modal
-router.post('/usuarios/:id/editar', requireAuth, requireAdmin, (req, res) => {
+router.post('/usuarios/:id/editar', requireAuth, requireAdmin, validarCambioRol, validarAsignarBase, handleValidationErrors, (req, res) => {
+    if (req.validationErrors) {
+        console.warn('Errores de validación en editar usuario:', req.validationMessage);
+        return res.redirect('/admin');
+    }
     const id = parseInt(req.params.id);
     const rol = req.body.rol === 'admin' ? 'admin' : 'empleado';
     const idConcesionario = req.body.id_concesionario ? parseInt(req.body.id_concesionario) : null;
@@ -317,7 +321,11 @@ router.post('/concesionarios/nuevo', requireAuth, requireAdmin, validarConcesion
 });
 
 // Editar concesionario (desde panel)
-router.post('/concesionarios/:id/editar', requireAuth, requireAdmin, (req, res) => {
+router.post('/concesionarios/:id/editar', requireAuth, requireAdmin, validarConcesionario, handleValidationErrors, (req, res) => {
+    if (req.validationErrors) {
+        console.warn('Errores de validación en editar concesionario:', req.validationMessage);
+        return res.redirect('/admin');
+    }
     const id = req.params.id;
     const { nombre, ciudad, direccion, telefono_contacto } = req.body;
     pool.getConnection((err, connection) => {
@@ -346,7 +354,7 @@ router.post('/concesionarios/:id/eliminar', requireAuth, requireAdmin, (req, res
 });
 
 // Carga inicial desde JSON cuando BD está vacía
-router.get('/carga-json', (req, res) => {
+router.get('/carga-json', requireAuth, requireAdmin, (req, res) => {
     res.render('admin/carga_json', { title: 'Cargar datos iniciales', mensaje: null, preferencias: req.session.preferencias || {} });
 });
 
@@ -424,7 +432,7 @@ router.post('/vaciar-bd', requireAuth, requireAdmin, (req, res) => {
     });
 });
 
-router.post('/carga-json', (req, res) => {
+router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
     let datos;
     try {
         const filePath = path.join(__dirname, '..', 'bd_vacia.json');

@@ -20,7 +20,7 @@ CREATE TABLE Usuarios (
     contrasena VARCHAR(255) NOT NULL,
     rol ENUM('empleado', 'admin') NOT NULL DEFAULT 'empleado',
     telefono VARCHAR(20),
-    id_concesionario INT NOT NULL,
+    id_concesionario INT,  -- Nullable: si se borra el concesionario, queda NULL
     preferencias_accesibilidad TEXT      -- Para JSON o datos largos
 ) ENGINE=InnoDB;
 
@@ -35,7 +35,7 @@ CREATE TABLE Vehiculos (
     numero_plazas INT NOT NULL,
     autonomia_km INT,
     color VARCHAR(30),
-    imagen_ruta VARCHAR(255),
+    imagen VARCHAR(255),
     estado ENUM('disponible', 'reservado', 'mantenimiento') NOT NULL DEFAULT 'disponible',
     id_concesionario INT NOT NULL
 ) ENGINE=InnoDB;
@@ -62,7 +62,7 @@ CREATE TABLE Reservas (
 ALTER TABLE Usuarios
     ADD CONSTRAINT FK_Usuarios_Concesionario FOREIGN KEY (id_concesionario)
     REFERENCES Concesionarios(id_concesionario)
-    ON DELETE CASCADE ON UPDATE CASCADE;
+    ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- Relaciones para la tabla Vehiculos
 ALTER TABLE Vehiculos
