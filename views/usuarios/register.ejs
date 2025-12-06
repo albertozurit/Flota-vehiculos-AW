@@ -1,63 +1,83 @@
 <%- include('../partials/head') %>
-<%- include('../partials/header', { usuario: usuario }) %>
+    <%- include('../partials/header', { usuario: usuario }) %>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <h2 class="mb-4">Registro de Empleado</h2>
-            
-            <% if (usuario && usuario.rol === 'admin') { %>
-                <div class="alert alert-info">Solo los administradores deben crear empleados.</div>
-            <% } %>
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <h2 class="mb-4">Registro de Empleado</h2>
 
-            <% if (typeof mensaje !== 'undefined' && mensaje) { %>
-                <div class="alert alert-warning"><%= mensaje %></div>
-            <% } %>
+                    <% if (usuario && usuario.rol==='admin' ) { %>
+                        <div class="alert alert-info">Solo los administradores deben crear empleados.</div>
+                        <% } %>
 
-            <% const listaConcesionarios = (typeof concesionarios !== 'undefined' && Array.isArray(concesionarios)) ? concesionarios : []; %>
-            <form action="/register" method="POST">
-                
-                <div class="mb-3">
-                    <label for="nombre" class="form-label">Nombre Completo</label>
-                    <input type="text" class="form-control" id="nombre" name="nombre" required>
+                            <% if (typeof mensaje !=='undefined' && mensaje) { %>
+                                <div class="alert alert-warning">
+                                    <%= mensaje %>
+                                </div>
+                                <% } %>
+
+                                    <% const listaConcesionarios=(typeof concesionarios !=='undefined' &&
+                                        Array.isArray(concesionarios)) ? concesionarios : []; %>
+                                        <form action="/register" method="POST">
+
+                                            <div class="mb-3">
+                                                <label for="nombre" class="form-label">Nombre Completo</label>
+                                                <input type="text" class="form-control" id="nombre" name="nombre"
+                                                    required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="email" class="form-label">Correo Corporativo</label>
+                                                <input type="email" class="form-control" id="email" name="email"
+                                                    placeholder="ejemplo@flotawei.com" required>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="password" class="form-label">Contraseña</label>
+                                                <input type="password" class="form-control" id="password"
+                                                    name="password" minlength="8" required>
+                                                <div class="form-text">Mínimo 8 caracteres, 1 mayúscula y 1 número.
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="id_concesionario" class="form-label">Concesionario</label>
+                                                <select id="id_concesionario" name="id_concesionario"
+                                                    class="form-select" required>
+                                                    <option value="">Seleccione...</option>
+                                                    <% listaConcesionarios.forEach(function(c){ %>
+                                                        <option value="<%= c.id %>">
+                                                            <%= c.nombre %>
+                                                        </option>
+                                                        <% }) %>
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="rol" class="form-label">Rol</label>
+                                                <select id="rol" name="rol" class="form-select">
+                                                    <option value="empleado" selected>Empleado</option>
+                                                    <option value="admin">Administrador</option>
+                                                </select>
+                                            </div>
+
+                                            <button type="submit" class="btn btn-primary">Registrar</button>
+                                        </form>
+
+                                        <p class="mt-3">¿Ya tienes cuenta? <a href="/login">Iniciar Sesión</a></p>
                 </div>
-
-                <div class="mb-3">
-                    <label for="email" class="form-label">Correo Corporativo</label>
-                    <input type="email" class="form-control" id="email" name="email" placeholder="ejemplo@flotawei.com" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="password" class="form-label">Contraseña</label>
-                    <input type="password" class="form-control" id="password" name="password" minlength="8" required>
-                    <div class="form-text">Mínimo 8 caracteres, 1 mayúscula y 1 número.</div>
-                </div>
-
-                <div class="mb-3">
-                    <label for="id_concesionario" class="form-label">Concesionario</label>
-                    <select id="id_concesionario" name="id_concesionario" class="form-select" required>
-                        <option value="">Seleccione...</option>
-                        <% listaConcesionarios.forEach(function(c){ %>
-                            <option value="<%= c.id %>"><%= c.nombre %></option>
-                        <% }) %>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="rol" class="form-label">Rol</label>
-                    <select id="rol" name="rol" class="form-select">
-                        <option value="empleado" selected>Empleado</option>
-                        <option value="admin">Administrador</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn btn-primary">Registrar</button>
-            </form>
-            
-            <p class="mt-3">¿Ya tienes cuenta? <a href="/login">Iniciar Sesión</a></p>
+            </div>
         </div>
-    </div>
-</div>
 
-</body>
-</html>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            window.appShortcuts = (typeof preferencias !== 'undefined' && preferencias.atajos) ? preferencias.atajos : {};
+            window.currentUserRole = "<%= usuario ? usuario.rol : '' %>";
+        </script>
+        <script src="/js/atajos.js"></script>
+        <script src="/js/accesibilidad.js"></script>
+        <%- include('../partials/footer', { usuario: usuario }) %>
+
+            </body>
+
+            </html>

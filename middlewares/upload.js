@@ -1,8 +1,18 @@
 const multer = require('multer');
 const path = require('path');
 
-// Configuración de almacenamiento en memoria (para guardar en BD)
-const storage = multer.memoryStorage();
+// Configuración de almacenamiento en disco (para guardar en public/images/vehiculos)
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, '..', 'public', 'images', 'vehiculos'));
+    },
+    filename: function (req, file, cb) {
+        // Nombre único: timestamp + número aleatorio + extensión original
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'vehiculo-' + uniqueSuffix + ext);
+    }
+});
 
 // Filtro de archivos - solo imágenes
 const fileFilter = function (req, file, cb) {

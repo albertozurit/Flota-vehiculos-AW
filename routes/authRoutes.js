@@ -713,7 +713,7 @@ router.get('/vehiculos', requireAuth, (request, response) => {
         // EMPLEADO: solo los de su concesionario
         const where = [];
         const params = [];
-        
+
         if (!esAdmin) {
             // Empleado: restringir a su concesionario
             where.push('v.id_concesionario = ?');
@@ -736,7 +736,7 @@ router.get('/vehiculos', requireAuth, (request, response) => {
             )`;
         }
 
-        const baseSql = `SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.estado, c.nombre AS concesionario_nombre, c.ciudad AS concesionario_ciudad
+        const baseSql = `SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.imagen, v.estado, c.nombre AS concesionario_nombre, c.ciudad AS concesionario_ciudad
                          FROM Vehiculos v${joinSql}`;
         const whereSql = where.length ? ` WHERE ${where.join(' AND ')}` : '';
         // Admin: ordenar por concesionario, luego por ID
@@ -787,7 +787,7 @@ router.get('/mi-base/vehiculos', requireAuth, (request, response) => {
                 preferencias: request.session.preferencias || {}
             });
         }
-        const sql = `SELECT id_vehiculo AS id, matricula, marca, modelo, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_concesionario = ?`;
+        const sql = `SELECT id_vehiculo AS id, matricula, marca, modelo, numero_plazas, autonomia_km, color, imagen, estado FROM Vehiculos WHERE id_concesionario = ?`;
         connection.query(sql, [usuario.id_concesionario || 1], (err, rows) => {
             connection.release();
             if (err) {
@@ -921,14 +921,16 @@ router.get('/reservas', requireAuth, async (req, res) => {
 
 
 
-// Ruta para servir imagen de un vehículo (BLOB desde BD)
+// Ruta para servir imagen de un vehículo (redirige a imagen o placeholder)
+// Esta ruta ya no es necesaria ya que las imágenes se sirven directamente desde /images/vehiculos/
+// pero la mantenemos por compatibilidad
 router.get('/vehiculos/:id/imagen', (request, response) => {
     const vehiculoId = request.params.id;
 
     pool.getConnection((err, connection) => {
         if (err) {
             console.error('Error al obtener conexión para imagen:', err);
-            return response.status(500).send('Error en el servidor');
+            return response.redirect('/images/no-image.png');
         }
 
         const sql = 'SELECT imagen FROM Vehiculos WHERE id_vehiculo = ?';
@@ -937,17 +939,15 @@ router.get('/vehiculos/:id/imagen', (request, response) => {
 
             if (err) {
                 console.error('Error al consultar imagen:', err);
-                return response.status(500).send('Error en el servidor');
-            }
-
-            if (rows.length === 0 || !rows[0].imagen) {
-                // Si no hay imagen, enviar imagen placeholder
                 return response.redirect('/images/no-image.png');
             }
 
-            // Servir el BLOB como imagen
-            response.contentType('image/jpeg');
-            response.send(rows[0].imagen);
+            if (rows.length === 0 || !rows[0].imagen) {
+                return response.redirect('/images/no-image.png');
+            }
+
+            // Redirigir a la ruta de la imagen en el sistema de archivos
+            response.redirect(rows[0].imagen);
         });
     });
 });
