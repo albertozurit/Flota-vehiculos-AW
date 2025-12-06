@@ -27,16 +27,7 @@
                                 <td><a href="/vehiculos">Vehículos disponibles</a></td>
                             </tr>
                             <% } %>
-                                <% if (usuario && usuario.rol==='empleado' ) { %>
-                                    <tr>
-                                        <td><a href="/reservas/nueva">Reservar vehículo</a></td>
-                                    </tr>
-                                    <% } %>
-                                        <% if (usuario && usuario.rol==='admin' ) { %>
-                                            <tr>
-                                                <td><a href="/admin">Administración</a></td>
-                                            </tr>
-                                            <% } %>
+                        <tr>
                     </table>
                 </td>
 
