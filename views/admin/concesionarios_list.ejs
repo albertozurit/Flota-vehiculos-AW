@@ -1,24 +1,45 @@
 <main class="container py-3">
   <h1 class="h3">Concesionarios</h1>
-  <% if (mensaje) { %><div class="alert alert-warning"><%= mensaje %></div><% } %>
-  <a class="btn btn-primary mb-3" href="/admin/concesionarios/nuevo">➕ Nuevo concesionario</a>
-  <table class="table table-striped">
-    <thead>
-      <tr><th>Nombre</th><th>Ciudad</th><th>Dirección</th><th>Teléfono</th></tr>
-    </thead>
-    <tbody>
-      <% (concesionarios||[]).forEach(c=> { %>
-        <tr>
-          <td><%= c.nombre %></td>
-          <td><%= c.ciudad || '' %></td>
-          <td><%= c.direccion || '' %></td>
-          <td><%= c.telefono_contacto || '' %></td>
-        </tr>
-      <% }) %>
-      <% if ((concesionarios||[]).length===0) { %>
-        <tr><td colspan="4" class="text-center text-muted">Sin concesionarios</td></tr>
-      <% } %>
-    </tbody>
-  </table>
-  <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#modalCargaJSON">Cargar datos iniciales (JSON)</button>
+  <% if (mensaje) { %>
+    <div class="alert alert-warning">
+      <%= mensaje %>
+    </div>
+    <% } %>
+      <a class="btn btn-primary mb-3" href="/admin/concesionarios/nuevo"><i class="bi bi-plus-circle"></i> Nuevo
+        concesionario</a>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Ciudad</th>
+            <th>Dirección</th>
+            <th>Teléfono</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% (concesionarios||[]).forEach(c=> { %>
+            <tr>
+              <td>
+                <%= c.nombre %>
+              </td>
+              <td>
+                <%= c.ciudad || '' %>
+              </td>
+              <td>
+                <%= c.direccion || '' %>
+              </td>
+              <td>
+                <%= c.telefono_contacto || '' %>
+              </td>
+            </tr>
+            <% }) %>
+              <% if ((concesionarios||[]).length===0) { %>
+                <tr>
+                  <td colspan="4" class="text-center text-muted">Sin concesionarios</td>
+                </tr>
+                <% } %>
+        </tbody>
+      </table>
+      <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal"
+        data-bs-target="#modalCargaJSON">Cargar datos iniciales (JSON)</button>
 </main>

@@ -68,7 +68,8 @@
           <section class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
               <span>Gestión de vehículos</span>
-              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearVehiculo">➕ Alta vehículo</button>
+              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                data-bs-target="#modalCrearVehiculo"><i class="bi bi-plus-circle"></i> Alta vehículo</button>
             </div>
             <div class="card-body">
               <div class="table-responsive">
@@ -200,7 +201,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
               <span>Gestión de usuarios</span>
               <button class="btn btn-sm btn-primary" type="button" data-bs-toggle="modal"
-                data-bs-target="#modalCrearUsuario">➕ Crear usuario</button>
+                data-bs-target="#modalCrearUsuario"><i class="bi bi-plus-circle"></i> Crear usuario</button>
             </div>
             <div class="card-body">
               <div class="table-responsive">
@@ -349,7 +350,8 @@
           </div>
 
           <!-- Modal Crear Vehículo -->
-          <div class="modal fade" id="modalCrearVehiculo" tabindex="-1" aria-labelledby="modalCrearVehiculoLabel" aria-hidden="true">
+          <div class="modal fade" id="modalCrearVehiculo" tabindex="-1" aria-labelledby="modalCrearVehiculoLabel"
+            aria-hidden="true">
             <div class="modal-dialog">
               <form method="POST" action="/admin/vehiculos/nuevo" class="modal-content">
                 <div class="modal-header">
@@ -391,8 +393,10 @@
                       <select class="form-select" name="id_concesionario">
                         <option value="1">Base (1)</option>
                         <% (concesionarios||[]).forEach(function(c){ %>
-                          <option value="<%= c.id %>"><%= c.nombre %></option>
-                        <% }) %>
+                          <option value="<%= c.id %>">
+                            <%= c.nombre %>
+                          </option>
+                          <% }) %>
                       </select>
                     </div>
                   </div>

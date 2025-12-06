@@ -9,8 +9,9 @@
             </div>
             <% } %>
 
-                    <% if (usuario && usuario.rol==='admin' ) { %>
-                    <a href="/admin/vehiculos/nuevo" class="btn btn-primary mb-3">➕ Crear Nuevo Vehículo</a>
+                <% if (usuario && usuario.rol==='admin' ) { %>
+                    <a href="/admin/vehiculos/nuevo" class="btn btn-primary mb-3"><i class="bi bi-plus-circle"></i>
+                        Crear Nuevo Vehículo</a>
                     <% } %>
 
                         <% if (vehiculos.length===0) { %>
@@ -98,12 +99,10 @@
                                     </tbody>
                                 </table>
                                 <% } %>
-
-                                    <a href="/" class="btn btn-secondary mt-3">⬅️ Volver al inicio</a>
     </div>
 
     <%- include('../partials/modal_reservar') %>
 
-    </body>
+        </body>
 
-    </html>
+        </html>

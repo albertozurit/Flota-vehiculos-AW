@@ -11,91 +11,90 @@
 <body>
 
     <%- include('../partials/header', { usuario: usuario }) %>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-12">
-                <h2 class="h3 mb-4 text-primary"><i class="fas fa-list-alt me-2"></i>Mis Reservas de Vehículos</h2>
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <h2 class="h3 mb-4 page-title"><i class="fas fa-list-alt me-2"></i>Mis Reservas de Vehículos</h2>
 
-                <% if (mensaje) { %>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <%= mensaje %>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    <% } %>
+                    <% if (mensaje) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <%= mensaje %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                    aria-label="Close"></button>
+                        </div>
+                        <% } %>
 
-                        <% if (reservas && reservas.length> 0) { %>
-                            <div class="table-responsive shadow-sm rounded">
-                                <table class="table table-hover align-middle">
-                                    <thead class="bg-primary text-white">
-                                        <tr>
-                                            <th># Reserva</th>
-                                            <th>Vehículo</th>
-                                            <th>Matrícula</th>
-                                            <th>Inicio</th>
-                                            <th>Fin</th>
-                                            <th>Estado</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <% reservas.forEach(reserva=> { %>
+                            <% if (reservas && reservas.length> 0) { %>
+                                <div class="table-responsive shadow-sm rounded">
+                                    <table class="table table-hover align-middle">
+                                        <thead class="bg-primary text-white">
                                             <tr>
-                                                <td>
-                                                    <%= reserva.id %>
-                                                </td>
-                                                <td>
-                                                    <%= reserva.vehiculo %>
-                                                </td>
-                                                <td>
-                                                    <%= reserva.matricula %>
-                                                </td>
-                                                <td>
-                                                    <%= reserva.inicio %>
-                                                </td>
-                                                <td>
-                                                    <%= reserva.fin %>
-                                                </td>
-                                                <td>
-                                                    <% if (reserva.estado==='Confirmada' ) { %>
-                                                        <span class="badge bg-success">
-                                                            <%= reserva.estado %>
-                                                        </span>
-                                                        <% } else { %>
-                                                            <span class="badge bg-warning text-dark">
+                                                <th># Reserva</th>
+                                                <th>Vehículo</th>
+                                                <th>Matrícula</th>
+                                                <th>Inicio</th>
+                                                <th>Fin</th>
+                                                <th>Estado</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% reservas.forEach(reserva=> { %>
+                                                <tr>
+                                                    <td>
+                                                        <%= reserva.id %>
+                                                    </td>
+                                                    <td>
+                                                        <%= reserva.vehiculo %>
+                                                    </td>
+                                                    <td>
+                                                        <%= reserva.matricula %>
+                                                    </td>
+                                                    <td>
+                                                        <%= reserva.inicio %>
+                                                    </td>
+                                                    <td>
+                                                        <%= reserva.fin %>
+                                                    </td>
+                                                    <td>
+                                                        <% if (reserva.estado==='Confirmada' ) { %>
+                                                            <span class="badge bg-success">
                                                                 <%= reserva.estado %>
                                                             </span>
-                                                            <% } %>
-                                                </td>
-                                                <td>
-                                                    <!-- Botones de acción (ejemplo: Cancelar o Ver detalles) -->
-                                                    <form action="/reservas/cancelar/<%= reserva.id %>" method="POST"
-                                                        style="display:inline;">
-                                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                            onclick="return confirm('¿Estás seguro de que quieres cancelar esta reserva?')">
-                                                            Cancelar
-                                                        </button>
-                                                    </form>
-                                                </td>
-                                            </tr>
-                                            <% }) %>
-                                    </tbody>
-                                </table>
-                             
-                            </div>
-                               <div class="mt-4 text-center">
-                                    <a href="/" class="btn btn-secondary mt-3">⬅️ Volver al inicio</a>
+                                                            <% } else { %>
+                                                                <span class="badge bg-warning text-dark">
+                                                                    <%= reserva.estado %>
+                                                                </span>
+                                                                <% } %>
+                                                    </td>
+                                                    <td>
+                                                        <!-- Botones de acción (ejemplo: Cancelar o Ver detalles) -->
+                                                        <form action="/reservas/cancelar/<%= reserva.id %>"
+                                                            method="POST" style="display:inline;">
+                                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                                onclick="return confirm('¿Estás seguro de que quieres cancelar esta reserva?')">
+                                                                Cancelar
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                <% }) %>
+                                        </tbody>
+                                    </table>
+
                                 </div>
-                            <% } else { %>
-                                <div class="alert alert-info" role="alert">
-                                    Aún no tienes reservas activas. <a href="/reservas/nuevo" class="alert-link">¡Haz
-                                        una reserva ahora!</a>
-                                </div>
-                                <% } %>
+                                <% } else { %>
+                                    <div class="alert alert-info" role="alert">
+                                        Aún no tienes reservas activas. <a href="/reservas/nuevo"
+                                            class="alert-link">¡Haz
+                                            una reserva ahora!</a>
+                                    </div>
+                                    <% } %>
+                </div>
             </div>
         </div>
-    </div>
 
-    <%- include('../partials/footer.ejs') %>
+        <%- include('../partials/footer.ejs') %>
 </body>
 
 </html>

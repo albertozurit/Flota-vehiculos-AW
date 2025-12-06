@@ -226,7 +226,7 @@ router.post('/login', validarLogin, (request, response) => {
             return response.render('usuarios/login', { mensaje: "Error en el servidor" });
         }
 
-        let sql = 'SELECT id_usuario AS id, nombre, correo AS email, contrasena AS password, rol, id_concesionario FROM Usuarios WHERE correo = ?';
+        let sql = 'SELECT id_usuario AS id, nombre, correo AS email, contrasena AS password, rol, id_concesionario, preferencias_accesibilidad FROM Usuarios WHERE correo = ?';
         connection.query(sql, [email], (err, rows) => {
             connection.release();
 
@@ -269,6 +269,20 @@ router.post('/login', validarLogin, (request, response) => {
                     id_concesionario: user.id_concesionario || null
                 };
 
+                // Cargar preferencias de accesibilidad desde la base de datos
+                if (user.preferencias_accesibilidad) {
+                    try {
+                        request.session.preferencias = JSON.parse(user.preferencias_accesibilidad);
+                        console.log('✅ Preferencias cargadas desde BD para usuario', user.id);
+                    } catch (e) {
+                        console.error('Error al parsear preferencias desde BD:', e);
+                        request.session.preferencias = {};
+                    }
+                } else {
+                    // Si no hay preferencias guardadas, inicializar objeto vacío
+                    request.session.preferencias = {};
+                }
+
                 request.session.save((err) => {
                     if (err) {
                         console.error("Error al guardar sesión:", err);
@@ -299,9 +313,8 @@ router.post('/logout', (request, response) => {
 
 //Accesibilidad
 router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
-    //TODO añadir validaciones si es necesario
     const prev = request.session.preferencias || {};
-    request.session.preferencias = {
+    const nuevasPreferencias = {
         contraste: request.body.contraste === 'true',
         daltonismo: request.body.daltonismo === 'true',
         fontSize: parseInt(request.body.fontSize) || 100,
@@ -311,8 +324,37 @@ router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
         }
     };
 
-    request.session.save(() => {
-        response.redirect(request.get('referer') || '/');
+    // Guardar en sesión primero para respuesta inmediata
+    request.session.preferencias = nuevasPreferencias;
+
+    // Guardar en base de datos para persistencia
+    const userId = request.session.usuario.id;
+    const preferenciasJSON = JSON.stringify(nuevasPreferencias);
+
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error al obtener conexión para guardar preferencias:', err);
+            // Continuar con sesión aunque falle BD
+            return request.session.save(() => {
+                response.redirect(request.get('referer') || '/');
+            });
+        }
+
+        const sql = 'UPDATE Usuarios SET preferencias_accesibilidad = ? WHERE id_usuario = ?';
+        connection.query(sql, [preferenciasJSON, userId], (err) => {
+            connection.release();
+
+            if (err) {
+                console.error('Error al actualizar preferencias en BD:', err);
+            } else {
+                console.log('✅ Preferencias guardadas en BD para usuario', userId);
+            }
+
+            // Guardar sesión y redirigir
+            request.session.save(() => {
+                response.redirect(request.get('referer') || '/');
+            });
+        });
     });
 });
 
@@ -875,5 +917,35 @@ router.get('/reservas', requireAuth, async (req, res) => {
 
 
 
+// Ruta para servir imagen de un vehículo (BLOB desde BD)
+router.get('/vehiculos/:id/imagen', (request, response) => {
+    const vehiculoId = request.params.id;
+
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error al obtener conexión para imagen:', err);
+            return response.status(500).send('Error en el servidor');
+        }
+
+        const sql = 'SELECT imagen FROM Vehiculos WHERE id_vehiculo = ?';
+        connection.query(sql, [vehiculoId], (err, rows) => {
+            connection.release();
+
+            if (err) {
+                console.error('Error al consultar imagen:', err);
+                return response.status(500).send('Error en el servidor');
+            }
+
+            if (rows.length === 0 || !rows[0].imagen) {
+                // Si no hay imagen, enviar imagen placeholder
+                return response.redirect('/images/no-image.png');
+            }
+
+            // Servir el BLOB como imagen
+            response.contentType('image/jpeg');
+            response.send(rows[0].imagen);
+        });
+    });
+});
 
 module.exports = router;
