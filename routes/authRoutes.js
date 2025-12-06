@@ -289,8 +289,8 @@ router.post('/logout', (request, response) => {
             console.log("Erorr cerrando sesion: ", err);
             return response.redirect('/');
         }
-        response.clearCookie('connect.sid');
-        response.redirect('/login');
+        response.clearCookie('connect.sid'); //elimina la cookie de sesión del navegador
+        response.redirect('/');
     });
 });
 
