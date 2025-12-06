@@ -52,7 +52,7 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
         }
 
         const queries = {
-            vehiculos: 'SELECT COUNT(*) AS c FROM Vehiculos',
+            vehiculos: "SELECT COUNT(*) AS c FROM Vehiculos WHERE estado IN ('disponible', 'reservado')",
             concesionarios: 'SELECT COUNT(*) AS c FROM Concesionarios',
             usuarios: 'SELECT COUNT(*) AS c FROM Usuarios',
             reservas: 'SELECT COUNT(*) AS c FROM Reservas'
@@ -96,7 +96,7 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
                                         stats.vehiculoMasUsado = eB ? null : ((rowsB && rowsB[0]) || null);
                                         // Also show short lists on dashboard (avoid multi-statements)
                                         const sqlVeh = 'SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.imagen, v.estado, c.nombre AS concesionario_nombre FROM Vehiculos v LEFT JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario ORDER BY v.id_vehiculo DESC LIMIT 20';
-                                        const sqlCon = 'SELECT id_concesionario AS id, nombre, ciudad, direccion, telefono_contacto FROM Concesionarios ORDER BY id_concesionario DESC LIMIT 20';
+                                        const sqlCon = 'SELECT id_concesionario AS id, nombre, ciudad, direccion, telefono_contacto FROM Concesionarios ORDER BY nombre ASC';
                                         const sqlUsr = 'SELECT u.id_usuario AS id, u.nombre, u.correo, u.rol, u.id_concesionario, c.nombre AS concesionario_nombre FROM Usuarios u LEFT JOIN Concesionarios c ON u.id_concesionario = c.id_concesionario ORDER BY u.id_usuario DESC LIMIT 20';
                                         pool.getConnection((err2, conn2) => {
                                             if (err2) {
@@ -231,50 +231,29 @@ router.post('/usuarios/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
 });
 
 // === Vehículos (CRUD) ===
-// Listar
+// Redirigir a /admin (ya no se usa vista separada)
 router.get('/vehiculos', requireAuth, requireAdmin, (req, res) => {
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error('Error al obtener conexión (admin/vehiculos):', err);
-            return res.render('vehiculos/lista', { vehiculos: [], mensaje: 'Error en el servidor', preferencias: req.session.preferencias || {} });
-        }
-
-        const sql = `SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado FROM Vehiculos`;
-        connection.query(sql, (err, rows) => {
-            connection.release();
-            if (err) {
-                console.error('Error consultando vehiculos (admin):', err);
-                return res.render('vehiculos/lista', { vehiculos: [], mensaje: 'Error en el servidor', preferencias: req.session.preferencias || {} });
-            }
-            res.render('vehiculos/lista', { title: 'Gestión de Vehículos', vehiculos: rows, mensaje: null, preferencias: req.session.preferencias || {} });
-        });
-    });
+    return res.redirect('/admin');
 });
 
-// Form nuevo (reusa vista existente)
-// RUTA COMENTADA: Ya no se usa, la creación de vehículos se hace desde el modal del panel de admin
-// router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (req, res) => {
-//     res.render('vehiculos/nuevo', { title: 'Nuevo Vehículo', mensaje: null, preferencias: req.session.preferencias || {} });
-// });
-
-// Crear (con subida de imagen)
+// Crear vehículo 
 router.post('/vehiculos/nuevo', requireAuth, requireAdmin, upload.single('imagen'), validarVehiculo, handleValidationErrors, (req, res) => {
     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, id_concesionario } = req.body;
 
-    // Si hay errores de validación, redirigir al admin con mensaje
-    if (req.validationErrors) {
+    // Validación básica inline
+    if (!matricula || !marca || !modelo) {
         req.session.mensaje = 'Error: Completa matrícula, marca y modelo';
         return res.redirect('/admin');
     }
 
-    // Si se subió una imagen, guardar la ruta relativa
-    let imagenPath = null;
-    if (req.file) {
-        imagenPath = '/images/vehiculos/' + req.file.filename;
-    }
+    // Si se subió imagen, guardar la ruta relativa; si no, null
+    const imagenPath = req.file ? '/images/vehiculos/' + req.file.filename : null;
 
     const vehiculo = {
-        matricula, marca, modelo, anio_matriculacion: anio_matriculacion || null,
+        matricula,
+        marca,
+        modelo,
+        anio_matriculacion: anio_matriculacion || null,
         numero_plazas: numero_plazas ? parseInt(numero_plazas) : null,
         autonomia_km: autonomia_km ? parseInt(autonomia_km) : null,
         color: color || null,
@@ -289,56 +268,22 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, upload.single('imagen
             req.session.mensaje = 'Error al crear vehículo: ' + (err.message || 'Error desconocido');
             return res.redirect('/admin');
         }
-        console.log('✅ Vehículo creado con ID:', id, imagenPath ? 'con imagen' : 'sin imagen');
+        console.log('✅ Vehículo creado con ID:', id);
         res.redirect('/admin');
     });
 });
 
-// RUTA COMENTADA: Ya no es necesaria, se edita mediante modal en /vehiculos
-// router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (req, res) => {
-//     const id = req.params.id;
-//     pool.getConnection((err, connection) => {
-//         if (err) return res.redirect('/admin/vehiculos');
-//         const sql = 'SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?';
-//         connection.query(sql, [id], (err, rows) => {
-//             connection.release();
-//             if (err || rows.length === 0) return res.redirect('/admin/vehiculos');
-//             res.render('vehiculos/editar', { title: 'Editar Vehículo', vehiculo: rows[0], mensaje: null, preferencias: req.session.preferencias || {} });
-//         });
-//     });
-// });
-
-// RUTA COMENTADA: Ya existe la misma funcionalidad en authRoutes.js
-// router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo, handleValidationErrors, (req, res) => {
-//     const id = req.params.id;
-//     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = req.body;
-//     if (!req.validationErrors) {
-//         return res.render('vehiculos/editar', { title: 'Editar Vehículo', vehiculo: { id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color }, mensaje: 'Completa matrícula, marca y modelo', preferencias: req.session.preferencias || {} });
-//     }
-//     pool.getConnection((err, connection) => {
-//         if (err) return res.redirect('/admin/vehiculos');
-//         const sql = `UPDATE Vehiculos SET matricula = ?, marca = ?, modelo = ?, anio_matriculacion = ?, numero_plazas = ?, autonomia_km = ?, color = ? WHERE id_vehiculo = ?`;
-//         const params = [matricula, marca, modelo, anio_matriculacion || null, numero_plazas ? parseInt(numero_plazas) : null, autonomia_km ? parseInt(autonomia_km) : null, color || null, id];
-//         connection.query(sql, params, (err) => {
-//             connection.release();
-//             if (err) {
-//                 console.error('Error actualizando vehiculo (admin):', err);
-//             }
-//             res.redirect('/admin/vehiculos');
-//         });
-//     });
-// });
 
 // Eliminar / baja lógica
 router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
     const id = req.params.id;
     pool.getConnection((err, connection) => {
-        if (err) return res.redirect('/admin/vehiculos');
+        if (err) return res.redirect('/admin');
         const sql = `UPDATE Vehiculos SET estado = 'mantenimiento' WHERE id_vehiculo = ?`;
         connection.query(sql, [id], (err) => {
             connection.release();
             if (err) console.error('Error marcando vehiculo como mantenimiento (admin):', err);
-            res.redirect('/admin/vehiculos');
+            res.redirect('/admin');
         });
     });
 });
@@ -347,11 +292,6 @@ router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (req, res) => 
 router.get('/concesionarios', requireAuth, requireAdmin, (req, res) => {
     return res.redirect('/admin');
 });
-
-// RUTA COMENTADA: Ya no se usa, la creación de concesionarios se hace desde el modal del panel de admin
-// router.get('/concesionarios/nuevo', requireAuth, requireAdmin, (req, res) => {
-//     res.render('admin/nuevo_concesionario', { title: 'Nuevo Concesionario', mensaje: null, preferencias: req.session.preferencias || {} });
-// });
 
 router.post('/concesionarios/nuevo', requireAuth, requireAdmin, validarConcesionario, handleValidationErrors, (req, res) => {
     // Si hay errores de validación

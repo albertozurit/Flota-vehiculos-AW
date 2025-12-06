@@ -669,15 +669,7 @@ router.get('/login', function (request, response) {
     request.session.mensaje = null;
 });
 
-// Formulario para crear vehículo (solo admin)
-router.get('/vehiculos/nuevo', requireAuth, requireAdmin, (request, response) => {
-    response.status(200);
-    response.render('vehiculos/nuevo', {
-        title: "Nuevo Vehículo",
-        mensaje: null,
-        preferencias: request.session.preferencias || {}
-    });
-});
+// RUTA ELIMINADA: La creación de vehículos se hace desde el modal en /admin
 
 // Listar vehículos con filtros y exclusión por rango de reservas
 router.get('/vehiculos', requireAuth, (request, response) => {
