@@ -22,25 +22,17 @@
                             placeholder="Ej: 5"
                             value="<%= (typeof filtros!=='undefined' && filtros.plazas) || '' %>">
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-12">
                         <label class="form-label">Color</label>
                         <input type="text" name="color" class="form-control"
+                            placeholder="Ej: Negro, Blanco, Azul"
                             value="<%= (typeof filtros!=='undefined' && filtros.color) || '' %>">
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-12">
                         <label class="form-label">Ciudad</label>
                         <input type="text" name="ciudad" class="form-control"
+                            placeholder="Ej: Madrid, Barcelona, Tenerife"
                             value="<%= (typeof filtros!=='undefined' && filtros.ciudad) || '' %>">
-                    </div>
-                    <div class="col-sm-6">
-                        <label class="form-label">Inicio</label>
-                        <input type="datetime-local" name="inicio" class="form-control"
-                            value="<%= (typeof filtros!=='undefined' && filtros.inicio) || '' %>">
-                    </div>
-                    <div class="col-sm-6">
-                        <label class="form-label">Fin</label>
-                        <input type="datetime-local" name="fin" class="form-control"
-                            value="<%= (typeof filtros!=='undefined' && filtros.fin) || '' %>">
                     </div>
                 </form>
             </div>

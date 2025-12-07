@@ -1,0 +1,150 @@
+<%- include('../partials/header') %>
+
+<div class="container my-5">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">
+                <i class="bi bi-graph-up text-primary me-3"></i>Estadísticas del Sistema
+            </h1>
+            <p class="lead text-muted">Análisis de reservas y uso de vehículos</p>
+        </div>
+    </div>
+
+    <!-- Resumen General -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card border-primary shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check display-1 text-primary mb-3"></i>
+                    <h3 class="display-4 fw-bold"><%= estadisticas.totalReservas %></h3>
+                    <p class="text-muted mb-0">Total de Reservas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-success shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-check-circle display-1 text-success mb-3"></i>
+                    <h3 class="display-4 fw-bold"><%= estadisticas.reservasActivas %></h3>
+                    <p class="text-muted mb-0">Reservas Activas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-info shadow-sm h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-flag display-1 text-info mb-3"></i>
+                    <h3 class="display-4 fw-bold"><%= estadisticas.reservasFinalizadas %></h3>
+                    <p class="text-muted mb-0">Reservas Finalizadas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vehículo Más Usado -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="bi bi-trophy-fill me-2"></i>Vehículo Más Reservado
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <% if (estadisticas.vehiculoMasUsado) { %>
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h3 class="text-primary"><%= estadisticas.vehiculoMasUsado.marca %> <%= estadisticas.vehiculoMasUsado.modelo %></h3>
+                                <p class="mb-2"><strong>Matrícula:</strong> <%= estadisticas.vehiculoMasUsado.matricula %></p>
+                                <p class="mb-2"><strong>Color:</strong> <%= estadisticas.vehiculoMasUsado.color %></p>
+                                <p class="mb-2"><strong>Concesionario:</strong> <%= estadisticas.vehiculoMasUsado.nombre_concesionario %> - <%= estadisticas.vehiculoMasUsado.ciudad %></p>
+                            </div>
+                            <div class="col-md-6 text-center">
+                                <div class="display-1 text-warning">
+                                    <i class="bi bi-star-fill"></i>
+                                </div>
+                                <h2 class="fw-bold"><%= estadisticas.vehiculoMasUsado.num_reservas %> reservas</h2>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted mb-0">No hay datos disponibles</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservas por Concesionario -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-building me-2"></i>Reservas por Concesionario
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <% if (estadisticas.reservasPorConcesionario && estadisticas.reservasPorConcesionario.length > 0) { %>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th><i class="bi bi-hash me-2"></i>Posición</th>
+                                        <th><i class="bi bi-building me-2"></i>Concesionario</th>
+                                        <th><i class="bi bi-geo-alt me-2"></i>Ciudad</th>
+                                        <th class="text-center"><i class="bi bi-calendar-check me-2"></i>Reservas</th>
+                                        <th>Gráfico</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% 
+                                    const maxReservas = Math.max(...estadisticas.reservasPorConcesionario.map(c => c.num_reservas));
+                                    estadisticas.reservasPorConcesionario.forEach((concesionario, index) => { 
+                                        const porcentaje = (concesionario.num_reservas / maxReservas) * 100;
+                                    %>
+                                        <tr>
+                                            <td class="fw-bold">
+                                                <% if (index === 0) { %>
+                                                    <i class="bi bi-trophy-fill text-warning"></i>
+                                                <% } else { %>
+                                                    <%= index + 1 %>
+                                                <% } %>
+                                            </td>
+                                            <td><%= concesionario.nombre %></td>
+                                            <td><i class="bi bi-pin-map text-danger"></i> <%= concesionario.ciudad %></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary fs-6"><%= concesionario.num_reservas %></span>
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 25px;">
+                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                         style="width: <%= porcentaje %>%;" 
+                                                         aria-valuenow="<%= concesionario.num_reservas %>" 
+                                                         aria-valuemin="0" 
+                                                         aria-valuemax="<%= maxReservas %>">
+                                                        <%= porcentaje.toFixed(0) %>%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% }); %>
+                                </tbody>
+                            </table>
+                        </div>
+                    <% } else { %>
+                        <p class="text-muted mb-0">No hay datos disponibles</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Volver -->
+    <div class="text-center">
+        <a href="/admin" class="btn btn-secondary btn-lg">
+            <i class="bi bi-arrow-left me-2"></i>Volver al Panel de Administración
+        </a>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

@@ -35,10 +35,14 @@
         <% 
         let concesionarioActual = null;
         const esAdmin = usuario && usuario.rol === 'admin';
+        const esEmpleado = usuario && usuario.rol === 'empleado';
         
         vehiculos.forEach((vehiculo, index) => { 
-            // Si es admin y cambia el concesionario, mostrar separador
-            if (esAdmin && vehiculo.concesionario_nombre !== concesionarioActual) {
+            // Mostrar separador de concesionario para admin (cuando cambia) o empleado (solo una vez al inicio)
+            const mostrarSeparador = (esAdmin && vehiculo.concesionario_nombre !== concesionarioActual) || 
+                                    (esEmpleado && index === 0);
+            
+            if (mostrarSeparador) {
                 concesionarioActual = vehiculo.concesionario_nombre;
                 
                 // Cerrar grid anterior si no es el primero
@@ -61,7 +65,7 @@
                 <!-- Nuevo grid -->
                 <div id="vehiculosGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
             <% } else if (index === 0) { %>
-                <!-- Primer grid (empleado o primer concesionario admin) -->
+                <!-- Primer grid (sin rol o cliente) -->
                 <div id="vehiculosGrid" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
             <% } %>
             

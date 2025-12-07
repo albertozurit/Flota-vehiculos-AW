@@ -44,6 +44,14 @@
                             <label for="edit_color" class="form-label">Color</label>
                             <input type="text" class="form-control" id="edit_color" name="color">
                         </div>
+                        <div class="col-md-12">
+                            <label for="edit_estado" class="form-label">Estado *</label>
+                            <select class="form-select" id="edit_estado" name="estado" required>
+                                <option value="disponible">Disponible</option>
+                                <option value="reservado">Reservado</option>
+                                <option value="mantenimiento">Mantenimiento</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -76,6 +84,7 @@
                 document.getElementById('edit_plazas').value = button.getAttribute('data-plazas') || '';
                 document.getElementById('edit_autonomia').value = button.getAttribute('data-autonomia') || '';
                 document.getElementById('edit_color').value = button.getAttribute('data-color') || '';
+                document.getElementById('edit_estado').value = button.getAttribute('data-estado') || 'disponible';
                 document.getElementById('formEditarVehiculo').action = '/vehiculos/' + button.getAttribute('data-id') + '/editar';
             });
         }

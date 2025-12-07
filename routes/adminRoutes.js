@@ -73,12 +73,12 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
 
                         // Extra stats: reservas por concesionario y vehículo más usado
                         pool.getConnection((errS, connS) => {
-                            const sqlResCon = `SELECT c.nombre, COUNT(r.id_reserva) AS total
+                            const sqlResCon = `SELECT c.nombre, c.ciudad, COUNT(r.id_reserva) AS num_reservas
                                            FROM Reservas r
                                            JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
                                            JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
                                            GROUP BY c.id_concesionario
-                                           ORDER BY total DESC`;
+                                           ORDER BY num_reservas DESC`;
                             const sqlTopVeh = `SELECT v.matricula, v.marca, v.modelo, COUNT(r.id_reserva) AS usos
                                            FROM Reservas r
                                            JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
@@ -217,7 +217,7 @@ router.post('/usuarios/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
 
     // Evitar que el admin se elimine a sí mismo
     if (req.session && req.session.usuario && req.session.usuario.id === id) {
-        console.log('⚠️ Un admin intentó eliminarse a sí mismo');
+
         return res.redirect('/admin');
     }
 
@@ -242,15 +242,16 @@ router.get('/vehiculos', requireAuth, requireAdmin, (req, res) => {
 
 // Crear vehículo 
 router.post('/vehiculos/nuevo', requireAuth, requireAdmin, upload.single('imagen'), validarVehiculo, handleValidationErrors, (req, res) => {
+    if (req.validationErrors && req.validationErrors.length > 0) {
+        return res.status(400).json({ error: req.validationMessage });
+    }
+    
     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, id_concesionario } = req.body;
 
-    // Validación básica inline
     if (!matricula || !marca || !modelo) {
-        req.session.mensaje = 'Error: Completa matrícula, marca y modelo';
-        return res.redirect('/admin');
+        return res.status(400).json({ error: 'Completa matrícula, marca y modelo' });
     }
 
-    // Si se subió imagen, guardar la ruta relativa; si no, null
     const imagenPath = req.file ? '/images/vehiculos/' + req.file.filename : null;
 
     const vehiculo = {
@@ -268,12 +269,10 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, upload.single('imagen
 
     insertarVehiculo(vehiculo, (err, id) => {
         if (err) {
-            console.error('Error insertando vehículo (admin):', err);
-            req.session.mensaje = 'Error al crear vehículo: ' + (err.message || 'Error desconocido');
-            return res.redirect('/admin');
+            console.error('Error insertando vehículo:', err);
+            return res.status(500).json({ error: 'Error al crear vehículo: ' + (err.message || 'Error desconocido') });
         }
-        console.log('✅ Vehículo creado con ID:', id);
-        res.redirect('/admin');
+        res.json({ success: true, id });
     });
 });
 
@@ -573,8 +572,91 @@ router.get('/usuarios', requireAuth, requireAdmin, (req, res) => {
                 console.error('Error listando usuarios (admin):', err);
                 return res.render('admin/lista_usuarios', { usuarios: [], mensaje: 'Error', preferencias: req.session.preferencias || {} });
             }
-            console.log(rows);
             res.render('admin/lista_usuarios', { title: 'Usuarios', usuarios: rows, mensaje: null, preferencias: req.session.preferencias || {} });
+        });
+    });
+});
+
+// === Estadísticas ===
+router.get('/estadisticas', requireAuth, requireAdmin, (req, res) => {
+    pool.getConnection((err, connection) => {
+        if (err) {
+            return res.render('admin/estadisticas', {
+                title: 'Estadísticas',
+                estadisticas: {
+                    totalReservas: 0,
+                    reservasActivas: 0,
+                    reservasFinalizadas: 0,
+                    vehiculoMasUsado: null,
+                    reservasPorConcesionario: []
+                },
+                preferencias: req.session.preferencias || {}
+            });
+        }
+
+        // Primero actualizar reservas expiradas
+        const updateSql = `
+            UPDATE Reservas 
+            SET estado = 'finalizada' 
+            WHERE estado = 'activa' AND fecha_fin < NOW()
+        `;
+
+        connection.query(updateSql, (updateErr) => {
+            if (updateErr) {
+                console.error('Error actualizando reservas expiradas:', updateErr);
+            }
+
+            // Consultas de estadísticas
+            const sqlTotal = `SELECT COUNT(*) AS total FROM Reservas`;
+            const sqlActivas = `SELECT COUNT(*) AS total FROM Reservas WHERE estado = 'activa'`;
+            const sqlFinalizadas = `SELECT COUNT(*) AS total FROM Reservas WHERE estado = 'finalizada'`;
+            const sqlVehiculoMasUsado = `
+                SELECT v.matricula, v.marca, v.modelo, v.color, c.nombre AS nombre_concesionario, c.ciudad, 
+                       COUNT(r.id_reserva) AS num_reservas
+                FROM Reservas r
+                JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
+                JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
+                GROUP BY v.id_vehiculo
+                ORDER BY num_reservas DESC
+                LIMIT 1
+            `;
+            const sqlReservasPorConcesionario = `
+                SELECT c.nombre, c.ciudad, COUNT(r.id_reserva) AS num_reservas
+                FROM Reservas r
+                JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
+                JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
+                GROUP BY c.id_concesionario
+                ORDER BY num_reservas DESC
+            `;
+
+            connection.query(sqlTotal, (err1, rows1) => {
+            connection.query(sqlActivas, (err2, rows2) => {
+                connection.query(sqlFinalizadas, (err3, rows3) => {
+                    connection.query(sqlVehiculoMasUsado, (err4, rows4) => {
+                        connection.query(sqlReservasPorConcesionario, (err5, rows5) => {
+                            connection.release();
+                            
+                            console.log('📊 Query error:', err5);
+                            console.log('📊 Query results:', rows5);
+
+                            const estadisticas = {
+                                totalReservas: (!err1 && rows1 && rows1[0]) ? rows1[0].total : 0,
+                                reservasActivas: (!err2 && rows2 && rows2[0]) ? rows2[0].total : 0,
+                                reservasFinalizadas: (!err3 && rows3 && rows3[0]) ? rows3[0].total : 0,
+                                vehiculoMasUsado: (!err4 && rows4 && rows4[0]) ? rows4[0] : null,
+                                reservasPorConcesionario: (!err5 && rows5) ? rows5 : []
+                            };
+
+                                res.render('admin/estadisticas', {
+                                    title: 'Estadísticas',
+                                    estadisticas,
+                                    preferencias: req.session.preferencias || {}
+                                });
+                            });
+                        });
+                    });
+                });
+            });
         });
     });
 });

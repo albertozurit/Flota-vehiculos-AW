@@ -213,3 +213,50 @@ Para crear un usuario administrador manualmente:
 ## Autor
 Laboratorio 7 - Aplicaciones Web
 Universidad Complutense de Madrid
+
+## 🔄 Sistema de Liberación Automática de Vehículos
+
+### **Funcionamiento**
+
+El sistema verifica automáticamente cada **5 minutos** si hay reservas que ya han expirado y libera los vehículos para que estén disponibles nuevamente.
+
+### **Proceso Automático**
+
+1. **Actualizar Reservas Expiradas**
+   - Busca reservas con `fecha_fin < AHORA` y `estado = 'confirmada'`
+   - Las marca como `estado = 'finalizada'`
+
+2. **Liberar Vehículos**
+   - Busca vehículos con `estado = 'reservado'`
+   - Verifica que NO tengan reservas activas vigentes
+   - Los marca como `estado = 'disponible'`
+
+### **Logs del Sistema**
+
+Al iniciar el servidor verás:
+```
+🔄 Iniciando sistema de liberación automática...
+Servidor arrancado en el puerto 3000
+🔄 Sistema de liberación automática de vehículos activado
+✅ X reserva(s) marcada(s) como finalizadas
+🚗 X vehículo(s) liberado(s) automáticamente
+```
+
+### **Ventajas**
+
+- ✅ Totalmente automático (sin intervención manual)
+- ✅ Se ejecuta al iniciar el servidor
+- ✅ Verificación cada 5 minutos
+- ✅ Logs informativos
+- ✅ Manejo de errores robusto
+
+### **Configuración**
+
+Para cambiar el intervalo de verificación, modifica en `app.js`:
+```javascript
+// Cambiar de 5 minutos a otro valor
+setInterval(liberarVehiculosExpirados, 5 * 60 * 1000); // 5 min
+setInterval(liberarVehiculosExpirados, 1 * 60 * 1000); // 1 min
+setInterval(liberarVehiculosExpirados, 15 * 60 * 1000); // 15 min
+```
+

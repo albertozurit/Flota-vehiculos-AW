@@ -412,11 +412,11 @@ router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo,
         return response.redirect('/vehiculos');
     }
     const vehiculoId = request.params.id;
-    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = request.body;
+    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado } = request.body;
 
     if (!matricula || !marca || !modelo) {
         return response.render('vehiculos/editar', {
-            vehiculo: { id: vehiculoId, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color },
+            vehiculo: { id: vehiculoId, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado },
             mensaje: "Por favor, completa los campos obligatorios: matrícula, marca y modelo"
         });
     }
@@ -427,8 +427,8 @@ router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo,
             return response.redirect('/vehiculos');
         }
 
-        const sql = `UPDATE Vehiculos SET matricula = ?, marca = ?, modelo = ?, anio_matriculacion = ?, numero_plazas = ?, autonomia_km = ?, color = ? WHERE id_vehiculo = ?`;
-        const params = [matricula, marca, modelo, anio_matriculacion || null, numero_plazas ? parseInt(numero_plazas) : null, autonomia_km ? parseInt(autonomia_km) : null, color || null, vehiculoId];
+        const sql = `UPDATE Vehiculos SET matricula = ?, marca = ?, modelo = ?, anio_matriculacion = ?, numero_plazas = ?, autonomia_km = ?, color = ?, estado = ? WHERE id_vehiculo = ?`;
+        const params = [matricula, marca, modelo, anio_matriculacion || null, numero_plazas ? parseInt(numero_plazas) : null, autonomia_km ? parseInt(autonomia_km) : null, color || null, estado || 'disponible', vehiculoId];
 
         connection.query(sql, params, (err, results) => {
             connection.release();
@@ -439,7 +439,7 @@ router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo,
             }
 
             console.log("✅ Vehículo actualizado correctamente");
-            response.redirect('/vehiculos');
+            response.redirect('/admin');
         });
     });
 });
@@ -908,44 +908,55 @@ router.get('/reservas', requireAuth, async (req, res) => {
                 return res.status(500).send('Error en el servidor');
             }
 
-            const sql = `
-                SELECT r.id_reserva AS id, r.fecha_inicio, r.fecha_fin, r.estado,
-                       v.marca, v.modelo, v.matricula
-                FROM Reservas r
-                LEFT JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
-                WHERE r.id_usuario = ? AND r.estado <> 'Cancelada'
-                ORDER BY r.fecha_inicio DESC
+            // Primero actualizar reservas expiradas
+            const updateSql = `
+                UPDATE Reservas 
+                SET estado = 'finalizada' 
+                WHERE estado = 'activa' AND fecha_fin < NOW()
             `;
 
-            connection.query(sql, [userId], (err, rows) => {
-                connection.release();
-                if (err) {
-                    console.error('Error en la consulta de reservas:', err);
-                    // En entorno de desarrollo devolvemos el mensaje de error para ayudar al debug
-                    return res.status(500).send('Error en la consulta de reservas: ' + (err.message || JSON.stringify(err)));
+            connection.query(updateSql, (updateErr) => {
+                if (updateErr) {
+                    console.error('Error actualizando reservas expiradas:', updateErr);
                 }
 
-                const misReservas = rows.map(r => {
-                    // formatear fechas a 'YYYY-MM-DD HH:MM'
-                    const inicio = r.fecha_inicio ? new Date(r.fecha_inicio).toISOString().slice(0, 16).replace('T', ' ') : '';
-                    const fin = r.fecha_fin ? new Date(r.fecha_fin).toISOString().slice(0, 16).replace('T', ' ') : '';
-                    return {
-                        id: r.id,
-                        vehiculo: `${r.marca || ''} ${r.modelo || ''}`.trim(),
-                        matricula: r.matricula || '',
-                        inicio: inicio,
-                        fin: fin,
-                        estado: r.estado
-                    };
-                });
+                const sql = `
+                    SELECT r.id_reserva AS id, r.fecha_inicio, r.fecha_fin, r.estado,
+                           v.marca, v.modelo, v.matricula
+                    FROM Reservas r
+                    LEFT JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
+                    WHERE r.id_usuario = ?
+                    ORDER BY r.fecha_inicio DESC
+                `;
 
-                res.render('reservas/lista_reservas', {
-                    title: 'Mis Reservas',
-                    usuario: req.session.usuario,
-                    reservas: misReservas,
-                    mensaje: req.session.mensaje || null
+                connection.query(sql, [userId], (err, rows) => {
+                    connection.release();
+                    if (err) {
+                        console.error('Error en la consulta de reservas:', err);
+                        return res.status(500).send('Error en la consulta de reservas: ' + (err.message || JSON.stringify(err)));
+                    }
+
+                    const misReservas = rows.map(r => {
+                        const inicio = r.fecha_inicio ? new Date(r.fecha_inicio).toISOString().slice(0, 16).replace('T', ' ') : '';
+                        const fin = r.fecha_fin ? new Date(r.fecha_fin).toISOString().slice(0, 16).replace('T', ' ') : '';
+                        return {
+                            id: r.id,
+                            vehiculo: `${r.marca || ''} ${r.modelo || ''}`.trim(),
+                            matricula: r.matricula || '',
+                            inicio: inicio,
+                            fin: fin,
+                            estado: r.estado
+                        };
+                    });
+
+                    res.render('reservas/lista_reservas', {
+                        title: 'Mis Reservas',
+                        usuario: req.session.usuario,
+                        reservas: misReservas,
+                        mensaje: req.session.mensaje || null
+                    });
+                    req.session.mensaje = null;
                 });
-                req.session.mensaje = null;
             });
         });
 
@@ -986,6 +997,37 @@ router.get('/vehiculos/:id/imagen', (request, response) => {
             response.redirect(rows[0].imagen);
         });
     });
+});
+
+// === Preferencias de accesibilidad ===
+router.post('/preferencias', (req, res) => {
+    const { tamanoLetra, contraste, animaciones } = req.body;
+    
+    // Guardar en sesión
+    req.session.preferencias = {
+        tamanoLetra: tamanoLetra || 'normal',
+        contraste: contraste || 'normal',
+        animaciones: animaciones !== undefined ? animaciones : true
+    };
+
+    // Guardar en BD si el usuario está autenticado
+    if (req.session.usuario && req.session.usuario.id) {
+        const prefsJson = JSON.stringify(req.session.preferencias);
+        pool.getConnection((err, connection) => {
+            if (!err) {
+                connection.query(
+                    'UPDATE Usuarios SET preferencias_accesibilidad = ? WHERE id_usuario = ?',
+                    [prefsJson, req.session.usuario.id],
+                    (err) => {
+                        connection.release();
+                        if (err) console.error('Error guardando preferencias en BD:', err);
+                    }
+                );
+            }
+        });
+    }
+
+    res.json({ success: true });
 });
 
 module.exports = router;

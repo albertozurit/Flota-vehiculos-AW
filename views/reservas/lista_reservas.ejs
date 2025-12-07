@@ -35,7 +35,6 @@
                                                 <th>Inicio</th>
                                                 <th>Fin</th>
                                                 <th>Estado</th>
-                                                <th>Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -57,18 +56,18 @@
                                                         <%= reserva.fin %>
                                                     </td>
                                                     <td>
-                                                        <% if (reserva.estado==='Confirmada' ) { %>
-                                                            <span class="badge bg-success">
-                                                                <%= reserva.estado %>
-                                                            </span>
-                                                            <% } else { %>
-                                                                <span class="badge bg-warning text-dark">
-                                                                    <%= reserva.estado %>
-                                                                </span>
-                                                                <% } %>
+                                                        <% if (reserva.estado==='confirmada' ) { %>
+                                                            <span class="badge bg-success">Activa</span>
+                                                        <% } else if (reserva.estado==='finalizada' ) { %>
+                                                            <span class="badge bg-secondary">Finalizada</span>
+                                                        <% } else if (reserva.estado==='Cancelada' ) { %>
+                                                            <span class="badge bg-danger">Cancelada</span>
+                                                        <% } else { %>
+                                                            <span class="badge bg-warning text-dark"><%= reserva.estado %></span>
+                                                        <% } %>
                                                     </td>
                                                     <td>
-                                                        <!-- Botones de acción (ejemplo: Cancelar o Ver detalles) -->
+                                                        <% if (reserva.estado==='confirmada' ) { %>
                                                         <form action="/reservas/cancelar/<%= reserva.id %>"
                                                             method="POST" style="display:inline;">
                                                             <button type="submit" class="btn btn-sm btn-danger"
@@ -76,6 +75,9 @@
                                                                 Cancelar
                                                             </button>
                                                         </form>
+                                                        <% } else { %>
+                                                            <span class="text-muted">-</span>
+                                                        <% } %>
                                                     </td>
                                                 </tr>
                                                 <% }) %>

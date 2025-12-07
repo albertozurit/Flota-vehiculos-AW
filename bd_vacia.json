@@ -143,7 +143,7 @@
       "autonomia_km": 528,
       "color": "Blanco Glaciar",
       "imagen": "/images/vehiculos/kia-EV6.png",
-      "estado": "reservado",
+      "estado": "disponible",
       "id_concesionario": 2
     },
     {
@@ -345,7 +345,7 @@
       "anio_matriculacion": 2024,
       "numero_plazas": 7,
       "autonomia_km": 560,
-      "color": "Blanco Perla",
+      "color": "Gris Perla",
       "imagen": "/images/vehiculos/tesla-model-x.png",
       "estado": "disponible",
       "id_concesionario": 6
@@ -357,7 +357,7 @@
       "anio_matriculacion": 2024,
       "numero_plazas": 5,
       "autonomia_km": 630,
-      "color": "Azul Aventurine",
+      "color": "Gris Manhattan",
       "imagen": "/images/vehiculos/bmw-ix.png",
       "estado": "disponible",
       "id_concesionario": 6
@@ -369,7 +369,7 @@
       "anio_matriculacion": 2023,
       "numero_plazas": 5,
       "autonomia_km": 436,
-      "color": "Gris Manhattan",
+      "color": "Azul Aventurine",
       "imagen": "/images/vehiculos/audi-e-tron.png",
       "estado": "disponible",
       "id_concesionario": 6
@@ -381,7 +381,7 @@
       "anio_matriculacion": 2023,
       "numero_plazas": 5,
       "autonomia_km": 420,
-      "color": "Amarillo Honey",
+      "color": "Verde Agua",
       "imagen": "/images/vehiculos/volkswagen-id-3.png",
       "estado": "disponible",
       "id_concesionario": 6
@@ -393,9 +393,9 @@
       "anio_matriculacion": 2022,
       "numero_plazas": 5,
       "autonomia_km": 484,
-      "color": "Verde Galáctico",
+      "color": "Azul Galáctico",
       "imagen": "/images/vehiculos/hyundai-kona-electric.png",
-      "estado": "reservado",
+      "estado": "disponible",
       "id_concesionario": 6
     }
   ]

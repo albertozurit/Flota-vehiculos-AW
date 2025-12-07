@@ -31,7 +31,7 @@ const validarVehiculo = [
     check("modelo", "El modelo debe tener máximo 50 caracteres").isLength({ max: 50 }),
     check("anio_matriculacion", "Año de matriculación inválido").optional({ checkFalsy: true }).isInt({ min: 1900, max: new Date().getFullYear() + 1 }),
     check("numero_plazas", "Número de plazas debe ser entre 1 y 50").optional({ checkFalsy: true }).isInt({ min: 1, max: 50 }),
-    check("autonomia_km", "Autonomía debe ser entre 1 y 2000 km").optional({ checkFalsy: true }).isInt({ min: 1, max: 2000 }),
+    check("autonomia_km", "Autonomía debe ser entre 1 y 10000 km").optional({ checkFalsy: true }).isInt({ min: 1, max: 10000 }),
     check("color", "Color debe tener máximo 30 caracteres").optional({ checkFalsy: true }).isLength({ max: 30 })
 ];
 

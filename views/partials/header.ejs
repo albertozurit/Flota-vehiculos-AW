@@ -45,6 +45,13 @@
 
                 <!-- Right Side Actions -->
                 <div class="nav-actions">
+                    <!-- Hamburger Menu (Mobile Only) -->
+                    <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-expanded="false" 
+                        aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
                     <!-- Accesibilidad - Siempre visible -->
                     <button class="btn-icon" type="button" data-bs-toggle="modal" data-bs-target="#modalAccesibilidad"
                         aria-label="Accesibilidad" title="Accesibilidad">
@@ -69,6 +76,31 @@
                             </a>
                             <% } %>
                 </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div class="collapse navbar-collapse d-lg-none" id="mobileMenu">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Inicio</a>
+                    </li>
+                    <% if (usuario && usuario.rol==='empleado' ) { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/vehiculos">Vehículos disponibles</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/reservas">Mis reservas</a>
+                        </li>
+                    <% } %>
+                    <% if (usuario && usuario.rol==='admin' ) { %>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/vehiculos">Vehículos disponibles</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin">Administración</a>
+                        </li>
+                    <% } %>
+                </ul>
             </div>
         </div>
     </nav>

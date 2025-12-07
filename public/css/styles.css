@@ -564,7 +564,37 @@ code {
     }
 
     .nav-list {
-        display: none;
+        display: none !important;
+    }
+
+    .navbar-toggler {
+        border: none;
+        padding: 0.5rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+    }
+
+    .navbar-toggler-icon {
+        width: 1.5em;
+        height: 1.5em;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.9)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    }
+
+    #mobileMenu {
+        background: rgba(62, 38, 16, 0.98);
+        padding: 1rem;
+        margin-top: 0.5rem;
+        border-radius: 8px;
+    }
+
+    #mobileMenu .nav-link {
+        color: #ffffff !important;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+    }
+
+    #mobileMenu .nav-link:hover {
+        background: rgba(255, 255, 255, 0.1);
     }
 
     .logo-marca img {
@@ -1159,5 +1189,45 @@ body {
 /* Evitar saltos visuales cuando se abre modal */
 body.modal-open .main-nav {
     padding-right: 0 !important;
+}
+
+/* ========================================
+   RESPONSIVE - MEJORAS MÓVIL
+   ======================================== */
+
+/* Tablas responsive - mejor scroll horizontal */
+.table-responsive {
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0.375rem;
+}
+
+/* Mejorar legibilidad en móvil */
+@media (max-width: 768px) {
+    /* Reducir tamaño de fuente en tablas */
+    .table {
+        font-size: 0.875rem;
+    }
+    
+    /* Botones más compactos */
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Cards con menos padding */
+    .card-body {
+        padding: 1rem;
+    }
+    
+    /* Stats en columna única */
+    .row.g-3 > [class*='col-md-3'] {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    
+    /* Modales ocupan más espacio */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
 }
 
