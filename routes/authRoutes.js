@@ -434,7 +434,7 @@ router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo,
                 return response.redirect('/vehiculos');
             }
 
-            response.redirect('/admin');
+            response.redirect('/vehiculos');
         });
     });
 });
@@ -769,8 +769,8 @@ router.get('/vehiculos', requireAuth, (request, response) => {
         const baseSql = `SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.imagen, v.estado, c.nombre AS concesionario_nombre, c.ciudad AS concesionario_ciudad
                          FROM Vehiculos v${joinSql}`;
         const whereSql = where.length ? ` WHERE ${where.join(' AND ')}` : '';
-        // Admin: ordenar por concesionario, luego por ID
-        // Empleado: ordenar solo por ID (ya solo ve su concesionario)
+        //En caso de ser admin, ordenar por concesionario y luego por id vehiculo descendente
+        //En caso de ser empleado, ordenar solo por ide dvechiuclo descendente
         const orderSql = esAdmin ? ' ORDER BY c.nombre ASC, v.id_vehiculo DESC' : ' ORDER BY v.id_vehiculo DESC';
         const finalSql = baseSql + whereSql + (inicio && fin ? excludeSql : '') + orderSql;
         const finalParams = params.concat(inicio && fin ? [inicio, fin] : []);
@@ -796,10 +796,6 @@ router.get('/vehiculos', requireAuth, (request, response) => {
                 preferencias: request.session.preferencias || {}
             };
 
-            // Si es AJAX, devolver la vista completa y el cliente extrae la tabla
-            if (request.get('X-Requested-With') === 'XMLHttpRequest') {
-                return response.render('vehiculos/lista_vehiculos', renderData);
-            }
             return response.render('vehiculos/lista_vehiculos', renderData);
         });
     });
