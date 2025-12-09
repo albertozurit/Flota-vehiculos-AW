@@ -1,5 +1,4 @@
-- Modal de editar -> se ve mal el boton de cancelar
+- Modal de editar -> se ve mal el boton de cancelar, no se logra leer lo que pone
 - El botón de cerrar sesión en algun momento desaparece, parece que no es responsive
-- Al aplicar filtros no debería recargar la pagina, AJAX
 - Añadir script (no hacer)
 
