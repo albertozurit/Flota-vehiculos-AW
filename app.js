@@ -56,13 +56,13 @@ app.use('/admin', adminRoutes);
 
 //Pagina de error 404 cuando no se encuentra la ruta
 app.use((request, response) => {
-    response.status(404).render('404', { titulo: "Página no encontrada" });
+    response.status(404).render('./errores/404', { titulo: "Página no encontrada" });
 });
 
 //Pagina cuando hay error
 app.use((err, request, response, next) => {
     console.error(err.stack);
-    response.status(500).render('500', { titulo: "Error en el servidor" });
+    response.status(500).render('./errores/500', { titulo: "Error en el servidor" });
 });
 
 
