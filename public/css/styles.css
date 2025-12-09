@@ -235,6 +235,17 @@ main {
 
 }
 
+.btn-outline-secondary {
+    background: transparent;
+    color: #495057;
+    border: 2px solid #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background: #6c757d;
+    color: #ffffff;
+}
+
 .btn-outline-danger {
     background: transparent;
     color: #dc3545;
@@ -782,6 +793,17 @@ body.alto-contraste .btn-secondary {
 
 body.alto-contraste .btn-secondary:hover {
     background: #e9ecef;
+}
+
+body.alto-contraste .btn-outline-secondary {
+    background: transparent;
+    color: #1a1a1a;
+    border: 2px solid #3e2610;
+}
+
+body.alto-contraste .btn-outline-secondary:hover {
+    background: #3e2610;
+    color: #ffffff;
 }
 
 /* Footer en Alto Contraste */
