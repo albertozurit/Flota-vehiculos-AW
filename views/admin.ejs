@@ -156,7 +156,7 @@
                             data-plazas="<%= v.numero_plazas || '' %>" data-autonomia="<%= v.autonomia_km || '' %>"
                             data-color="<%= v.color || '' %>" data-estado="<%= v.estado || 'disponible' %>">Editar</button>
                           <form action="/admin/vehiculos/<%= v.id %>/eliminar" method="POST" class="d-inline"
-                            onsubmit="return confirm('¿Eliminar/baja lógica?')">
+                            onsubmit="return confirm('¿Dar de baja el vehículo?')">
                             <button class="btn btn-sm btn-outline-danger">Baja</button>
                           </form>
                         </td>
@@ -220,8 +220,8 @@
                             data-direccion="<%= c.direccion || '' %>"
                             data-telefono="<%= c.telefono_contacto || '' %>">Editar</button>
                           <form action="/admin/concesionarios/<%= c.id_concesionario || c.id %>/eliminar" method="POST"
-                            class="d-inline" onsubmit="return confirm('¿Eliminar concesionario?')">
-                            <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            class="d-inline" onsubmit="return confirm('¿Dar de baja el concesionario?')">
+                            <button class="btn btn-sm btn-outline-danger">Baja</button>
                           </form>
                         </td>
                       </tr>
@@ -288,8 +288,8 @@
                             Editar
                           </button>
                           <form action="/admin/usuarios/<%= u.id_usuario || u.id %>/eliminar" method="POST"
-                            class="d-inline" onsubmit="return confirm('¿Eliminar usuario?')">
-                            <button class="btn btn-sm btn-outline-danger" title="Eliminar usuario">Eliminar</button>
+                            class="d-inline" onsubmit="return confirm('¿Dar de baja el usuario?')">
+                            <button class="btn btn-sm btn-outline-danger" title="Baja usuario">Baja</button>
                           </form>
                         </td>
                       </tr>

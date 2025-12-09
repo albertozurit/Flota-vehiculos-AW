@@ -6,7 +6,8 @@ CREATE TABLE Concesionarios (
     nombre VARCHAR(100) NOT NULL,
     ciudad VARCHAR(50) NOT NULL,
     direccion VARCHAR(255),
-    telefono_contacto VARCHAR(20)
+    telefono_contacto VARCHAR(20),
+    activo TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
 
@@ -19,7 +20,8 @@ CREATE TABLE Usuarios (
     rol ENUM('empleado', 'admin') NOT NULL DEFAULT 'empleado',
     telefono VARCHAR(20),
     id_concesionario INT,
-    preferencias_accesibilidad TEXT
+    preferencias_accesibilidad TEXT,
+    activo TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
 
@@ -35,7 +37,8 @@ CREATE TABLE Vehiculos (
     color VARCHAR(30),
     imagen VARCHAR(255),
     estado ENUM('disponible', 'reservado', 'mantenimiento') NOT NULL DEFAULT 'disponible',
-    id_concesionario INT NOT NULL
+    id_concesionario INT NOT NULL,
+    activo TINYINT(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB;
 
 

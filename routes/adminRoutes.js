@@ -52,9 +52,9 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
         }
 
         const queries = {
-            vehiculos: "SELECT COUNT(*) AS c FROM Vehiculos WHERE estado IN ('disponible', 'reservado')",
-            concesionarios: 'SELECT COUNT(*) AS c FROM Concesionarios',
-            usuarios: 'SELECT COUNT(*) AS c FROM Usuarios',
+            vehiculos: "SELECT COUNT(*) AS c FROM Vehiculos WHERE activo = 1 AND estado IN ('disponible', 'reservado')",
+            concesionarios: 'SELECT COUNT(*) AS c FROM Concesionarios WHERE activo = 1',
+            usuarios: 'SELECT COUNT(*) AS c FROM Usuarios WHERE activo = 1',
             reservas: 'SELECT COUNT(*) AS c FROM Reservas'
         };
 
@@ -75,13 +75,13 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
                         pool.getConnection((errS, connS) => {
                             const sqlResCon = `SELECT c.nombre, c.ciudad, COUNT(r.id_reserva) AS num_reservas
                                            FROM Reservas r
-                                           JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
-                                           JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
+                                           JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo AND v.activo = 1
+                                           JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario AND c.activo = 1
                                            GROUP BY c.id_concesionario
                                            ORDER BY num_reservas DESC`;
                             const sqlTopVeh = `SELECT v.matricula, v.marca, v.modelo, COUNT(r.id_reserva) AS usos
                                            FROM Reservas r
-                                           JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
+                                           JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo AND v.activo = 1
                                            GROUP BY v.id_vehiculo
                                            ORDER BY usos DESC
                                            LIMIT 1`;
@@ -95,9 +95,9 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
                                         stats.reservasPorConcesionario = eA ? [] : (rowsA || []);
                                         stats.vehiculoMasUsado = eB ? null : ((rowsB && rowsB[0]) || null);
                                         // Also show short lists on dashboard (avoid multi-statements)
-                                        const sqlVeh = 'SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.imagen, v.estado, c.nombre AS concesionario_nombre FROM Vehiculos v LEFT JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario ORDER BY v.id_vehiculo DESC LIMIT 20';
-                                        const sqlCon = 'SELECT id_concesionario AS id, nombre, ciudad, direccion, telefono_contacto FROM Concesionarios ORDER BY nombre ASC';
-                                        const sqlUsr = 'SELECT u.id_usuario AS id, u.nombre, u.correo, u.rol, u.id_concesionario, c.nombre AS concesionario_nombre FROM Usuarios u LEFT JOIN Concesionarios c ON u.id_concesionario = c.id_concesionario ORDER BY u.id_usuario DESC LIMIT 20';
+                                        const sqlVeh = 'SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.imagen, v.estado, c.nombre AS concesionario_nombre FROM Vehiculos v LEFT JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario WHERE v.activo = 1 ORDER BY v.id_vehiculo DESC LIMIT 20';
+                                        const sqlCon = 'SELECT id_concesionario AS id, nombre, ciudad, direccion, telefono_contacto FROM Concesionarios WHERE activo = 1 ORDER BY nombre ASC';
+                                        const sqlUsr = 'SELECT u.id_usuario AS id, u.nombre, u.correo, u.rol, u.id_concesionario, c.nombre AS concesionario_nombre FROM Usuarios u LEFT JOIN Concesionarios c ON u.id_concesionario = c.id_concesionario WHERE u.activo = 1 ORDER BY u.id_usuario DESC LIMIT 20';
                                         pool.getConnection((err2, conn2) => {
                                             if (err2) {
                                                 return res.render('admin', { title: 'Panel de administración', stats, vehiculos: [], concesionarios: [], usuarios: [], preferencias: req.session.preferencias || {} });
@@ -211,7 +211,7 @@ router.post('/usuarios/:id/editar', requireAuth, requireAdmin, validarCambioRol,
     });
 });
 
-// Eliminar usuario
+// Baja lógica de usuario
 router.post('/usuarios/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
     const id = parseInt(req.params.id);
 
@@ -224,10 +224,10 @@ router.post('/usuarios/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
     pool.getConnection((err, connection) => {
         if (err) return res.redirect('/admin');
 
-        connection.query('DELETE FROM Usuarios WHERE id_usuario = ?', [id], (e) => {
+        connection.query('UPDATE Usuarios SET activo = 0 WHERE id_usuario = ?', [id], (e) => {
             connection.release();
             if (e) {
-                console.error('Error eliminando usuario:', e);
+                console.error('Error dando de baja usuario:', e);
             }
             res.redirect('/admin');
         });
@@ -277,15 +277,15 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, upload.single('imagen
 });
 
 
-// Eliminar / baja lógica
+// Baja lógica de vehículo
 router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
     const id = req.params.id;
     pool.getConnection((err, connection) => {
         if (err) return res.redirect('/admin');
-        const sql = `UPDATE Vehiculos SET estado = 'mantenimiento' WHERE id_vehiculo = ?`;
+        const sql = `UPDATE Vehiculos SET activo = 0 WHERE id_vehiculo = ?`;
         connection.query(sql, [id], (err) => {
             connection.release();
-            if (err) console.error('Error marcando vehiculo como mantenimiento (admin):', err);
+            if (err) console.error('Error dando de baja vehículo:', err);
             res.redirect('/admin');
         });
     });
@@ -338,15 +338,15 @@ router.post('/concesionarios/:id/editar', requireAuth, requireAdmin, validarConc
     });
 });
 
-// Eliminar concesionario (desde panel)
+// Baja lógica de concesionario
 router.post('/concesionarios/:id/eliminar', requireAuth, requireAdmin, (req, res) => {
     const id = req.params.id;
     pool.getConnection((err, connection) => {
         if (err) return res.redirect('/admin');
-        const sql = 'DELETE FROM Concesionarios WHERE id_concesionario = ?';
+        const sql = 'UPDATE Concesionarios SET activo = 0 WHERE id_concesionario = ?';
         connection.query(sql, [id], (err) => {
             connection.release();
-            if (err) console.error('Error eliminando concesionario:', err);
+            if (err) console.error('Error dando de baja concesionario:', err);
             res.redirect('/admin');
         });
     });
@@ -566,7 +566,7 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
 router.get('/usuarios', requireAuth, requireAdmin, (req, res) => {
     pool.getConnection((err, connection) => {
         if (err) return res.render('admin/lista_usuarios', { usuarios: [], mensaje: 'Error', preferencias: req.session.preferencias || {} });
-        connection.query('SELECT id_usuario, nombre, correo, rol FROM Usuarios', (err, rows) => {
+        connection.query('SELECT id_usuario, nombre, correo, rol FROM Usuarios WHERE activo = 1', (err, rows) => {
             connection.release();
             if (err) {
                 console.error('Error listando usuarios (admin):', err);
@@ -614,8 +614,8 @@ router.get('/estadisticas', requireAuth, requireAdmin, (req, res) => {
                 SELECT v.matricula, v.marca, v.modelo, v.color, c.nombre AS nombre_concesionario, c.ciudad, 
                        COUNT(r.id_reserva) AS num_reservas
                 FROM Reservas r
-                JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
-                JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
+                JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo AND v.activo = 1
+                JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario AND c.activo = 1
                 GROUP BY v.id_vehiculo
                 ORDER BY num_reservas DESC
                 LIMIT 1
@@ -623,8 +623,8 @@ router.get('/estadisticas', requireAuth, requireAdmin, (req, res) => {
             const sqlReservasPorConcesionario = `
                 SELECT c.nombre, c.ciudad, COUNT(r.id_reserva) AS num_reservas
                 FROM Reservas r
-                JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
-                JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
+                JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo AND v.activo = 1
+                JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario AND c.activo = 1
                 GROUP BY c.id_concesionario
                 ORDER BY num_reservas DESC
             `;

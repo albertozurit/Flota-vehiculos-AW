@@ -134,7 +134,7 @@ router.post('/register', requireAuth, requireAdmin, validarRegistro, (request, r
             });
         }
 
-        let sqlCheck = 'SELECT correo FROM Usuarios WHERE correo = ?';
+        let sqlCheck = 'SELECT correo FROM Usuarios WHERE correo = ? AND activo = 1';
         connection.query(sqlCheck, [email], (err, rows) => {
             if (err) {
                 connection.release();
@@ -226,7 +226,7 @@ router.post('/login', validarLogin, (request, response) => {
             return response.render('usuarios/login', { mensaje: "Error en el servidor" });
         }
 
-        let sql = 'SELECT id_usuario AS id, nombre, correo AS email, contrasena AS password, rol, id_concesionario, preferencias_accesibilidad FROM Usuarios WHERE correo = ?';
+        let sql = 'SELECT id_usuario AS id, nombre, correo AS email, contrasena AS password, rol, id_concesionario, preferencias_accesibilidad FROM Usuarios WHERE correo = ? AND activo = 1';
         connection.query(sql, [email], (err, rows) => {
             connection.release();
 
@@ -236,7 +236,7 @@ router.post('/login', validarLogin, (request, response) => {
             }
 
             if (rows.length === 0) {
-                console.log("Usuario no encontrado");
+                console.log("Usuario no encontrado o inactivo");
                 return response.render('usuarios/login', { mensaje: "Usuario no encontrado" });
             }
 
@@ -744,15 +744,18 @@ router.get('/vehiculos', requireAuth, (request, response) => {
         const where = [];
         const params = [];
 
+        // Filtrar solo vehículos activos
+        where.push('v.activo = 1');
+        
         if (!esAdmin) {
-            // Empleado: restringir a su concesionario
+            // Empleado: restringir a su concesionario activo
             where.push('v.id_concesionario = ?');
             params.push(baseId);
         }
         if (autonomia_min) { where.push('v.autonomia_km >= ?'); params.push(parseInt(autonomia_min)); }
         if (plazas) { where.push('v.numero_plazas >= ?'); params.push(parseInt(plazas)); }
         if (color) { where.push('LOWER(v.color) LIKE LOWER(?)'); params.push(`%${color}%`); }
-        let joinSql = ' JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario';
+        let joinSql = ' JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario AND c.activo = 1';
         if (ciudad) { where.push('LOWER(c.ciudad) LIKE LOWER(?)'); params.push(`%${ciudad}%`); }
 
         // Excluir vehículos reservados en el rango [inicio, fin] si ambos están presentes
@@ -827,7 +830,7 @@ router.get('/reservas', requireAuth, async (req, res) => {
                     SELECT r.id_reserva AS id, r.fecha_inicio, r.fecha_fin, r.estado,
                            v.marca, v.modelo, v.matricula
                     FROM Reservas r
-                    LEFT JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo
+                    LEFT JOIN Vehiculos v ON r.id_vehiculo = v.id_vehiculo AND v.activo = 1
                     WHERE r.id_usuario = ?
                     ORDER BY r.fecha_inicio DESC
                 `;

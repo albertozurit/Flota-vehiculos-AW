@@ -1,4 +1,4 @@
-<!-- Modal de Filtros de Vehículos -->
+<!-- Modal de Filtros de Vehículos TODO actualizar sin recargar página--> 
 <div class="modal fade" id="modalFiltros" tabindex="-1" aria-labelledby="modalFiltrosLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -43,16 +43,14 @@
         </div>
     </div>
 </div>
-
 <script>
     (function() {
         function initModalFiltros() {
             const form = document.getElementById('filtrosForm');
             const limpiar = document.getElementById('limpiarFiltros');
-            const grid = document.getElementById('vehiculosGrid');
             const modal = document.getElementById('modalFiltros');
             
-            if (!form || !limpiar || !grid || !modal) {
+            if (!form || !limpiar || !modal) {
                 setTimeout(initModalFiltros, 100);
                 return;
             }
@@ -65,11 +63,60 @@
                 if (bsModal) bsModal.hide();
                 
                 const params = new URLSearchParams(new FormData(form));
-                window.location.href = '/vehiculos?' + params.toString();
+                
+                // Hacer petición AJAX
+                fetch('/vehiculos?' + params.toString(), {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Crear un documento temporal para parsear el HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Extraer el contenido del main
+                    const newMain = doc.querySelector('main');
+                    const currentMain = document.querySelector('main');
+                    
+                    if (newMain && currentMain) {
+                        currentMain.innerHTML = newMain.innerHTML;
+                        // Re-inicializar scripts si es necesario
+                        initModalFiltros();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al aplicar filtros:', error);
+                    alert('Error al aplicar filtros. Intenta de nuevo.');
+                });
             });
 
             limpiar.addEventListener('click', function () {
-                window.location.href = '/vehiculos';
+                // Limpiar filtros con AJAX
+                fetch('/vehiculos', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newMain = doc.querySelector('main');
+                    const currentMain = document.querySelector('main');
+                    
+                    if (newMain && currentMain) {
+                        currentMain.innerHTML = newMain.innerHTML;
+                        initModalFiltros();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al limpiar filtros:', error);
+                    alert('Error al limpiar filtros. Intenta de nuevo.');
+                });
             });
         }
         
