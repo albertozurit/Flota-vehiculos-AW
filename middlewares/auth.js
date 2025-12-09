@@ -17,3 +17,4 @@ function requireAdmin(request, response, next) {
 }
 
 module.exports = { requireAuth, requireAdmin };
+

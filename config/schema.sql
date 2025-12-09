@@ -1,6 +1,4 @@
--- ***************************************************************
 -- 1. CREACIÓN DE TABLAS (Desde la tabla principal hacia las relaciones)
--- ***************************************************************
 
 -- 1. Tabla Concesionarios
 CREATE TABLE Concesionarios (
@@ -16,19 +14,19 @@ CREATE TABLE Concesionarios (
 CREATE TABLE Usuarios (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
-    correo VARCHAR(100) NOT NULL UNIQUE, -- Restricción: Correo ÚNICO
+    correo VARCHAR(100) NOT NULL UNIQUE,
     contrasena VARCHAR(255) NOT NULL,
     rol ENUM('empleado', 'admin') NOT NULL DEFAULT 'empleado',
     telefono VARCHAR(20),
-    id_concesionario INT,  -- Nullable: si se borra el concesionario, queda NULL
-    preferencias_accesibilidad TEXT      -- Para JSON o datos largos
+    id_concesionario INT,
+    preferencias_accesibilidad TEXT
 ) ENGINE=InnoDB;
 
 
 -- 3. Tabla Vehiculos
 CREATE TABLE Vehiculos (
     id_vehiculo INT AUTO_INCREMENT PRIMARY KEY,
-    matricula VARCHAR(20) NOT NULL UNIQUE, -- Restricción: Matrícula ÚNICA
+    matricula VARCHAR(20) NOT NULL UNIQUE,
     marca VARCHAR(50) NOT NULL,
     modelo VARCHAR(50) NOT NULL,
     anio_matriculacion YEAR NOT NULL,
@@ -54,9 +52,7 @@ CREATE TABLE Reservas (
 ) ENGINE=InnoDB;
 
 
--- ***************************************************************
 -- 2. ESTABLECER CLAVES FORÁNEAS (RELACIONES)
--- ***************************************************************
 
 -- Relaciones para la tabla Usuarios
 ALTER TABLE Usuarios
@@ -78,3 +74,18 @@ ALTER TABLE Reservas
     ADD CONSTRAINT FK_Reservas_Vehiculo FOREIGN KEY (id_vehiculo)
     REFERENCES Vehiculos(id_vehiculo)
     ON DELETE CASCADE ON UPDATE CASCADE;
+
+
+-- 3. INSERTAR USUARIO ADMINISTRADOR POR DEFECTO
+-- Usuario: admin@flotawei.com
+-- Contraseña: Admin123
+
+INSERT INTO Usuarios (nombre, correo, contrasena, rol, telefono, id_concesionario)
+VALUES (
+    'Administrador',
+    'admin@flotawei.com',
+    '$2b$10$VZnqZl5ygL8BCM3GpjghG.1BsqG.sCbYN65gCVFW9jKbbGENgSvSq',
+    'admin',
+    NULL,
+    NULL
+);

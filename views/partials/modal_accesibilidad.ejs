@@ -39,15 +39,18 @@
           </div>
 
           <h6 class="mt-4">Atajos de Teclado</h6>
-          <p class="small mb-2">Predefinidos: Ctrl+I (Inicio), Ctrl+V (Vehículos), Ctrl+R (Reservar), Ctrl+H (Mis reservas).</p>
+          <p class="small mb-2">Predefinidos: Ctrl+I (Inicio), Ctrl+V (Vehículos), Ctrl+R (Reservar), Ctrl+H (Mis
+            reservas).</p>
           <div class="row g-2">
             <div class="col-md-6">
               <label class="form-label">Atajo reservar</label>
-              <input type="text" class="form-control" name="atajo_reservar" placeholder="Ctrl+R" value="<%= (preferencias && preferencias.atajos && preferencias.atajos.reservar) ? preferencias.atajos.reservar : '' %>">
+              <input type="text" class="form-control" name="atajo_reservar" placeholder="Ctrl+R"
+                value="<%= (preferencias && preferencias.atajos && preferencias.atajos.reservar) ? preferencias.atajos.reservar : '' %>">
             </div>
             <div class="col-md-6">
               <label class="form-label">Atajo mis reservas</label>
-              <input type="text" class="form-control" name="atajo_mis_reservas" placeholder="Ctrl+H" value="<%= (preferencias && preferencias.atajos && preferencias.atajos.misReservas) ? preferencias.atajos.misReservas : '' %>">
+              <input type="text" class="form-control" name="atajo_mis_reservas" placeholder="Ctrl+H"
+                value="<%= (preferencias && preferencias.atajos && preferencias.atajos.misReservas) ? preferencias.atajos.misReservas : '' %>">
             </div>
           </div>
         </div>

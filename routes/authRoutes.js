@@ -300,7 +300,6 @@ router.post('/login', validarLogin, (request, response) => {
 router.post('/logout', (request, response) => {
     request.session.destroy((err) => {
         if (err) {
-            console.log("Erorr cerrando sesion: ", err);
             return response.redirect('/');
         }
         response.clearCookie('connect.sid'); //elimina la cookie de sesión del navegador
@@ -351,8 +350,6 @@ router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
 
             if (err) {
                 console.error('Error al actualizar preferencias en BD:', err);
-            } else {
-                console.log('✅ Preferencias guardadas en BD para usuario', userId);
             }
 
             // Guardar sesión y redirigir
@@ -394,7 +391,6 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, validarVehiculo, (req
 
     insertarVehiculo(vehiculo, (err, newVehicleId) => {
         if (!err) {
-            console.log("✅ Vehículo creado con ID:", newVehicleId);
             response.redirect('/vehiculos');
         } else {
             console.error("Error al insertar vehículo:", err);
@@ -438,7 +434,6 @@ router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo,
                 return response.redirect('/vehiculos');
             }
 
-            console.log("✅ Vehículo actualizado correctamente");
             response.redirect('/admin');
         });
     });
@@ -554,7 +549,6 @@ router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) =
                                 }
 
                                 connection.release();
-                                console.log(`Reserva creada para el vehículo ${vehiculoId} de ${inicio} a ${fin} (id_reserva=${insertRes.insertId})`);
                                 req.session.mensaje = '¡Reserva realizada con éxito!';
                                 return res.redirect('/reservas');
                             });
@@ -640,7 +634,6 @@ router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (request, resp
             return response.redirect('/vehiculos');
         }
 
-        console.log(`Vehículo ${vehiculoId} marcado como inactivo`);
         response.redirect('/vehiculos');
     });
 });
@@ -676,7 +669,8 @@ router.get('/perfil', requireAuth, (request, response) => {
 // RUTA COMENTADA: Ya no se usa, el registro se hace desde el modal del panel de admin
 // router.get('/register', requireAuth, requireAdmin, (request, response) => {
 //     pool.getConnection((err, connection) => {
-//         if (err) {
+//         if (e
+// rr) {
 //             console.error('Error al obtener conexión para cargar concesionarios:', err);
 //             response.status(200);
 //             return response.render('usuarios/register', {
@@ -811,93 +805,6 @@ router.get('/vehiculos', requireAuth, (request, response) => {
     });
 });
 
-// Panel empleado: Vehículos de mi base (filtrados por concesionario asignado)
-router.get('/mi-base/vehiculos', requireAuth, (request, response) => {
-    const usuario = request.session.usuario;
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error("Error al obtener conexión:", err);
-            return response.render('vehiculos/lista_vehiculos', {
-                vehiculos: [],
-                mensaje: "Error en el servidor",
-                preferencias: request.session.preferencias || {}
-            });
-        }
-        const sql = `SELECT id_vehiculo AS id, matricula, marca, modelo, numero_plazas, autonomia_km, color, imagen, estado FROM Vehiculos WHERE id_concesionario = ?`;
-        connection.query(sql, [usuario.id_concesionario || 1], (err, rows) => {
-            connection.release();
-            if (err) {
-                console.error("Error en la consulta:", err);
-                return response.render('vehiculos/lista_vehiculos', {
-                    vehiculos: [],
-                    mensaje: "Error en el servidor",
-                    preferencias: request.session.preferencias || {}
-                });
-            }
-            response.render('vehiculos/lista_vehiculos', {
-                title: "Vehículos de mi base",
-                vehiculos: rows,
-                mensaje: null,
-                preferencias: request.session.preferencias || {}
-            });
-        });
-    });
-});
-
-
-// RUTA COMENTADA: Ya no es necesaria, se edita mediante modal en /vehiculos
-// router.get('/vehiculos/:id/editar', requireAuth, requireAdmin, (request, response) => {
-//     const vehiculoId = request.params.id;
-//     pool.getConnection((err, connection) => {
-//         if (err) {
-//             console.error("Error en el servidor");
-//             return response.redirect('/vehiculos');
-//         }
-//         let sql = "SELECT id_vehiculo AS id, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado FROM Vehiculos WHERE id_vehiculo = ?";
-//         connection.query(sql, [vehiculoId], (err, rows) => {
-//             connection.release();
-//             if (err) {
-//                 console.error("Error en la consulta:", err);
-//                 return response.redirect('/vehiculos');
-//             }
-//             console.log(`vehiculo editado`);
-//             if (rows.length === 0) {
-//                 console.log("Vehículo no encontrado");
-//                 return response.redirect('/vehiculos');
-//             }
-//             response.render('vehiculos/editar', {
-//                 title: "Editar Vehículo",
-//                 mensaje: null,
-//                 vehiculo: rows[0],
-//                 preferencias: request.session.preferencias || {}
-//             });
-//         })
-//     })
-// });
-
-
-// RUTA COMENTADA: Ya no es necesaria, se reserva mediante modal en /vehiculos
-// router.get('/reservas/nuevo', requireAuth, async (req, res) => {
-//     if (!req.session || !req.session.usuario || req.session.usuario.rol !== 'empleado') {
-//         return res.redirect('/');
-//     }
-//     try {
-//         const vehiculosDisponibles = [
-//             { id: 1, nombre: 'Tesla Model 3', matricula: '1234 ABC', bateria: '80%' },
-//             { id: 2, nombre: 'Nissan Leaf', matricula: '5678 DEF', bateria: '70%' },
-//         ];
-//         res.render('reservasformulario', {
-//             title: 'Nueva Reserva de Vehículo',
-//             usuario: req.session.usuario,
-//             vehiculos: vehiculosDisponibles,
-//             mensaje: null
-//         });
-//     } catch (error) {
-//         console.error('Error al cargar el formulario de reserva:', error);
-//         res.status(500).send('Error interno del servidor.');
-//     }
-// });
-
 router.get('/reservas', requireAuth, async (req, res) => {
     try {
         const userId = req.session.usuario.id;
@@ -967,50 +874,15 @@ router.get('/reservas', requireAuth, async (req, res) => {
 });
 
 
-
-// Ruta para servir imagen de un vehículo (redirige a imagen o placeholder)
-// Esta ruta ya no es necesaria ya que las imágenes se sirven directamente desde /images/vehiculos/
-// pero la mantenemos por compatibilidad
-router.get('/vehiculos/:id/imagen', (request, response) => {
-    const vehiculoId = request.params.id;
-
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error('Error al obtener conexión para imagen:', err);
-            return response.redirect('/images/no-image.png');
-        }
-
-        const sql = 'SELECT imagen FROM Vehiculos WHERE id_vehiculo = ?';
-        connection.query(sql, [vehiculoId], (err, rows) => {
-            connection.release();
-
-            if (err) {
-                console.error('Error al consultar imagen:', err);
-                return response.redirect('/images/no-image.png');
-            }
-
-            if (rows.length === 0 || !rows[0].imagen) {
-                return response.redirect('/images/no-image.png');
-            }
-
-            // Redirigir a la ruta de la imagen en el sistema de archivos
-            response.redirect(rows[0].imagen);
-        });
-    });
-});
-
-// === Preferencias de accesibilidad ===
+//guardar preferencias de Accesibilidad
 router.post('/preferencias', (req, res) => {
     const { tamanoLetra, contraste, animaciones } = req.body;
-    
-    // Guardar en sesión
     req.session.preferencias = {
         tamanoLetra: tamanoLetra || 'normal',
         contraste: contraste || 'normal',
         animaciones: animaciones !== undefined ? animaciones : true
     };
 
-    // Guardar en BD si el usuario está autenticado
     if (req.session.usuario && req.session.usuario.id) {
         const prefsJson = JSON.stringify(req.session.preferencias);
         pool.getConnection((err, connection) => {

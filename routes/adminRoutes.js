@@ -245,7 +245,7 @@ router.post('/vehiculos/nuevo', requireAuth, requireAdmin, upload.single('imagen
     if (req.validationErrors && req.validationErrors.length > 0) {
         return res.status(400).json({ error: req.validationMessage });
     }
-    
+
     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, id_concesionario } = req.body;
 
     if (!matricula || !marca || !modelo) {
@@ -630,22 +630,19 @@ router.get('/estadisticas', requireAuth, requireAdmin, (req, res) => {
             `;
 
             connection.query(sqlTotal, (err1, rows1) => {
-            connection.query(sqlActivas, (err2, rows2) => {
-                connection.query(sqlFinalizadas, (err3, rows3) => {
-                    connection.query(sqlVehiculoMasUsado, (err4, rows4) => {
-                        connection.query(sqlReservasPorConcesionario, (err5, rows5) => {
-                            connection.release();
-                            
-                            console.log('📊 Query error:', err5);
-                            console.log('📊 Query results:', rows5);
+                connection.query(sqlActivas, (err2, rows2) => {
+                    connection.query(sqlFinalizadas, (err3, rows3) => {
+                        connection.query(sqlVehiculoMasUsado, (err4, rows4) => {
+                            connection.query(sqlReservasPorConcesionario, (err5, rows5) => {
+                                connection.release();
 
-                            const estadisticas = {
-                                totalReservas: (!err1 && rows1 && rows1[0]) ? rows1[0].total : 0,
-                                reservasActivas: (!err2 && rows2 && rows2[0]) ? rows2[0].total : 0,
-                                reservasFinalizadas: (!err3 && rows3 && rows3[0]) ? rows3[0].total : 0,
-                                vehiculoMasUsado: (!err4 && rows4 && rows4[0]) ? rows4[0] : null,
-                                reservasPorConcesionario: (!err5 && rows5) ? rows5 : []
-                            };
+                                const estadisticas = {
+                                    totalReservas: (!err1 && rows1 && rows1[0]) ? rows1[0].total : 0,
+                                    reservasActivas: (!err2 && rows2 && rows2[0]) ? rows2[0].total : 0,
+                                    reservasFinalizadas: (!err3 && rows3 && rows3[0]) ? rows3[0].total : 0,
+                                    vehiculoMasUsado: (!err4 && rows4 && rows4[0]) ? rows4[0] : null,
+                                    reservasPorConcesionario: (!err5 && rows5) ? rows5 : []
+                                };
 
                                 res.render('admin/estadisticas', {
                                     title: 'Estadísticas',

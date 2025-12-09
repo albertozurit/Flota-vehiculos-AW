@@ -1,6 +1,6 @@
 /* ESTILOS BASE - WeiZhu Fleet */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
+/*@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*/
 * {
     margin: 0;
     padding: 0;
@@ -651,9 +651,7 @@ code {
     }
 }
 
-/* ============================================ */
 /* MODOS DE ACCESIBILIDAD */
-/* ============================================ */
 
 /* MODO ALTO CONTRASTE (Fondo Claro / Texto Oscuro) */
 body.alto-contraste {
@@ -921,9 +919,228 @@ body.daltonismo .page-title {
     color: #003d7a !important;
     /* Azul del modo daltonismo */
 }
-/* ========================================
-   CARRUSEL HERO ESTILO BMW
-   ======================================== */
+
+/* LOGO */
+body.daltonismo .logo-marca {
+    background: rgba(255, 149, 0, 0.1) !important;
+    border: 2px solid #FF9500 !important;
+}
+
+body.daltonismo .logo-marca:hover {
+    background: rgba(255, 149, 0, 0.2) !important;
+    border-color: #FFB84D !important;
+}
+
+body.daltonismo .main-nav::before,
+body.daltonismo .main-nav::after {
+    display: none !important;
+}
+
+/* Modales adicionales */
+body.daltonismo .modal-content {
+    border: 3px solid #0066CC !important;
+}
+
+body.daltonismo .modal-body {
+    background: #FFFFFF !important;
+    color: #1A1A1A !important;
+}
+
+body.daltonismo .modal-footer {
+    background: #F5F5F5 !important;
+    border-top: 2px solid #CCCCCC !important;
+}
+
+body.daltonismo .btn-close {
+    filter: brightness(0) invert(1) !important;
+    background: #FF6600 !important;
+    border: 2px solid #FFFFFF !important;
+    border-radius: 50% !important;
+}
+
+body.daltonismo .btn-close:hover {
+    background: #FF9500 !important;
+}
+
+/* UTILIDADES */
+body.daltonismo .text-muted {
+    color: #666666 !important;
+    font-style: italic !important;
+}
+
+body.daltonismo .text-warning {
+    color: #FFCC00 !important;
+    font-weight: 600 !important;
+}
+
+/* FORMULARIOS */
+body.daltonismo input:focus,
+body.daltonismo textarea:focus,
+body.daltonismo select:focus {
+    border-color: #FF9500 !important;
+    outline: 2px solid #FF9500 !important;
+}
+
+/* ENLACES */
+body.daltonismo a {
+    color: #0066CC !important;
+}
+
+body.daltonismo a:hover {
+    color: #FF9500 !important;
+}
+
+/* ENFOQUE */
+body.daltonismo *:focus-visible {
+    outline: 3px solid #FF9500 !important;
+    outline-offset: 2px !important;
+}
+
+/* ALERTAS */
+body.daltonismo .alert-success {
+    background: rgba(0, 153, 204, 0.15) !important;
+    color: #004999 !important;
+    border: 3px solid #0099CC !important;
+    border-left-width: 8px !important;
+}
+
+body.daltonismo .alert-warning {
+    background: rgba(255, 204, 0, 0.15) !important;
+    color: #664400 !important;
+    border: 3px solid #FFCC00 !important;
+    border-left-width: 8px !important;
+}
+
+body.daltonismo .alert-danger {
+    background: rgba(255, 102, 0, 0.15) !important;
+    color: #CC7700 !important;
+    border: 3px solid #FF6600 !important;
+    border-left-width: 8px !important;
+}
+
+/* TABLAS */
+body.daltonismo th {
+    background: #0066CC !important;
+    color: #FFFFFF !important;
+    border: 2px solid #004999 !important;
+}
+
+body.daltonismo tr:nth-child(even) {
+    background: rgba(0, 102, 204, 0.05) !important;
+}
+
+body.daltonismo tr:hover {
+    background: rgba(255, 149, 0, 0.1) !important;
+}
+
+/* CONTENIDO */
+body.daltonismo main {
+    background: #FFFFFF !important;
+}
+
+/* BADGES Y ESTADOS */
+body.daltonismo .badge {
+    border: 2px solid currentColor !important;
+}
+
+body.daltonismo .badge.bg-success {
+    background: #0099CC !important;
+    color: #FFFFFF !important;
+}
+
+body.daltonismo .badge.bg-warning {
+    background: #FFCC00 !important;
+    color: #1A1A1A !important;
+}
+
+body.daltonismo .badge.bg-danger {
+    background: #FF6600 !important;
+    color: #FFFFFF !important;
+}
+
+/* CARDS */
+body.daltonismo .card {
+    border: 2px solid #0066CC !important;
+}
+
+body.daltonismo .card-header {
+    background: #E6F2FF !important;
+    color: #003D7A !important;
+    border-bottom: 2px solid #0066CC !important;
+}
+
+/* BOTONES ESPECÍFICOS */
+body.daltonismo .btn-success {
+    background: linear-gradient(135deg, #0066CC, #4D94DB) !important;
+    color: #FFFFFF !important;
+    border: 2px solid #004999 !important;
+}
+
+body.daltonismo .btn-success:hover {
+    background: linear-gradient(135deg, #004999, #0066CC) !important;
+    border-color: #FF9500 !important;
+}
+
+body.daltonismo .btn-warning {
+    background: #0066CC !important;
+    color: #FFFFFF !important;
+    border: 2px solid #004999 !important;
+}
+
+body.daltonismo .btn-warning:hover {
+    background: #004999 !important;
+    border-color: #003366 !important;
+}
+
+body.daltonismo .btn-danger {
+    background: #CC0066 !important;
+    color: #FFFFFF !important;
+    border: 2px solid #990052 !important;
+}
+
+body.daltonismo .btn-danger:hover {
+    background: #990052 !important;
+    border-color: #660033 !important;
+}
+
+body.daltonismo .btn-outline-secondary {
+    background: transparent !important;
+    color: #0066CC !important;
+    border: 2px solid #0066CC !important;
+}
+
+body.daltonismo .btn-outline-secondary:hover {
+    background: #0066CC !important;
+    color: #FFFFFF !important;
+}
+
+/* BADGES ESPECÍFICOS */
+body.daltonismo .bg-success {
+    background: #0099CC !important;
+    color: #FFFFFF !important;
+}
+
+body.daltonismo .bg-warning {
+    background: #FFCC00 !important;
+    color: #1A1A1A !important;
+}
+
+body.daltonismo .bg-danger {
+    background: #FF6600 !important;
+    color: #FFFFFF !important;
+}
+
+body.daltonismo .bg-secondary {
+    background: #666666 !important;
+    color: #FFFFFF !important;
+}
+
+body.daltonismo .bg-primary {
+    background: #0066CC !important;
+    color: #FFFFFF !important;
+}
+
+/* CARRUSEL */
 
 .hero-carousel {
     margin-top: 0;
@@ -955,21 +1172,21 @@ body.daltonismo .page-title {
     left: 0;
     right: 0;
     padding: 4rem 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0) 100%);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0) 100%);
     text-align: left;
     color: white;
 }
 
 .carousel-caption-custom h1 {
     font-weight: 700;
-    text-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
     margin-bottom: 1rem;
     animation: fadeInUp 0.8s ease-out;
 }
 
 .carousel-caption-custom p {
     font-size: 1.25rem;
-    text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
     max-width: 600px;
     animation: fadeInUp 1s ease-out;
 }
@@ -996,7 +1213,7 @@ body.daltonismo .page-title {
     color: white;
     border-color: white;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(255,255,255,0.3);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
 }
 
 /* Indicadores del carrusel */
@@ -1008,7 +1225,7 @@ body.daltonismo .page-title {
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background-color: rgba(255,255,255,0.5);
+    background-color: rgba(255, 255, 255, 0.5);
     border: 2px solid white;
     transition: all 0.3s ease;
 }
@@ -1036,7 +1253,7 @@ body.daltonismo .page-title {
 .hero-carousel .carousel-control-next-icon {
     width: 3rem;
     height: 3rem;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.5);
     border-radius: 50%;
     padding: 1rem;
 }
@@ -1047,6 +1264,7 @@ body.daltonismo .page-title {
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1060,7 +1278,7 @@ body.daltonismo .page-title {
 
 .hover-lift:hover {
     transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0,0,0,0.15) !important;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
 }
 
 .feature-icon {
@@ -1069,9 +1287,12 @@ body.daltonismo .page-title {
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.05);
     }
@@ -1083,19 +1304,19 @@ body.daltonismo .page-title {
         height: 60vh;
         min-height: 400px;
     }
-    
+
     .carousel-caption-custom {
         padding: 2rem 0;
     }
-    
+
     .carousel-caption-custom h1 {
         font-size: 2rem;
     }
-    
+
     .carousel-caption-custom p {
         font-size: 1rem;
     }
-    
+
     .carousel-caption-custom .btn {
         padding: 0.6rem 1.5rem;
         font-size: 0.9rem;
@@ -1107,25 +1328,23 @@ body.daltonismo .page-title {
         height: 50vh;
         min-height: 350px;
     }
-    
+
     .carousel-caption-custom h1 {
         font-size: 1.75rem;
     }
-    
+
     .carousel-caption-custom .d-flex {
         flex-direction: column;
         gap: 0.5rem !important;
     }
-    
+
     .carousel-caption-custom .btn {
         width: 100%;
     }
 }
 
 
-/* ========================================
-   MEJORAS MODAL RESERVAR
-   ======================================== */
+/* MEJORAS MODAL RESERVAR */
 
 #reservarModal .modal-content {
     animation: modalSlideIn 0.3s ease-out;
@@ -1144,6 +1363,7 @@ body.daltonismo .page-title {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -1163,9 +1383,7 @@ body.daltonismo .page-title {
 }
 
 
-/* ========================================
-   FIX HEADER CON MODALES
-   ======================================== */
+/* FIX HEADER CON MODALES */
 
 /* Evitar que el body se desplace cuando se abre un modal */
 body.modal-open {
@@ -1191,9 +1409,7 @@ body.modal-open .main-nav {
     padding-right: 0 !important;
 }
 
-/* ========================================
-   RESPONSIVE - MEJORAS MÓVIL
-   ======================================== */
+/* RESPONSIVE - MEJORAS MÓVIL */
 
 /* Tablas responsive - mejor scroll horizontal */
 .table-responsive {
@@ -1203,31 +1419,31 @@ body.modal-open .main-nav {
 
 /* Mejorar legibilidad en móvil */
 @media (max-width: 768px) {
+
     /* Reducir tamaño de fuente en tablas */
     .table {
         font-size: 0.875rem;
     }
-    
+
     /* Botones más compactos */
     .btn-sm {
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
     }
-    
+
     /* Cards con menos padding */
     .card-body {
         padding: 1rem;
     }
-    
+
     /* Stats en columna única */
-    .row.g-3 > [class*='col-md-3'] {
+    .row.g-3>[class*='col-md-3'] {
         flex: 0 0 100%;
         max-width: 100%;
     }
-    
+
     /* Modales ocupan más espacio */
     .modal-dialog {
         margin: 0.5rem;
     }
 }
-

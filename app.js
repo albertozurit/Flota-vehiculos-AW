@@ -4,7 +4,7 @@ const session = require('express-session');
 const pool = require('./config/config');
 
 //CONFIGURACION SESION PARA LA BD
-const mysqlSession = require ('express-mysql-session');
+const mysqlSession = require('express-mysql-session');
 const MySQLStore = mysqlSession(session);
 const sessionStore = new MySQLStore({}, pool);
 
@@ -32,7 +32,7 @@ const middlewareSession = session({
     resave: false, //fuerza a que se guarde el contenido de la sesion en la bd
     saveUninitialized: false, //no crea sesion para aquellos que no estan en la bd
     secret: "wei1234", //caddeza para firmar el "SID" que se ennvia al cliente
-    cookie: {maxAge: 24 * 60 * 60 * 1000},
+    cookie: { maxAge: 24 * 60 * 60 * 1000 },
     store: sessionStore
 });
 
@@ -46,7 +46,7 @@ app.use((request, response, next) => {
 })
 
 
-const authRoutes = require ('./routes/authRoutes');
+const authRoutes = require('./routes/authRoutes');
 const reservasRoutes = require('./routes/reservasRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
@@ -65,12 +65,10 @@ function liberarVehiculosExpirados() {
         AND estado = 'confirmada'
     `, (errRes, resultRes) => {
         if (errRes) {
-            console.error('❌ Error actualizando reservas expiradas:', errRes);
             return;
         }
-        
+
         if (resultRes.affectedRows > 0) {
-            console.log(`✅ ${resultRes.affectedRows} reserva(s) marcada(s) como finalizadas`);
         }
 
         // Luego liberamos los vehículos cuyas reservas activas ya expiraron
@@ -86,11 +84,7 @@ function liberarVehiculosExpirados() {
                 AND r.fecha_fin > NOW()
             )
         `, (errVeh, resultVeh) => {
-            if (errVeh) {
-                console.error('❌ Error liberando vehículos:', errVeh);
-            } else if (resultVeh.affectedRows > 0) {
-                console.log(`🚗 ${resultVeh.affectedRows} vehículo(s) liberado(s) automáticamente`);
-            }
+            // Silencioso
         });
     });
 }
@@ -102,7 +96,6 @@ setInterval(liberarVehiculosExpirados, 30 * 1000);
 liberarVehiculosExpirados();
 
 // Ejecutar al iniciar el servidor
-console.log('🔄 Iniciando sistema de liberación automática...');
 liberarVehiculosExpirados();
 
 //INICIAR EL SERVIDOR
@@ -110,8 +103,7 @@ app.listen(PORT, function (err) {
     if (err) {
         console.error("Fallo el servidor" + err.message);
     } else {
-        console.log("Servidor arrancado en el puerto 3000 http://localhost:3000");
-        console.log("🔄 Sistema de liberación automática de vehículos activado");
+        console.log("Servidor arrancado en http://localhost:3000");
     }
 })
 
