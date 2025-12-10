@@ -272,11 +272,16 @@ router.post('/login', validarLogin, (request, response) => {
 
 //logout 
 router.post('/logout', (request, response) => {
+    if (request.session) {
+        request.session.usuario = null;
+    }
     request.session.destroy((err) => {
         if (err) {
+            console.error('Error al destruir la sesión:', err);
             return response.redirect('/');
         }
-        response.clearCookie('connect.sid'); //elimina la cookie de sesión del navegador
+
+        response.clearCookie('connect.sid', { path: '/' });
         response.redirect('/');
     });
 });
