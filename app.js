@@ -65,51 +65,6 @@ app.use((err, request, response, next) => {
     response.status(500).render('./errores/500', { titulo: "Error en el servidor" });
 });
 
-
-
-//SISTEMA AUTOMÁTICO DE LIBERACIÓN DE VEHÍCULOS
-function liberarVehiculosExpirados() {
-    // Primero actualizamos el estado de las reservas expiradas
-    pool.query(`
-        UPDATE Reservas 
-        SET estado = 'finalizada'
-        WHERE fecha_fin < NOW() 
-        AND estado = 'confirmada'
-    `, (errRes, resultRes) => {
-        if (errRes) {
-            return;
-        }
-
-        if (resultRes.affectedRows > 0) {
-        }
-
-        // Luego liberamos los vehículos cuyas reservas activas ya expiraron
-        pool.query(`
-            UPDATE Vehiculos v
-            SET v.estado = 'disponible'
-            WHERE v.estado = 'reservado'
-            AND NOT EXISTS (
-                SELECT 1 FROM Reservas r 
-                WHERE r.id_vehiculo = v.id_vehiculo 
-                AND r.estado = 'confirmada'
-                AND r.fecha_inicio <= NOW()
-                AND r.fecha_fin > NOW()
-            )
-        `, (errVeh, resultVeh) => {
-            // Silencioso
-        });
-    });
-}
-
-// Ejecutar cada 30 segundos para pruebas (cambiar a 5 minutos en producción)
-setInterval(liberarVehiculosExpirados, 30 * 1000);
-
-// Ejecutar inmediatamente al iniciar
-liberarVehiculosExpirados();
-
-// Ejecutar al iniciar el servidor
-liberarVehiculosExpirados();
-
 //INICIAR EL SERVIDOR
 app.listen(PORT, function (err) {
     if (err) {
@@ -118,6 +73,3 @@ app.listen(PORT, function (err) {
         console.log("Servidor arrancado en http://localhost:3000");
     }
 })
-
-
-

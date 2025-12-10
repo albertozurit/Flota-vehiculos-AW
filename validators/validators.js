@@ -24,13 +24,13 @@ const validarRegistro = [
 // Validación de vehículo
 const validarVehiculo = [
     check("matricula", "La matrícula es obligatoria").notEmpty(),
-    check("matricula", "La matrícula debe tener entre 2 y 20 caracteres").isLength({ min: 2, max: 20 }),
+    check("matricula", "La matrícula debe tener exactamente 7 caracteres").isLength({ min: 7, max: 7 }),
     check("marca", "La marca es obligatoria").notEmpty(),
     check("marca", "La marca debe tener máximo 50 caracteres").isLength({ max: 50 }),
     check("modelo", "El modelo es obligatorio").notEmpty(),
     check("modelo", "El modelo debe tener máximo 50 caracteres").isLength({ max: 50 }),
     check("anio_matriculacion", "Año de matriculación inválido").optional({ checkFalsy: true }).isInt({ min: 1900, max: new Date().getFullYear() + 1 }),
-    check("numero_plazas", "Número de plazas debe ser entre 1 y 50").optional({ checkFalsy: true }).isInt({ min: 1, max: 50 }),
+    check("numero_plazas", "Número de plazas debe ser entre 1 y 9").optional({ checkFalsy: true }).isInt({ min: 1, max: 9 }),
     check("autonomia_km", "Autonomía debe ser entre 1 y 10000 km").optional({ checkFalsy: true }).isInt({ min: 1, max: 10000 }),
     check("color", "Color debe tener máximo 30 caracteres").optional({ checkFalsy: true }).isLength({ max: 30 })
 ];
@@ -46,7 +46,15 @@ const validarReserva = [
     check("fechaFin", "La fecha de fin es obligatoria").notEmpty(),
     check("fechaFin", "Formato de fecha de fin inválido").isDate(),
     check("horaFin", "La hora de fin es obligatoria").notEmpty(),
-    check("horaFin", "Formato de hora inválido (HH:MM)").matches(/^([01]\d|2[0-3]):([0-5]\d)$/)
+    check("horaFin", "Formato de hora inválido (HH:MM)").matches(/^([01]\d|2[0-3]):([0-5]\d)$/),
+    check("fechaFin").custom((value, { req }) => {
+        const inicio = new Date(`${req.body.fechaInicio}T${req.body.horaInicio}`);
+        const fin = new Date(`${req.body.fechaFin}T${req.body.horaFin}`);
+        if (fin <= inicio) {
+            throw new Error('La fecha y hora de fin debe ser posterior a la de inicio');
+        }
+        return true;
+    })
 ];
 
 // Validación de concesionario

@@ -52,7 +52,7 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
         }
 
         const queries = {
-            vehiculos: "SELECT COUNT(*) AS c FROM Vehiculos WHERE activo = 1 AND estado IN ('disponible', 'reservado')",
+            vehiculos: "SELECT COUNT(*) AS c FROM Vehiculos WHERE activo = 1 AND estado IN ('disponible')",
             concesionarios: 'SELECT COUNT(*) AS c FROM Concesionarios WHERE activo = 1',
             usuarios: 'SELECT COUNT(*) AS c FROM Usuarios WHERE activo = 1',
             reservas: 'SELECT COUNT(*) AS c FROM Reservas'
@@ -95,7 +95,7 @@ router.get('/', requireAuth, requireAdmin, (req, res) => {
                                         stats.reservasPorConcesionario = eA ? [] : (rowsA || []);
                                         stats.vehiculoMasUsado = eB ? null : ((rowsB && rowsB[0]) || null);
                                         // Also show short lists on dashboard (avoid multi-statements)
-                                        const sqlVeh = 'SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.imagen, v.estado, c.nombre AS concesionario_nombre FROM Vehiculos v LEFT JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario WHERE v.activo = 1 ORDER BY v.id_vehiculo DESC LIMIT 20';
+                                        const sqlVeh = 'SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, v.numero_plazas, v.autonomia_km, v.color, v.imagen, v.estado, c.nombre AS concesionario_nombre FROM Vehiculos v LEFT JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario WHERE v.activo = 1 ORDER BY v.id_vehiculo DESC';
                                         const sqlCon = 'SELECT id_concesionario AS id, nombre, ciudad, direccion, telefono_contacto FROM Concesionarios WHERE activo = 1 ORDER BY nombre ASC';
                                         const sqlUsr = 'SELECT u.id_usuario AS id, u.nombre, u.correo, u.rol, u.id_concesionario, c.nombre AS concesionario_nombre FROM Usuarios u LEFT JOIN Concesionarios c ON u.id_concesionario = c.id_concesionario WHERE u.activo = 1 ORDER BY u.id_usuario DESC LIMIT 20';
                                         pool.getConnection((err2, conn2) => {
@@ -242,11 +242,17 @@ router.get('/vehiculos', requireAuth, requireAdmin, (req, res) => {
 
 // Crear vehículo 
 router.post('/vehiculos/nuevo', requireAuth, requireAdmin, upload.single('imagen'), validarVehiculo, handleValidationErrors, (req, res) => {
+
     if (req.validationErrors && req.validationErrors.length > 0) {
         return res.status(400).json({ error: req.validationMessage });
     }
 
     const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, id_concesionario } = req.body;
+
+    // Validación manual adicional
+    if (!matricula || matricula.length !== 7) {
+        return res.status(400).json({ error: 'La matrícula debe tener exactamente 7 caracteres' });
+    }
 
     if (!matricula || !marca || !modelo) {
         return res.status(400).json({ error: 'Completa matrícula, marca y modelo' });
@@ -363,7 +369,7 @@ router.post('/vaciar-bd', requireAuth, requireAdmin, (req, res) => {
         if (err) {
             return res.render('admin/carga_json', {
                 title: 'Cargar datos iniciales',
-                mensaje: '❌ Error de conexión',
+                mensaje: 'Error de conexión',
                 tipo: 'danger',
                 preferencias: req.session.preferencias || {}
             });
@@ -374,7 +380,7 @@ router.post('/vaciar-bd', requireAuth, requireAdmin, (req, res) => {
                 connection.release();
                 return res.render('admin/carga_json', {
                     title: 'Cargar datos iniciales',
-                    mensaje: '❌ Error iniciando transacción',
+                    mensaje: 'Error iniciando transacción',
                     tipo: 'danger',
                     preferencias: req.session.preferencias || {}
                 });
@@ -398,7 +404,7 @@ router.post('/vaciar-bd', requireAuth, requireAdmin, (req, res) => {
                             connection.release();
                             res.render('admin/carga_json', {
                                 title: 'Cargar datos iniciales',
-                                mensaje: `❌ Error vaciando BD: ${err.message}`,
+                                mensaje: `Error vaciando BD: ${err.message}`,
                                 tipo: 'danger',
                                 preferencias: req.session.preferencias || {}
                             });
@@ -412,14 +418,14 @@ router.post('/vaciar-bd', requireAuth, requireAdmin, (req, res) => {
                             if (cErr) {
                                 return res.render('admin/carga_json', {
                                     title: 'Cargar datos iniciales',
-                                    mensaje: '❌ Error confirmando cambios',
+                                    mensaje: 'Error confirmando cambios',
                                     tipo: 'danger',
                                     preferencias: req.session.preferencias || {}
                                 });
                             }
                             res.render('admin/carga_json', {
                                 title: 'Cargar datos iniciales',
-                                mensaje: '✅ Base de datos vaciada correctamente. Ahora puedes cargar los datos del JSON.',
+                                mensaje: 'Base de datos vaciada correctamente. Ahora puedes cargar los datos del JSON.',
                                 tipo: 'success',
                                 preferencias: req.session.preferencias || {}
                             });
@@ -440,7 +446,7 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
     } catch (e) {
         return res.render('admin/carga_json', {
             title: 'Cargar datos iniciales',
-            mensaje: '❌ Error: No se pudo leer el archivo bd_vacia.json. Verifica que existe en la raíz del proyecto.',
+            mensaje: 'Error: No se pudo leer el archivo bd_vacia.json. Verifica que existe en la raíz del proyecto.',
             tipo: 'danger',
             preferencias: req.session.preferencias || {}
         });
@@ -449,7 +455,7 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
         if (err) {
             return res.render('admin/carga_json', {
                 title: 'Cargar datos iniciales',
-                mensaje: '❌ Error: No se pudo conectar a la base de datos.',
+                mensaje: 'Error: No se pudo conectar a la base de datos.',
                 tipo: 'danger',
                 preferencias: req.session.preferencias || {}
             });
@@ -460,7 +466,7 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
                 connection.release();
                 return res.render('admin/carga_json', {
                     title: 'Cargar datos iniciales',
-                    mensaje: '❌ Error: No se pudo verificar el estado de la base de datos.',
+                    mensaje: 'Error: No se pudo verificar el estado de la base de datos.',
                     tipo: 'danger',
                     preferencias: req.session.preferencias || {}
                 });
@@ -471,7 +477,7 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
                 connection.release();
                 return res.render('admin/carga_json', {
                     title: 'Cargar datos iniciales',
-                    mensaje: `⚠️ La base de datos NO está vacía (${vehCount} vehículos, ${conCount} concesionarios). Usa el botón "Vaciar BD" primero.`,
+                    mensaje: `La base de datos NO está vacía (${vehCount} vehículos, ${conCount} concesionarios). Usa el botón "Vaciar BD" primero.`,
                     tipo: 'warning',
                     preferencias: req.session.preferencias || {}
                 });
@@ -481,7 +487,7 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
                     connection.release();
                     return res.render('admin/carga_json', {
                         title: 'Cargar datos iniciales',
-                        mensaje: '❌ Error: No se pudo iniciar la transacción en la base de datos.',
+                        mensaje: 'Error: No se pudo iniciar la transacción en la base de datos.',
                         tipo: 'danger',
                         preferencias: req.session.preferencias || {}
                     });
@@ -533,14 +539,14 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
                             if (cErr) {
                                 return res.render('admin/carga_json', {
                                     title: 'Cargar datos iniciales',
-                                    mensaje: '❌ Error: No se pudieron confirmar los cambios. Inténtalo de nuevo.',
+                                    mensaje: 'Error: No se pudieron confirmar los cambios. Inténtalo de nuevo.',
                                     tipo: 'danger',
                                     preferencias: req.session.preferencias || {}
                                 });
                             }
                             return res.render('admin/carga_json', {
                                 title: 'Cargar datos iniciales',
-                                mensaje: `✅ Éxito: Se cargaron ${concesionarios.length} concesionarios, ${usuariosJson.length} usuarios y ${vehiculosJson.length} vehículos correctamente.`,
+                                mensaje: `Éxito: Se cargaron ${concesionarios.length} concesionarios, ${usuariosJson.length} usuarios y ${vehiculosJson.length} vehículos correctamente.`,
                                 tipo: 'success',
                                 preferencias: req.session.preferencias || {}
                             });
@@ -550,7 +556,7 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
                             connection.release();
                             res.render('admin/carga_json', {
                                 title: 'Cargar datos iniciales',
-                                mensaje: `❌ Error: ${err2.message || 'Error desconocido'}. Verifica que la base de datos esté vacía y el JSON sea válido.`,
+                                mensaje: `Error: ${err2.message || 'Error desconocido'}. Verifica que la base de datos esté vacía y el JSON sea válido.`,
                                 tipo: 'danger',
                                 preferencias: req.session.preferencias || {}
                             });

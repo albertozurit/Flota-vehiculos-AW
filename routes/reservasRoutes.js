@@ -1,9 +1,52 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../config/config');
-// No usamos el middleware que redirige en peticiones AJAX; haremos una comprobación manual
+const { requireAuth } = require('../middlewares/auth');
 
+// GET /reservas/nuevo/:id - Devuelve el formulario de reserva para AJAX
+router.get('/nuevo/:id', requireAuth, (req, res) => {
+    const vehiculoId = parseInt(req.params.id);
 
+    if (!vehiculoId || isNaN(vehiculoId)) {
+        return res.status(400).send('<div class="alert alert-danger">ID de vehículo inválido</div>');
+    }
+
+    pool.getConnection((err, connection) => {
+        if (err) {
+            console.error('Error de conexión:', err);
+            return res.status(500).send('<div class="alert alert-danger">Error de conexión</div>');
+        }
+
+        const sql = `SELECT v.id_vehiculo AS id, v.matricula, v.marca, v.modelo, v.anio_matriculacion, 
+                     v.numero_plazas, v.autonomia_km, v.color, v.estado, 
+                     c.nombre AS concesionario_nombre, c.ciudad AS concesionario_ciudad
+                     FROM Vehiculos v
+                     LEFT JOIN Concesionarios c ON v.id_concesionario = c.id_concesionario
+                     WHERE v.id_vehiculo = ? AND v.activo = 1`;
+
+        connection.query(sql, [vehiculoId], (err, rows) => {
+            connection.release();
+
+            if (err) {
+                console.error('Error consultando vehículo:', err);
+                return res.status(500).send('<div class="alert alert-danger">Error al cargar el vehículo</div>');
+            }
+
+            if (!rows || rows.length === 0) {
+                return res.status(404).send('<div class="alert alert-danger">Vehículo no encontrado</div>');
+            }
+
+            const vehiculo = rows[0];
+
+            // Renderizar solo el formulario (sin layout completo)
+            res.render('reservas/reservas_formulario', {
+                vehiculo: vehiculo,
+                usuario: req.session.usuario,
+                preferencias: req.session.preferencias || {}
+            });
+        });
+    });
+});
 
 // Cancelar reserva (solo empleados, propia)
 router.post('/cancelar/:id', (req, res) => {

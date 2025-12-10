@@ -86,17 +86,23 @@
                     <tbody>
                       <% stats.reservasPorConcesionario.forEach(item=> { %>
                         <tr>
-                          <td><%= item.nombre %></td>
-                          <td><%= item.ciudad %></td>
-                          <td class="text-end"><span class="badge bg-primary"><%= item.num_reservas %></span></td>
+                          <td>
+                            <%= item.nombre %>
+                          </td>
+                          <td>
+                            <%= item.ciudad %>
+                          </td>
+                          <td class="text-end"><span class="badge bg-primary">
+                              <%= item.num_reservas %>
+                            </span></td>
                         </tr>
-                      <% }); %>
+                        <% }); %>
                     </tbody>
                   </table>
                 </div>
-              <% } else { %>
-                <p class="text-muted mb-0">No hay reservas registradas aún.</p>
-              <% } %>
+                <% } else { %>
+                  <p class="text-muted mb-0">No hay reservas registradas aún.</p>
+                  <% } %>
             </div>
           </section>
 
@@ -154,7 +160,8 @@
                             data-matricula="<%= v.matricula || '' %>" data-marca="<%= v.marca || '' %>"
                             data-modelo="<%= v.modelo || '' %>" data-anio="<%= v.anio_matriculacion || '' %>"
                             data-plazas="<%= v.numero_plazas || '' %>" data-autonomia="<%= v.autonomia_km || '' %>"
-                            data-color="<%= v.color || '' %>" data-estado="<%= v.estado || 'disponible' %>">Editar</button>
+                            data-color="<%= v.color || '' %>"
+                            data-estado="<%= v.estado || 'disponible' %>">Editar</button>
                           <form action="/admin/vehiculos/<%= v.id %>/eliminar" method="POST" class="d-inline"
                             onsubmit="return confirm('¿Dar de baja el vehículo?')">
                             <button class="btn btn-sm btn-outline-danger">Baja</button>
@@ -435,7 +442,8 @@
           <div class="modal fade" id="modalCrearVehiculo" tabindex="-1" aria-labelledby="modalCrearVehiculoLabel"
             aria-hidden="true">
             <div class="modal-dialog">
-              <form method="POST" action="/admin/vehiculos/nuevo" class="modal-content" enctype="multipart/form-data" id="formNuevoVehiculo">
+              <form method="POST" action="/admin/vehiculos/nuevo" class="modal-content" enctype="multipart/form-data"
+                id="formNuevoVehiculo">
                 <div class="modal-header">
                   <h5 class="modal-title" id="modalCrearVehiculoLabel">Nuevo vehículo</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
@@ -445,7 +453,7 @@
                   <div class="row g-2">
                     <div class="col-md-4">
                       <label class="form-label">Matrícula</label>
-                      <input class="form-control" name="matricula" maxlength="10" required>
+                      <input class="form-control" name="matricula" minlength="7" maxlength="7" required>
                     </div>
                     <div class="col-md-4">
                       <label class="form-label">Marca</label>
@@ -573,15 +581,15 @@
         e.preventDefault();
         const errorDiv = document.getElementById('errorCrearVehiculo');
         errorDiv.classList.add('d-none');
-        
+
         const formData = new FormData(formCrearVehiculo);
-        
+
         try {
           const response = await fetch('/admin/vehiculos/nuevo', {
             method: 'POST',
             body: formData
           });
-          
+
           if (response.ok) {
             window.location.reload();
           } else {

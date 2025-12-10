@@ -57,33 +57,7 @@ function insertarUsuario(usuario, callback) {
     });
 }
 
-function insertarVehiculo(vehiculo, callback) {
-    pool.getConnection((err, connection) => {
-        if (err) return callback(err);
-
-        const sql = `INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario)
-                     VALUES (?,?,?,?,?,?,?,?,?,?)`;
-
-        const params = [
-            vehiculo.matricula || null,
-            vehiculo.marca || null,
-            vehiculo.modelo || null,
-            vehiculo.anio_matriculacion || null,
-            vehiculo.numero_plazas || null,
-            vehiculo.autonomia_km || null,
-            vehiculo.color || null,
-            vehiculo.imagen || null,
-            vehiculo.estado || 'disponible',
-            vehiculo.id_concesionario || 1
-        ];
-
-        connection.query(sql, params, (err, results) => {
-            connection.release();
-            if (err) return callback(err);
-            callback(null, results.insertId);
-        });
-    });
-}
+// insertarVehiculo: Función movida a adminRoutes.js (única ubicación)
 
 //RUTAS POST
 router.post('/register', requireAuth, requireAdmin, validarRegistro, (request, response) => {
@@ -273,7 +247,7 @@ router.post('/login', validarLogin, (request, response) => {
                 if (user.preferencias_accesibilidad) {
                     try {
                         request.session.preferencias = JSON.parse(user.preferencias_accesibilidad);
-                        console.log('✅ Preferencias cargadas desde BD para usuario', user.id);
+                        console.log('Preferencias cargadas desde BD para usuario', user.id);
                     } catch (e) {
                         console.error('Error al parsear preferencias desde BD:', e);
                         request.session.preferencias = {};
@@ -360,99 +334,21 @@ router.post('/accesibilidad/guardar', requireAuth, (request, response) => {
     });
 });
 
-// Crear vehículo (solo admin)
-router.post('/vehiculos/nuevo', requireAuth, requireAdmin, validarVehiculo, (request, response) => {
-    const errors = validationResult(request);
-    if (!errors.isEmpty()) {
-        return response.render('vehiculos/nuevo', {
-            mensaje: errors.array().map(e => e.msg).join('. ')
-        });
-    }
-    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color } = request.body;
+// POST /vehiculos/nuevo: Ruta movida a adminRoutes.js con soporte de imagen y mejor validación
 
-    // Validaciones básicas: matrícula, marca y modelo son obligatorios
-    if (!matricula || !marca || !modelo) {
-        return response.render('vehiculos/nuevo', {
-            mensaje: "Por favor, completa los campos obligatorios: matrícula, marca y modelo"
-        });
-    }
-
-    const vehiculo = {
-        matricula: matricula,
-        marca: marca,
-        modelo: modelo,
-        anio_matriculacion: anio_matriculacion || null,
-        numero_plazas: numero_plazas ? parseInt(numero_plazas) : null,
-        autonomia_km: autonomia_km ? parseInt(autonomia_km) : null,
-        color: color || null,
-        estado: 'disponible',
-        id_concesionario: 1 // opción A: concesionario por defecto
-    };
-
-    insertarVehiculo(vehiculo, (err, newVehicleId) => {
-        if (!err) {
-            response.redirect('/vehiculos');
-        } else {
-            console.error("Error al insertar vehículo:", err);
-            response.render('vehiculos/nuevo', {
-                mensaje: "Error al crear el vehículo"
-            });
-        }
-    });
-});
-
-//editar vehiculo solo admin
-router.post('/vehiculos/:id/editar', requireAuth, requireAdmin, validarVehiculo, (request, response) => {
-    const errors = validationResult(request);
-    if (!errors.isEmpty()) {
-        return response.redirect('/vehiculos');
-    }
-    const vehiculoId = request.params.id;
-    const { matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado } = request.body;
-
-    if (!matricula || !marca || !modelo) {
-        return response.render('vehiculos/editar', {
-            vehiculo: { id: vehiculoId, matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, estado },
-            mensaje: "Por favor, completa los campos obligatorios: matrícula, marca y modelo"
-        });
-    }
-
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error("Error al obtener conexión:", err);
-            return response.redirect('/vehiculos');
-        }
-
-        const sql = `UPDATE Vehiculos SET matricula = ?, marca = ?, modelo = ?, anio_matriculacion = ?, numero_plazas = ?, autonomia_km = ?, color = ?, estado = ? WHERE id_vehiculo = ?`;
-        const params = [matricula, marca, modelo, anio_matriculacion || null, numero_plazas ? parseInt(numero_plazas) : null, autonomia_km ? parseInt(autonomia_km) : null, color || null, estado || 'disponible', vehiculoId];
-
-        connection.query(sql, params, (err, results) => {
-            connection.release();
-
-            if (err) {
-                console.error("Error al actualizar vehículo:", err);
-                return response.redirect('/vehiculos');
-            }
-
-            response.redirect('/vehiculos');
-        });
-    });
-});
+// POST /vehiculos/:id/editar: Ruta de edición ahora solo en adminRoutes.js
 
 //Crear reserva 
 router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) => {
     // Verificar errores de validación
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).render('reservasformulario', {
-            title: 'Nueva Reserva de Vehículo',
-            usuario: req.session.usuario,
-            vehiculos: [],
-            mensaje: errors.array().map(e => e.msg).join('. ')
-        });
+        req.session.mensaje = errors.array().map(e => e.msg).join('. ');
+        return res.redirect('/vehiculos');
     }
 
     const { vehiculoId, fechaInicio, horaInicio, fechaFin, horaFin } = req.body;
+    const vehiculoIdNum = parseInt(vehiculoId);
     const userId = req.session.usuario.id;
 
     // Validación básica
@@ -493,7 +389,7 @@ router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) =
                     AND estado = 'activa'
                     AND NOT (fecha_fin <= ? OR fecha_inicio >= ?)
                 `;
-                connection.query(checkOverlapSql, [vehiculoId, inicio, fin], (checkErr, overlapRows) => {
+                connection.query(checkOverlapSql, [vehiculoIdNum, inicio, fin], (checkErr, overlapRows) => {
                     if (checkErr) {
                         console.error('Error verificando solapamiento:', checkErr);
                         return connection.rollback(() => {
@@ -507,14 +403,14 @@ router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) =
                         // Ya existe una reserva activa en ese rango
                         return connection.rollback(() => {
                             connection.release();
-                            req.session.mensaje = '⚠️ El vehículo ya tiene una reserva activa en ese horario. Por favor, elige otro rango de fechas.';
+                            req.session.mensaje = 'El vehículo ya tiene una reserva activa en ese horario. Por favor, elige otro rango de fechas.';
                             return res.redirect('/reservas');
                         });
                     }
 
                     // No hay solapamiento, proceder con la inserción
                     const insertSql = `INSERT INTO Reservas (id_usuario, id_vehiculo, fecha_inicio, fecha_fin, estado) VALUES (?,?,?,?,?)`;
-                    const insertParams = [userId, vehiculoId, inicio, fin, 'activa'];
+                    const insertParams = [userId, vehiculoIdNum, inicio, fin, 'activa'];
 
                     connection.query(insertSql, insertParams, (insertErr, insertRes) => {
                         if (insertErr) {
@@ -528,7 +424,7 @@ router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) =
 
                         // Actualizar estado del vehículo a 'reservado'
                         const updateSql = `UPDATE Vehiculos SET estado = 'reservado' WHERE id_vehiculo = ?`;
-                        connection.query(updateSql, [vehiculoId], (updateErr) => {
+                        connection.query(updateSql, [vehiculoIdNum], (updateErr, updateResult) => {
                             if (updateErr) {
                                 console.error('Error actualizando estado del vehículo:', updateErr);
                                 return connection.rollback(() => {
@@ -569,74 +465,7 @@ router.post('/reservas/guardar', requireAuth, validarReserva, async (req, res) =
     }
 });
 
-function eliminarVehiculo(vehiculoId, callback) {
-    pool.getConnection((err, connection) => {
-        if (err) {
-            return callback(err);
-        }
-        // Usamos nuevo esquema: comprobar estado en `Vehiculos` usando id_vehiculo
-        let sqlCheckEstado = "SELECT estado FROM Vehiculos WHERE id_vehiculo = ?";
-        connection.query(sqlCheckEstado, [vehiculoId], (err, rows) => {
-            if (err) {
-                connection.release();
-                return callback(err);
-            }
-
-            if (rows.length === 0) {
-                connection.release();
-                return callback(new Error("El vehículo no existe."));
-            }
-
-            const vehiculo = rows[0];
-
-            if (vehiculo.estado === "reservado") {
-                connection.release();
-                return callback(new Error("El vehículo está reservado actualmente y no se puede eliminar."));
-            }
-
-            // Comprobar si tiene reservas activas en la tabla `Reservas`
-            let sqlCheckReservas = `SELECT id_reserva FROM Reservas WHERE id_vehiculo = ? AND estado = 'activa'`;
-            connection.query(sqlCheckReservas, [vehiculoId], (err, reservas) => {
-                if (err) {
-                    connection.release();
-                    return callback(err);
-                }
-
-                if (reservas.length > 0) {
-                    connection.release();
-                    return callback(new Error("El vehículo tiene reservas activas y no se puede eliminar."));
-                }
-
-                // Baja lógica: marcar como 'mantenimiento'
-                let sqlUpdate = "UPDATE Vehiculos SET estado = 'mantenimiento' WHERE id_vehiculo = ?";
-                connection.query(sqlUpdate, [vehiculoId], (err, results) => {
-                    connection.release();
-
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    callback(null, results.affectedRows);
-                });
-            });
-        });
-    });
-}
-
-
-// Baja lógica del vehículo
-router.post('/vehiculos/:id/eliminar', requireAuth, requireAdmin, (request, response) => {
-    const vehiculoId = request.params.id;
-
-    eliminarVehiculo(vehiculoId, (err, affectedRows) => {
-        if (err) {
-            console.error("Error al eliminar vehículo:", err);
-            return response.redirect('/vehiculos');
-        }
-
-        response.redirect('/vehiculos');
-    });
-});
+// POST /vehiculos/:id/eliminar: Ruta de eliminación ahora solo en adminRoutes.js (baja lógica simple)
 
 
 
@@ -665,36 +494,6 @@ router.get('/perfil', requireAuth, (request, response) => {
         preferencias: request.session.preferencias || {}
     });
 });
-
-// RUTA COMENTADA: Ya no se usa, el registro se hace desde el modal del panel de admin
-// router.get('/register', requireAuth, requireAdmin, (request, response) => {
-//     pool.getConnection((err, connection) => {
-//         if (e
-// rr) {
-//             console.error('Error al obtener conexión para cargar concesionarios:', err);
-//             response.status(200);
-//             return response.render('usuarios/register', {
-//                 title: "Registro de usuario",
-//                 usuario: request.session.usuario || null,
-//                 mensaje: request.session.mensaje || null,
-//                 preferencias: request.session.preferencias || {},
-//                 concesionarios: []
-//             });
-//         }
-//         connection.query('SELECT id_concesionario AS id, nombre FROM Concesionarios ORDER BY nombre', (e, rows) => {
-//             connection.release();
-//             response.status(200);
-//             response.render('usuarios/register', {
-//                 title: "Registro de usuario",
-//                 usuario: request.session.usuario || null,
-//                 mensaje: request.session.mensaje || null,
-//                 preferencias: request.session.preferencias || {},
-//                 concesionarios: e ? [] : (rows || [])
-//             });
-//             request.session.mensaje = null;
-//         });
-//     });
-// });
 
 router.get('/login', function (request, response) {
     response.status(200);
@@ -746,7 +545,7 @@ router.get('/vehiculos', requireAuth, (request, response) => {
 
         // Filtrar solo vehículos activos
         where.push('v.activo = 1');
-        
+
         if (!esAdmin) {
             // Empleado: restringir a su concesionario activo
             where.push('v.id_concesionario = ?');
@@ -795,10 +594,11 @@ router.get('/vehiculos', requireAuth, (request, response) => {
                 title: "Vehículos disponibles",
                 vehiculos: rows,
                 filtros: { autonomia_min, plazas, color, inicio, fin, ciudad },
-                mensaje: null,
+                mensaje: request.session.mensaje || null,
                 preferencias: request.session.preferencias || {}
             };
 
+            request.session.mensaje = null;
             return response.render('vehiculos/lista_vehiculos', renderData);
         });
     });

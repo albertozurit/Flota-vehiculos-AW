@@ -58,26 +58,28 @@
                                                     <td>
                                                         <% if (reserva.estado==='confirmada' ) { %>
                                                             <span class="badge bg-success">Activa</span>
-                                                        <% } else if (reserva.estado==='finalizada' ) { %>
-                                                            <span class="badge bg-secondary">Finalizada</span>
-                                                        <% } else if (reserva.estado==='Cancelada' ) { %>
-                                                            <span class="badge bg-danger">Cancelada</span>
-                                                        <% } else { %>
-                                                            <span class="badge bg-warning text-dark"><%= reserva.estado %></span>
-                                                        <% } %>
+                                                            <% } else if (reserva.estado==='finalizada' ) { %>
+                                                                <span class="badge bg-secondary">Finalizada</span>
+                                                                <% } else if (reserva.estado==='Cancelada' ) { %>
+                                                                    <span class="badge bg-danger">Cancelada</span>
+                                                                    <% } else { %>
+                                                                        <span class="badge bg-warning text-dark">
+                                                                            <%= reserva.estado %>
+                                                                        </span>
+                                                                        <% } %>
                                                     </td>
                                                     <td>
                                                         <% if (reserva.estado==='confirmada' ) { %>
-                                                        <form action="/reservas/cancelar/<%= reserva.id %>"
-                                                            method="POST" style="display:inline;">
-                                                            <button type="submit" class="btn btn-sm btn-danger"
-                                                                onclick="return confirm('¿Estás seguro de que quieres cancelar esta reserva?')">
-                                                                Cancelar
-                                                            </button>
-                                                        </form>
-                                                        <% } else { %>
-                                                            <span class="text-muted">-</span>
-                                                        <% } %>
+                                                            <form action="/reservas/cancelar/<%= reserva.id %>"
+                                                                method="POST" style="display:inline;">
+                                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                                    onclick="return confirm('¿Estás seguro de que quieres cancelar esta reserva?')">
+                                                                    Cancelar
+                                                                </button>
+                                                            </form>
+                                                            <% } else { %>
+                                                                <span class="text-muted">-</span>
+                                                                <% } %>
                                                     </td>
                                                 </tr>
                                                 <% }) %>
@@ -87,8 +89,7 @@
                                 </div>
                                 <% } else { %>
                                     <div class="alert alert-info" role="alert">
-                                        Aún no tienes reservas activas. <a href="/reservas/nuevo"
-                                            class="alert-link">¡Haz
+                                        Aún no tienes reservas activas. <a href="/vehiculos" class="alert-link">¡Haz
                                             una reserva ahora!</a>
                                     </div>
                                     <% } %>
