@@ -500,69 +500,90 @@ router.post('/carga-json', requireAuth, requireAdmin, (req, res) => {
                 const insertarVeh = vehiculosJson.map(v => [v.matricula || null, v.marca || null, v.modelo || null, v.anio_matriculacion || null, v.numero_plazas || null, v.autonomia_km || null, v.color || null, v.imagen || null, v.estado || 'disponible', v.id_concesionario || 1]);
                 const insertarUsr = usuariosJson.map(u => [u.nombre || null, u.correo || null, u.contrasena || null, u.rol || 'empleado', u.telefono || null, u.id_concesionario || null, u.preferencias_accesibilidad || null]);
 
-                // Función async para ejecutar en orden
-                (async () => {
-                    try {
-                        // 1. Insertar concesionarios PRIMERO
-                        if (insertarCon.length > 0) {
-                            await new Promise((resolve, reject) => {
-                                connection.query('INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?', [insertarCon], (err, result) => {
-                                    if (err) return reject(err);
-                                    resolve(result);
-                                });
-                            });
-                        }
+                // Función helper para manejar errores y hacer rollback
+                const handleError = (err) => {
+                    connection.rollback(() => {
+                        connection.release();
+                        res.render('admin/carga_json', {
+                            title: 'Cargar datos iniciales',
+                            mensaje: `Error: ${err.message || 'Error desconocido'}. Verifica que la base de datos esté vacía y el JSON sea válido.`,
+                            tipo: 'danger',
+                            preferencias: req.session.preferencias || {}
+                        });
+                    });
+                };
 
-                        // 2. Insertar usuarios (después de concesionarios)
-                        if (insertarUsr.length > 0) {
-                            await new Promise((resolve, reject) => {
-                                connection.query('INSERT INTO Usuarios (nombre, correo, contrasena, rol, telefono, id_concesionario, preferencias_accesibilidad) VALUES ?', [insertarUsr], (err, result) => {
-                                    if (err) return reject(err);
-                                    resolve(result);
-                                });
-                            });
-                        }
-
-                        // 3. Insertar vehículos (al final)
-                        if (insertarVeh.length > 0) {
-                            await new Promise((resolve, reject) => {
-                                connection.query('INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?', [insertarVeh], (err, result) => {
-                                    if (err) return reject(err);
-                                    resolve(result);
-                                });
-                            });
-                        }
-
-                        // 4. Confirmar transacción
-                        connection.commit(cErr => {
-                            connection.release();
-                            if (cErr) {
-                                return res.render('admin/carga_json', {
-                                    title: 'Cargar datos iniciales',
-                                    mensaje: 'Error: No se pudieron confirmar los cambios. Inténtalo de nuevo.',
-                                    tipo: 'danger',
-                                    preferencias: req.session.preferencias || {}
-                                });
-                            }
+                // Función para confirmar transacción (commit)
+                const confirmarTransaccion = () => {
+                    connection.commit(cErr => {
+                        connection.release();
+                        if (cErr) {
                             return res.render('admin/carga_json', {
                                 title: 'Cargar datos iniciales',
-                                mensaje: `Éxito: Se cargaron ${concesionarios.length} concesionarios, ${usuariosJson.length} usuarios y ${vehiculosJson.length} vehículos correctamente.`,
-                                tipo: 'success',
-                                preferencias: req.session.preferencias || {}
-                            });
-                        });
-                    } catch (err2) {
-                        connection.rollback(() => {
-                            connection.release();
-                            res.render('admin/carga_json', {
-                                title: 'Cargar datos iniciales',
-                                mensaje: `Error: ${err2.message || 'Error desconocido'}. Verifica que la base de datos esté vacía y el JSON sea válido.`,
+                                mensaje: 'Error: No se pudieron confirmar los cambios. Inténtalo de nuevo.',
                                 tipo: 'danger',
                                 preferencias: req.session.preferencias || {}
                             });
+                        }
+                        return res.render('admin/carga_json', {
+                            title: 'Cargar datos iniciales',
+                            mensaje: `Éxito: Se cargaron ${concesionarios.length} concesionarios, ${usuariosJson.length} usuarios y ${vehiculosJson.length} vehículos correctamente.`,
+                            tipo: 'success',
+                            preferencias: req.session.preferencias || {}
                         });
+                    });
+                };
+
+                // Función para insertar vehículos (paso 3)
+                const insertarVehiculos = () => {
+                    if (insertarVeh.length > 0) {
+                        connection.query(
+                            'INSERT INTO Vehiculos (matricula, marca, modelo, anio_matriculacion, numero_plazas, autonomia_km, color, imagen, estado, id_concesionario) VALUES ?',
+                            [insertarVeh],
+                            (err) => {
+                                if (err) return handleError(err);
+                                confirmarTransaccion();
+                            }
+                        );
+                    } else {
+                        confirmarTransaccion();
                     }
-                })();
+                };
+
+                // Función para insertar usuarios (paso 2)
+                const insertarUsuarios = () => {
+                    if (insertarUsr.length > 0) {
+                        connection.query(
+                            'INSERT INTO Usuarios (nombre, correo, contrasena, rol, telefono, id_concesionario, preferencias_accesibilidad) VALUES ?',
+                            [insertarUsr],
+                            (err) => {
+                                if (err) return handleError(err);
+                                insertarVehiculos(); // Llamar al siguiente paso
+                            }
+                        );
+                    } else {
+                        insertarVehiculos(); // Si no hay usuarios, pasar directamente a vehículos
+                    }
+                };
+
+                // Función para insertar concesionarios (paso 1) - INICIO
+                const insertarConcesionarios = () => {
+                    if (insertarCon.length > 0) {
+                        connection.query(
+                            'INSERT INTO Concesionarios (nombre, ciudad, direccion, telefono_contacto) VALUES ?',
+                            [insertarCon],
+                            (err) => {
+                                if (err) return handleError(err);
+                                insertarUsuarios(); // Llamar al siguiente paso
+                            }
+                        );
+                    } else {
+                        insertarUsuarios(); // Si no hay concesionarios, pasar a usuarios
+                    }
+                };
+
+                // Iniciar la cadena de callbacks
+                insertarConcesionarios();
             });
         });
     });
