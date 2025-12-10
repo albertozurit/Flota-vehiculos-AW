@@ -574,33 +574,33 @@
       });
     }
 
-    // Script para validar formulario Crear Vehículo
-    const formCrearVehiculo = document.getElementById('formNuevoVehiculo');
+    var formCrearVehiculo = document.getElementById('formNuevoVehiculo');
     if (formCrearVehiculo) {
-      formCrearVehiculo.addEventListener('submit', async (e) => {
+      formCrearVehiculo.addEventListener('submit', function (e) {
         e.preventDefault();
-        const errorDiv = document.getElementById('errorCrearVehiculo');
+        var errorDiv = document.getElementById('errorCrearVehiculo');
         errorDiv.classList.add('d-none');
 
-        const formData = new FormData(formCrearVehiculo);
+        var formData = new FormData(formCrearVehiculo);
 
-        try {
-          const response = await fetch('/admin/vehiculos/nuevo', {
-            method: 'POST',
-            body: formData
-          });
-
-          if (response.ok) {
-            window.location.reload();
-          } else {
-            const data = await response.json();
-            errorDiv.textContent = data.error || 'Error al crear el vehículo';
+        fetch('/admin/vehiculos/nuevo', {
+          method: 'POST',
+          body: formData
+        })
+          .then(function (response) {
+            if (response.ok) {
+              window.location.reload();
+            } else {
+              return response.json().then(function (data) {
+                errorDiv.textContent = data.error || 'Error al crear el vehículo';
+                errorDiv.classList.remove('d-none');
+              });
+            }
+          })
+          .catch(function (error) {
+            errorDiv.textContent = 'Error de conexión al crear el vehículo';
             errorDiv.classList.remove('d-none');
-          }
-        } catch (error) {
-          errorDiv.textContent = 'Error de conexión al crear el vehículo';
-          errorDiv.classList.remove('d-none');
-        }
+          });
       });
     }
 
