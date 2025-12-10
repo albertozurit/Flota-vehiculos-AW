@@ -1,249 +1,276 @@
 # Manual de Uso - FlotaWei
 
-## Índice
-1. [Introducción](#introducción)
-2. [Requisitos del Sistema](#requisitos-del-sistema)
-3. [Inicio de Sesión](#inicio-de-sesión)
-4. [Roles de Usuario](#roles-de-usuario)
-5. [Funcionalidades por Rol](#funcionalidades-por-rol)
-6. [Gestión de Vehículos](#gestión-de-vehículos)
-7. [Gestión de Reservas](#gestión-de-reservas)
-8. [Panel de Administración](#panel-de-administración)
-9. [Atajos de Teclado](#atajos-de-teclado)
+Sistema de gestión de flota de vehículos eléctricos para la empresa FlotaWei.
 
----
+## Inicio Rápido
 
-## Introducción
+### Acceder al Sistema
+- URL: http://localhost:3000
+- Administrador por defecto:
+  - Email: admin@flotawei.com
+  - Contraseña: Admin123
 
-**FlotaWei** es una aplicación web para la gestión de flotas de vehículos eléctricos. Permite a los empleados reservar vehículos y a los administradores gestionar toda la flota, usuarios y concesionarios.
-
----
-
-## Requisitos del Sistema
-
-### Navegadores Compatibles
-- Google Chrome (v90+)
-- Mozilla Firefox (v88+)
-- Microsoft Edge (v90+)
-- Safari (v14+)
-
-### Conexión a Internet
-- Requerida para todas las funcionalidades
-
----
-
-## Inicio de Sesión
-
-### Acceder a la Plataforma
-1. Abrir el navegador web
-2. Navegar a la URL de la aplicación
-3. Hacer clic en el icono de usuario en la parte superior derecha
-4. Ingresar correo corporativo (@flotawei.com) y contraseña
-5. Opcionalmente marcar "Recordar sesión" para mantener la sesión activa 30 días
-
-### Requisitos de Contraseña
-- Mínimo 8 caracteres
-- Al menos 1 letra mayúscula
-- Al menos 1 número
-
-### Recuperar Contraseña
-Contactar con el administrador del sistema para restablecer la contraseña.
-
----
-
-## Roles de Usuario
-
-### Empleado
-- Visualizar vehículos disponibles
-- Realizar reservas
-- Consultar mis reservas
-- Gestionar perfil personal
-
-### Administrador
-- Todas las funcionalidades de empleado
-- Gestionar usuarios
-- Gestionar vehículos
-- Gestionar concesionarios
-- Acceder a estadísticas
-- Cargar datos iniciales
+### Carga Inicial de Datos (Primera vez)
+1. Inicia sesión como administrador
+2. Ve a Panel de Administrador y selecciona Cargar datos (JSON)
+3. Selecciona el archivo datos.json
+4. Haz clic en Cargar datos
 
 ---
 
 ## Funcionalidades por Rol
 
-### Como Empleado
+### EMPLEADO
 
-#### Consultar Vehículos Disponibles
-1. Iniciar sesión
-2. Navegar a "Vehículos disponibles"
-3. Aplicar filtros (opcional):
-   - Autonomía mínima
+#### Registrarse
+1. Haz clic en Registrarse
+2. Completa el formulario:
+   - Email corporativo (debe terminar en @flotawei.com)
+   - Contraseña (mínimo 8 caracteres, 1 mayúscula, 1 número)
+   - Nombre completo
+3. Haz clic en Registrarse
+
+#### Ver Vehículos Disponibles
+1. Inicia sesión
+2. Ve a Vehículos en el menú
+3. Verás todas las tarjetas de vehículos disponibles
+
+#### Filtrar Vehículos
+1. En la vista de vehículos, haz clic en Filtros
+2. Selecciona los criterios que necesites:
+   - Autonomía mínima en kilómetros
    - Número de plazas
    - Color
-   - Ciudad del concesionario
-4. Visualizar detalles de cada vehículo en tarjetas
+   - Ciudad
+   - Fechas de disponibilidad
+3. Haz clic en Aplicar filtros
 
-#### Realizar una Reserva
-1. En la lista de vehículos, hacer clic en "Reservar"
-2. Seleccionar fecha y hora de inicio
-3. Seleccionar fecha y hora de fin
-4. Confirmar reserva
-5. La reserva aparecerá en "Mis reservas"
+#### Reservar un Vehículo
+1. En la tarjeta del vehículo, haz clic en Reservar
+2. Se abrirá un formulario donde debes completar:
+   - Fecha y hora de inicio
+   - Fecha y hora de fin
+   - Teléfono (opcional)
+   - Acepta las condiciones de uso
+3. Haz clic en Reservar
+4. El vehículo cambiará automáticamente a estado "Reservado"
 
-#### Consultar Mis Reservas
-1. Navegar a "Mis reservas"
-2. Ver listado de todas las reservas (activas, finalizadas, canceladas)
-3. Los estados se actualizan automáticamente
+#### Ver Mis Reservas
+1. Ve a Reservas en el menú
+2. Verás tu historial completo de reservas: activas, finalizadas y canceladas
 
-### Como Administrador
+#### Cancelar Reserva
+1. En Reservas, busca la reserva activa que quieres cancelar
+2. Haz clic en Cancelar
+3. Confirma la acción
 
-#### Acceder al Panel de Administración
-1. Iniciar sesión como administrador
-2. Hacer clic en "Administración" en el menú
+---
 
-#### Gestionar Vehículos
-**Crear vehículo:**
-1. En el panel de administración, sección "Vehículos"
-2. Hacer clic en "Nuevo vehículo"
-3. Completar formulario:
-   - Matrícula (obligatorio)
-   - Marca (obligatorio)
-   - Modelo (obligatorio)
-   - Año de matriculación
-   - Número de plazas
-   - Autonomía en km
+### ADMINISTRADOR
+
+El administrador tiene acceso a todas las funcionalidades de empleado, además de:
+
+#### Panel de Administración
+1. Haz clic en Panel de Administrador
+2. Verás las siguientes estadísticas:
+   - Total de vehículos
+   - Total de concesionarios
+   - Total de usuarios
+   - Total de reservas
+   - Reservas por concesionario
+   - Vehículo más usado
+
+#### Gestión de Vehículos
+
+Alta de vehículo:
+1. En el Panel, haz clic en Alta vehículo
+2. Completa el formulario con los siguientes datos:
+   - Matrícula (exactamente 7 caracteres)
+   - Marca
+   - Modelo
+   - Año (entre 1900 y 2100)
+   - Plazas (entre 1 y 9)
+   - Autonomía (1-10000 km)
    - Color
    - Imagen (opcional)
    - Concesionario asignado
-4. Guardar
+3. Haz clic en Crear
 
-**Editar vehículo:**
-1. En la lista de vehículos, hacer clic en "Editar"
-2. Modificar campos deseados
-3. Guardar cambios
+Editar vehículo:
+1. En la tabla de vehículos, localiza el vehículo
+2. Haz clic en Editar
+3. Modifica los campos necesarios
+4. Haz clic en Guardar cambios
 
-**Dar de baja vehículo:**
-1. Hacer clic en "Eliminar" junto al vehículo
-2. El vehículo quedará marcado como inactivo (baja lógica)
+Dar de baja vehículo:
+1. En la tabla de vehículos, haz clic en Baja
+2. Confirma la acción
 
-#### Gestionar Usuarios
-**Crear usuario:**
-1. En el panel de administración, hacer clic en "Nuevo usuario"
-2. Completar formulario:
-   - Nombre
-   - Correo corporativo
-   - Contraseña (cumplir requisitos)
-   - Rol (Empleado/Admin)
-   - Concesionario base
-3. Guardar
+#### Gestión de Concesionarios
 
-**Editar usuario:**
-1. Hacer clic en "Editar" junto al usuario
-2. Modificar rol o concesionario base
-3. Guardar
-
-**Dar de baja usuario:**
-1. Hacer clic en "Eliminar" junto al usuario
-2. El usuario quedará inactivo (baja lógica)
-3. No se puede eliminar el propio usuario administrador
-
-#### Gestionar Concesionarios
-**Crear concesionario:**
-1. En el panel de administración, hacer clic en "Nuevo concesionario"
-2. Completar formulario:
+Alta:
+1. Completa el formulario en la sección de concesionarios:
    - Nombre
    - Ciudad
    - Dirección
-   - Teléfono de contacto
-3. Guardar
+   - Teléfono
+2. Haz clic en Crear concesionario
 
-**Editar concesionario:**
-1. Hacer clic en "Editar" junto al concesionario
-2. Modificar campos
-3. Guardar
+Editar:
+1. Haz clic en Editar en la tabla
+2. Modifica los datos necesarios
+3. Haz clic en Guardar cambios
 
-**Dar de baja concesionario:**
-1. Hacer clic en "Eliminar"
-2. El concesionario quedará inactivo (baja lógica)
+Baja:
+1. Haz clic en Baja
+2. Confirma la acción
 
-#### Cargar Datos Iniciales
-1. Navegar a "Carga inicial desde JSON"
-2. Asegurar que la base de datos está vacía (usar "Vaciar BD" si es necesario)
-3. Hacer clic en "Cargar datos"
-4. El archivo `bd_vacia.json` se procesará automáticamente
+#### Gestión de Usuarios
 
-#### Consultar Estadísticas
-1. En el panel de administración, hacer clic en "Estadísticas"
-2. Visualizar:
-   - Total de reservas
-   - Reservas activas
-   - Reservas finalizadas
-   - Vehículo más usado
-   - Reservas por concesionario
+Crear usuario:
+1. Haz clic en Crear usuario
+2. Completa los datos:
+   - Nombre
+   - Email corporativo
+   - Contraseña
+   - Concesionario base
+   - Rol (empleado o administrador)
+3. Haz clic en Crear
 
----
+Editar usuario:
+1. Haz clic en Editar
+2. Modifica el rol o el concesionario base asignado
+3. Haz clic en Guardar cambios
 
-## Gestión de Vehículos
-
-### Estados de Vehículos
-- **Disponible**: El vehículo está libre para reservar
-- **Reservado**: El vehículo tiene una reserva activa
-- **Mantenimiento**: El vehículo no está disponible
-- **Inactivo**: El vehículo ha sido dado de baja (no visible)
-
-### Filtros Disponibles
-- **Autonomía mínima**: Filtrar vehículos con al menos X km de autonomía
-- **Número de plazas**: Filtrar por capacidad
-- **Color**: Buscar por color específico
-- **Ciudad**: Filtrar por ubicación del concesionario
+#### Estadísticas
+En el panel principal se muestran automáticamente:
+- Tabla de reservas por concesionario (nombre, ciudad y número de reservas)
+- Vehículo más usado (muestra marca, modelo, matrícula y número total de usos)
 
 ---
 
-## Gestión de Reservas
+## Accesibilidad
 
-### Estados de Reservas
-- **Activa**: La reserva está en curso
-- **Finalizada**: La reserva ha terminado (automático al pasar la fecha)
-- **Cancelada**: La reserva fue cancelada manualmente
+### Activar Opciones de Accesibilidad
+1. Haz clic en el botón de Accesibilidad en la esquina superior
+2. En el modal que se abre, puedes seleccionar:
+   
+   Modos de visualización:
+   - Alto contraste: fondo blanco con texto negro
+   - Modo daltonismo: esquema de colores adaptado
+   
+   Tamaño de texto:
+   - Pequeño (80%)
+   - Normal (100%)
+   - Grande (120%)
+   
+   Atajos de teclado:
+   - Puedes personalizar las teclas para realizar acciones rápidas
+   - Usa la tecla Tab para navegar entre elementos
 
-### Reglas de Reservas
-- No se pueden solapar reservas del mismo vehículo
-- Las fechas de inicio y fin son obligatorias
-- La fecha de fin debe ser posterior a la de inicio
-- Al reservar, el vehículo cambia automáticamente a estado "Reservado"
-
----
-
-## Atajos de Teclado
-
-### Atajos Predeterminados del Sistema
-- **Alt + I**: Ir a Inicio
-- **Alt + V**: Ir a Vehículos disponibles
-- **Alt + H**: Ir a Mis reservas (empleados)
-- **Alt + A**: Ir a Administración (administradores)
-
-### Atajos Personalizables
-Los usuarios pueden configurar atajos personalizados desde el menú de Accesibilidad:
-- Atajo para reservar vehículo
-- Atajo para ver mis reservas
-
-### Configurar Atajos Personalizados
-1. Hacer clic en el icono de accesibilidad (parte superior derecha)
-2. Navegar a la sección "Atajos de teclado"
-3. Ingresar combinación de teclas deseada
-4. Guardar preferencias
+3. Haz clic en Guardar preferencias
+4. Tus preferencias se guardarán en tu cuenta y se aplicarán automáticamente en futuras sesiones
 
 ---
 
-## Soporte y Contacto
+## Seguridad
 
-Para soporte técnico o consultas, contactar con el administrador del sistema.
+### Cerrar Sesión
+- Haz clic en tu nombre en la esquina superior derecha
+- Selecciona Cerrar sesión
 
-**Usuario administrador por defecto:**
-- Correo: admin@flotawei.com
+### Cambiar Contraseña
+- Contacta con el administrador del sistema para solicitar el restablecimiento de tu contraseña
+
+---
+
+## Validaciones del Sistema
+
+### Matrícula de vehículo
+- Debe tener exactamente 7 caracteres (letras y números)
+- No se aceptan matrículas de más o menos caracteres
+
+### Fechas de reserva
+- La fecha de fin debe ser posterior a la fecha de inicio
+- No se permiten reservas en fechas pasadas
+- No se permiten reservas que se solapen con otras existentes
+
+### Contraseñas
+- Mínimo 8 caracteres
+- Al menos 1 letra mayúscula
+- Al menos 1 número
+
+### Email corporativo
+- Debe terminar obligatoriamente en @flotawei.com
+
+---
+
+## Diseño Responsive
+
+El sistema se adapta automáticamente a diferentes dispositivos:
+- Ordenadores de escritorio
+- Tablets
+- Teléfonos móviles
+
+---
+
+## Solución de Problemas Comunes
+
+### No puedo iniciar sesión
+- Verifica que tu email termine en @flotawei.com
+- Asegúrate de que la contraseña cumpla los requisitos mínimos
+- Si persiste el problema, contacta con el administrador
+
+### No veo vehículos disponibles
+- Revisa si hay filtros aplicados que puedan estar limitando los resultados
+- Comprueba las fechas seleccionadas en el filtro
+- Es posible que todos los vehículos estén reservados en ese momento
+
+### Error al crear un vehículo
+- Verifica que la matrícula tenga exactamente 7 caracteres
+- Asegúrate de completar todos los campos obligatorios
+- Comprueba que el año esté entre 1900 y 2100
+- Verifica que el número de plazas esté entre 1 y 9
+
+---
+
+## Datos de Ejemplo
+
+Administrador por defecto:
+- Email: admin@flotawei.com
 - Contraseña: Admin123
 
+Empleados de ejemplo (crear manualmente si es necesario):
+- juan@flotawei.com
+- maria@flotawei.com
+
+Al cargar el archivo JSON se importarán automáticamente:
+- Concesionarios: Madrid Centro, Barcelona Norte, Valencia Sur
+- Vehículos: Tesla Model 3, Nissan Leaf, BMW i3, entre otros
+
 ---
 
-**Versión del Manual**: 1.0  
-**Última actualización**: Diciembre 2024
+## Funcionalidades Implementadas
+
+El sistema incluye todas las siguientes funcionalidades:
+
+- Registro, inicio y cierre de sesión con seguridad
+- Carga inicial de datos desde archivo JSON
+- Listado completo de vehículos con sistema de filtros
+- Sistema de reservas de vehículos
+- Gestión dinámica de disponibilidad según las fechas
+- Panel de administración completo
+- Gestión de vehículos (alta, edición y baja)
+- Gestión de concesionarios (alta, edición y baja)
+- Gestión de usuarios
+- Estadísticas administrativas (reservas por concesionario y vehículo más usado)
+- Sistema de accesibilidad (contraste, tamaño de fuente, navegación por teclado)
+- Diseño responsive que se adapta a cualquier dispositivo
+- Validaciones completas en todos los formularios
+
+---
+
+Para cualquier consulta o problema técnico, contacta con el administrador del sistema.
+
+Versión: 1.0.0
+Última actualización: Diciembre 2025
